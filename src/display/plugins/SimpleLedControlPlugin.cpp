@@ -21,13 +21,8 @@ void SimpleLedControlPlugin::loop() {
 void SimpleLedControlPlugin::updateControl() {
     Settings settings = this->controller->getSettings();
     int mode = this->controller->getMode();
-    //if (mode == MODE_STANDBY) {
-    //    sendControl(50, 80, 50, 40, 0);
-    //    return;
-    //}
     if (mode == MODE_BREW || mode == MODE_STEAM){
         if (abs(controller->getCurrentTemp()-controller->getTargetTemp())<=2) {
-            //printf("current temp: %i target: %i - within 2C",controller->getCurrentTemp(),controller->getTargetTemp());
             sendControl(13, 184, 54, 100, 255); 
         } else if ((controller->getCurrentTemp()-controller->getTargetTemp())>3){
             sendControl(217, 24, 24, 90, 255); 
@@ -52,7 +47,6 @@ void SimpleLedControlPlugin::updateControl() {
 
 void SimpleLedControlPlugin::sendControl(uint8_t r, uint8_t g, uint8_t b, uint8_t w, uint8_t ext) {
     if (r != last_r || b != last_b || g != last_g || w != last_w){
-        //printf("r:%i, g:%i, b:%i, w:%i\n",r, g, b, w);
         this->controller->getClientController()->sendSimpleLedControl(r, g, b, w);
     }
 
