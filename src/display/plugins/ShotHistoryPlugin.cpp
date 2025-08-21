@@ -73,6 +73,13 @@ void ShotHistoryPlugin::record() {
         } else {
             controller->getSettings().setHistoryIndex(controller->getSettings().getHistoryIndex() + 1);
             cleanupHistory();
+            // Upload the completed shot to NAS
+            if (uploadShotToNAS(currentId)) {
+                ESP_LOGI("ShotHistory", "Shot %s uploaded to NAS successfully", currentId.c_str());
+                SPIFFS.remove("/h/" + currentId + ".dat");
+            } else {
+                ESP_LOGW("ShotHistory", "Failed to upload shot %s to NAS, keeping locally", currentId.c_str());
+            }            
         }
     }
 }
