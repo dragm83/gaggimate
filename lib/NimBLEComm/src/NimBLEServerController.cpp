@@ -161,6 +161,7 @@ void NimBLEServerController::registerPressureScaleCallback(const float_callback_
 void NimBLEServerController::registerTareCallback(const void_callback_t &callback) { tareCallback = callback; }
 
 void NimBLEServerController::registerLedControlCallback(const led_control_callback_t &callback) { ledControlCallback = callback; }
+void NimBLEServerController::registerSimpleLedControlCallback(const simple_led_control_callback_t &callback) { simpleLedControlCallback = callback; }
 
 void NimBLEServerController::setInfo(const String infoString) {
     this->infoString = infoString;
@@ -269,6 +270,16 @@ void NimBLEServerController::onWrite(NimBLECharacteristic *pCharacteristic) {
             uint8_t brightness = get_token(msg, 1, ',').toInt();
             ledControlCallback(channel, brightness);
             ESP_LOGV(LOG_TAG, "Received led control, %d: %d", channel, brightness);
+        }
+    } else if (pCharacteristic->getUUID().equals(NimBLEUUID(SIMPLE_LED_CONTROL_UUID))) {
+        if (simpleLedControlCallback != nullptr) {
+            auto msg = String(pCharacteristic->getValue().c_str());
+            uint8_t rd = get_token(msg, 0, ',').toInt();
+            uint8_t gr = get_token(msg, 1, ',').toInt();
+            uint8_t bl = get_token(msg, 2, ',').toInt();
+            uint8_t wh = get_token(msg, 3, ',').toInt();
+            simpleLedControlCallback(rd,gr,bl,wh);
+            ESP_LOGV(LOG_TAG, "Received led control, r: %d g: %d b: %d w: %d", r, g, b, w);
         }
     }
 }

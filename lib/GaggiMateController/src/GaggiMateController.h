@@ -6,6 +6,7 @@
 #include <peripherals/DistanceSensor.h>
 #include <peripherals/Heater.h>
 #include <peripherals/LedController.h>
+#include <peripherals/SimpleLedController.h>
 #include <peripherals/Max31855Thermocouple.h>
 #include <peripherals/PressureSensor.h>
 #include <peripherals/Pump.h>
@@ -46,6 +47,7 @@ class GaggiMateController {
     DigitalInput *steamBtn = nullptr;
     PressureSensor *pressureSensor = nullptr;
     LedController *ledController = nullptr;
+    SimpleLedController *simpleLedController = nullptr;
     DistanceSensor *distanceSensor = nullptr;
 
     std::vector<ControllerConfig> configs;

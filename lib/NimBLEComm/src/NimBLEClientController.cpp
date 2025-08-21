@@ -98,6 +98,7 @@ bool NimBLEClientController::connectToServer() {
     pressureScaleChar = pRemoteService->getCharacteristic(NimBLEUUID(PRESSURE_SCALE_UUID));
     volumetricTareChar = pRemoteService->getCharacteristic(NimBLEUUID(VOLUMETRIC_TARE_UUID));
     ledControlChar = pRemoteService->getCharacteristic(NimBLEUUID(LED_CONTROL_UUID));
+    simpleLedControlChar = pRemoteService->getCharacteristic(NimBLEUUID(SIMPLE_LED_CONTROL_UUID));
 
     // Obtain the remote notify characteristic and subscribe to it
 
@@ -193,6 +194,14 @@ void NimBLEClientController::sendLedControl(uint8_t channel, uint8_t brightness)
         ledControlChar->writeValue(String(channel) + "," + String(brightness));
     }
 }
+
+
+void NimBLEClientController::sendSimpleLedControl(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
+    if (client->isConnected() && ledControlChar != nullptr) {
+        ledControlChar->writeValue(String(r) + "," + String(g) + "," + String(b) + "," + String(w));
+    }
+}
+
 
 void NimBLEClientController::sendAltControl(bool pinState) {
     if (altControlChar != nullptr && client->isConnected()) {

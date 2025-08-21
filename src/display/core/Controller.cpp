@@ -14,6 +14,7 @@
 #include <display/plugins/BoilerFillPlugin.h>
 #include <display/plugins/HomekitPlugin.h>
 #include <display/plugins/LedControlPlugin.h>
+#include <display/plugins/SimpleLedControlPlugin.h>
 #include <display/plugins/MQTTPlugin.h>
 #include <display/plugins/ShotHistoryPlugin.h>
 #include <display/plugins/SmartGrindPlugin.h>
@@ -52,6 +53,7 @@ void Controller::setup() {
     pluginManager->registerPlugin(&ShotHistory);
     pluginManager->registerPlugin(&BLEScales);
     pluginManager->registerPlugin(new LedControlPlugin());
+    pluginManager->registerPlugin(new SimpleLedControlPlugin());
     pluginManager->setup(this);
 
     pluginManager->on("profiles:profile:save", [this](Event const &event) {
@@ -149,6 +151,7 @@ void Controller::setupInfos() {
                                     .pressure = doc["cp"]["ps"].as<bool>(),
                                     .ledControl = doc["cp"]["led"].as<bool>(),
                                     .tof = doc["cp"]["tof"].as<bool>(),
+                                    .simpleLedControl = doc["cp"]["sled"].as<bool>(),
                                 }};
     }
 }

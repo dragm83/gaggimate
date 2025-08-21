@@ -20,6 +20,7 @@ class NimBLEClientController : public NimBLEAdvertisedDeviceCallbacks, NimBLECli
     void sendPumpModelCoeffs(const String &pumpModelCoeffs);
     void setPressureScale(float scale);
     void sendLedControl(uint8_t channel, uint8_t brightness);
+    void sendSimpleLedControl(uint8_t r, uint8_t g, uint8_t b, uint8_t w);
     bool isReadyForConnection() const;
     bool isConnected();
     void scan();
@@ -57,6 +58,7 @@ class NimBLEClientController : public NimBLEAdvertisedDeviceCallbacks, NimBLECli
     NimBLERemoteCharacteristic *volumetricMeasurementChar = nullptr;
     NimBLERemoteCharacteristic *volumetricTareChar = nullptr;
     NimBLERemoteCharacteristic *ledControlChar = nullptr;
+    NimBLERemoteCharacteristic *simpleLedControlChar = nullptr;
     NimBLERemoteCharacteristic *tofMeasurementChar = nullptr;
     NimBLEAdvertisedDevice *serverDevice = nullptr;
     bool readyForConnection = false;

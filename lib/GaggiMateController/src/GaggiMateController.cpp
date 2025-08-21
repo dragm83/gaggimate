@@ -37,6 +37,22 @@ void GaggiMateController::setup() {
     this->brewBtn = new DigitalInput(_config.brewButtonPin, [this](const bool state) { _ble.sendBrewBtnState(state); });
     this->steamBtn = new DigitalInput(_config.steamButtonPin, [this](const bool state) { _ble.sendSteamBtnState(state); });
 
+    // Simple LED Controller
+    this->simpleLedController = new SimpleLedController();
+
+    if (_config.capabilites.simpleLed) {
+        if (this->simpleLedController->isAvailable()) {
+            _ble.registerSimpleLedControlCallback(
+                [this](uint8_t r, uint8_t g, uint8_t b, uint8_t w) { simpleLedController->setChannel(r, g, b, w); });
+        }
+
+    } 
+
+    if (_config.capabilites.ledControls) {
+        this->ledController->setup();
+    }
+
+
     // 5-Pin peripheral port
     Wire.begin(_config.sunriseSdaPin, _config.sunriseSclPin, 400000);
     this->ledController = new LedController(&Wire);

@@ -24,6 +24,7 @@
 #define VOLUMETRIC_TARE_UUID "a8bd52e0-77c3-412c-847c-4e802c3982f9"
 #define TOF_MEASUREMENT_UUID "7282c525-21a0-416a-880d-21fe98602533"
 #define LED_CONTROL_UUID "37804a2b-49ab-4500-8582-db4279fc8573"
+#define SIMPLE_LED_CONTROL_UUID "1ced810c-ad9f-45df-8292-b7cc945441c6"
 
 constexpr size_t ERROR_CODE_COMM_SEND = 1;
 constexpr size_t ERROR_CODE_COMM_RCV = 2;
@@ -49,12 +50,14 @@ using advanced_output_callback_t =
     std::function<void(bool valve, float boilerSetpoint, bool pressureTarget, float pumpPressure, float pumpFlow)>;
 using sensor_read_callback_t = std::function<void(float temperature, float pressure, float puckFlow, float pumpFlow)>;
 using led_control_callback_t = std::function<void(uint8_t channel, uint8_t brightness)>;
+using simple_led_control_callback_t = std::function<void(uint8_t r, uint8_t g, uint8_t b, uint8_t w)>;
 
 struct SystemCapabilities {
     bool dimming;
     bool pressure;
     bool ledControl;
     bool tof;
+    bool simpleLedControl;
 };
 
 struct SystemInfo {

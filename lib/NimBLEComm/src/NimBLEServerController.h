@@ -26,6 +26,7 @@ class NimBLEServerController : public NimBLEServerCallbacks, public NimBLECharac
     void registerPressureScaleCallback(const float_callback_t &callback);
     void registerTareCallback(const void_callback_t &callback);
     void registerLedControlCallback(const led_control_callback_t &callback);
+    void registerSimpleLedControlCallback(const simple_led_control_callback_t &callback);
     void setInfo(String infoString);
 
   private:
@@ -48,6 +49,7 @@ class NimBLEServerController : public NimBLEServerCallbacks, public NimBLECharac
     NimBLECharacteristic *volumetricTareChar = nullptr;
     NimBLECharacteristic *tofMeasurementChar = nullptr;
     NimBLECharacteristic *ledControlChar = nullptr;
+    NimBLECharacteristic *simpleLedControlChar = nullptr;
 
     simple_output_callback_t outputControlCallback = nullptr;
     advanced_output_callback_t advancedControlCallback = nullptr;
@@ -59,6 +61,7 @@ class NimBLEServerController : public NimBLEServerCallbacks, public NimBLECharac
     float_callback_t pressureScaleCallback = nullptr;
     void_callback_t tareCallback = nullptr;
     led_control_callback_t ledControlCallback = nullptr;
+    simple_led_control_callback_t simpleLedControlCallback = nullptr;
 
     // BLEServerCallbacks overrides
     void onConnect(NimBLEServer *pServer) override;
