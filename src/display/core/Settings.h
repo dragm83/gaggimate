@@ -140,6 +140,8 @@ class Settings {
     void setSunriseExtBrightness(int sunrise_ext_brightness);
     void setEmptyTankDistance(int empty_tank_distance);
     void setFullTankDistance(int full_tank_distance);
+    String getStoreServer() const { return storeServer; }
+    void setStoreServer(const String &storeServer);
 
   private:
     Preferences preferences;
@@ -187,6 +189,7 @@ class Settings {
     std::vector<String> profileOrder; // persisted profile ordering
     float steamPumpPercentage = DEFAULT_STEAM_PUMP_PERCENTAGE;
     int historyIndex = 0;
+    String storeServer = "";
 
     // Deprecated, use profiles
     int targetBrewTemp = 93;

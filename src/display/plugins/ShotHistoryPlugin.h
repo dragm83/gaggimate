@@ -64,6 +64,17 @@ class ShotHistoryPlugin : public Plugin {
 
     xTaskHandle taskHandle;
     static void loopTask(void *arg);
+
+    // Setup for remote storage server
+    String baseUrl() const;
+    String urlJoin(const String& path) const;
+
+    String httpGetString(const String& path) const;
+    bool   httpPostJson(const String& path, const String& json) const;
+    bool   httpDelete(const String& path) const;
+    bool uploadShotToNAS(const String& id);
+    void syncHistoryIndex();
+
 };
 
 extern ShotHistoryPlugin ShotHistory;

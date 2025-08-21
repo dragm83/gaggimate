@@ -53,6 +53,7 @@ Settings::Settings() {
     profileOrder = explode(preferences.getString("po", ""), ',');
     steamPumpPercentage = preferences.getFloat("spp", DEFAULT_STEAM_PUMP_PERCENTAGE);
     historyIndex = preferences.getInt("hi", 0);
+    storeServer = preferences.getString("strsrv", "");
 
     // Display settings
     mainBrightness = preferences.getInt("main_b", 16);
@@ -401,6 +402,11 @@ void Settings::setFullTankDistance(int full_tank_distance) {
     save();
 }
 
+void Settings::setStoreServer(const String &storeServer) {
+    this->storeServer = storeServer;
+    save();
+}
+
 void Settings::doSave() {
     if (!dirty) {
         return;
@@ -456,6 +462,7 @@ void Settings::doSave() {
     preferences.putString("po", implode(profileOrder, ","));
     preferences.putFloat("spp", steamPumpPercentage);
     preferences.putInt("hi", historyIndex);
+    preferences.putString("strsrv", storeServer);
 
     // Display settings
     preferences.putInt("main_b", mainBrightness);

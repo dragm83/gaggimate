@@ -4,6 +4,8 @@
 #include <display/core/Controller.h>
 #include <display/core/ProfileManager.h>
 #include <display/core/utils.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
 
 ShotHistoryPlugin ShotHistory;
 
@@ -158,5 +160,128 @@ void ShotHistoryPlugin::loopTask(void *arg) {
     while (true) {
         plugin->record();
         vTaskDelay(250 / portTICK_PERIOD_MS);
+    }
+}
+
+
+// Webdav helpers
+
+static String normalizeBase(const String& raw) {
+  if (!raw.length()) return "";
+  String b = raw;
+  if (!b.startsWith("http://") && !b.startsWith("https://")) b = "http://" + b;
+  while (b.endsWith("/")) b.remove(b.length()-1);
+  return b;
+}
+
+String ShotHistoryPlugin::baseUrl() const {
+  return normalizeBase(controller->getSettings().getStoreServer());  // SAME as ProfileManager
+}
+
+String ShotHistoryPlugin::urlJoin(const String& path) const {
+  const String b = baseUrl();
+  if (!b.length()) return "";
+  return path.startsWith("/") ? (b + path) : (b + "/" + path);
+}
+
+String ShotHistoryPlugin::httpGetString(const String& path) const {
+    if (WiFi.status() != WL_CONNECTED) {
+        ESP_LOGW("ShotHistory", "WiFi not connected; skipping GET request");
+        return "";
+    }
+    
+    String url = urlJoin(path);
+    if (!url.length()) return "";           // no remote configured
+    HTTPClient http; WiFiClient client;
+    String out;
+    if (!http.begin(client, url)) return out;
+    int code = http.GET();
+    if (code == 200) out = http.getString();
+    http.end();
+    return out;
+}
+
+bool ShotHistoryPlugin::httpPostJson(const String& path, const String& json) const {
+    if (WiFi.status() != WL_CONNECTED) {
+        ESP_LOGW("ShotHistory", "WiFi not connected; skipping POST request");
+        return false;
+    }
+    
+    String url = urlJoin(path);
+    if (!url.length()) return false;
+    HTTPClient http; WiFiClient client;
+    if (!http.begin(client, url)) return false;
+    http.addHeader("Content-Type", "application/json");
+    int code = http.POST((uint8_t*)json.c_str(), json.length());
+    http.end();
+    return (code >= 200 && code < 300);
+}
+
+bool ShotHistoryPlugin::httpDelete(const String& path) const {
+    if (WiFi.status() != WL_CONNECTED) {
+        ESP_LOGW("ShotHistory", "WiFi not connected; skipping DELETE request");
+        return false;
+    }
+    
+    String url = urlJoin(path);
+    if (!url.length()) return false;
+    HTTPClient http; WiFiClient client;
+    if (!http.begin(client, url)) return false;
+    int code = http.sendRequest("DELETE");
+    http.end();
+    return (code >= 200 && code < 300);
+}
+
+bool ShotHistoryPlugin::uploadShotToNAS(const String& id) {
+    if (WiFi.status() != WL_CONNECTED) {
+        ESP_LOGW("ShotHistory", "WiFi not connected; keeping shot locally");
+        return false;
+    }
+    
+    const String upUrl = urlJoin("/upload");
+    if (!upUrl.length()) {
+        ESP_LOGW("ShotHistory", "No store server set; keeping shot locally");
+        return false;
+    }
+
+    const String path = "/h/" + id + ".dat";
+    File f = SPIFFS.open(path, FILE_READ);
+    if (!f) return false;
+
+    HTTPClient http; WiFiClient client;
+    if (!http.begin(client, upUrl)) { f.close(); return false; }
+    http.addHeader("Content-Type", "text/plain");
+    http.addHeader("X-Shot-Id", id.c_str());
+
+    const size_t len = f.size();
+    int httpCode = http.sendRequest("POST", &f, len);
+
+    f.close();
+    http.end();
+    if (httpCode < 200 || httpCode >= 300) {
+        ESP_LOGW("ShotHistory", "NAS upload failed, HTTP code: %d", httpCode);
+        return false;
+    }
+    return true;
+}
+
+void ShotHistoryPlugin::syncHistoryIndex() {
+    File root = SPIFFS.open("/h");
+    if (!root || !root.isDirectory()) return;
+
+    int maxIdx = 0;
+    File file = root.openNextFile();
+    while (file) {
+        String name = file.name();
+        if (name.endsWith(".dat")) {
+            int num = name.substring(3, name.length() - 4).toInt(); // assuming "/h/00042.dat"
+            if (num > maxIdx) maxIdx = num;
+        }
+        file = root.openNextFile();
+    }
+
+    int stored = controller->getSettings().getHistoryIndex();
+    if (maxIdx > stored) {
+        controller->getSettings().setHistoryIndex(maxIdx);
     }
 }
