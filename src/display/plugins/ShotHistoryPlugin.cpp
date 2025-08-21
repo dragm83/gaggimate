@@ -17,17 +17,8 @@ void ShotHistoryPlugin::setup(Controller *c, PluginManager *pm) {
     pm->on("controller:volumetric-measurement:bluetooth:change", [this](Event const &event) {
         const float weight = event.getFloat("value");
         const unsigned long now = millis();
-        if (lastVolumeSample != 0) {
-            const unsigned long timeDiff = now - lastVolumeSample;
-            const float volumeDiff = weight - currentBluetoothWeight;
-            const float volumeFlow = volumeDiff / static_cast<float>(timeDiff) * 1000.0f;
-            currentBluetoothFlow = currentBluetoothFlow * 0.9f + volumeFlow * 0.1f;
-        }
-        lastVolumeSample = now;
-        currentBluetoothWeight = weight;
-        try {
-            const float weight = event.getFloat("value");
-            const unsigned long now = millis();
+        // Explicit check: Only process if weight is a valid number (not NaN or Inf)
+        if (!isnan(weight) && isfinite(weight)) {
             if (lastVolumeSample != 0) {
                 const unsigned long timeDiff = now - lastVolumeSample;
                 const float volumeDiff = weight - currentBluetoothWeight;
@@ -35,8 +26,8 @@ void ShotHistoryPlugin::setup(Controller *c, PluginManager *pm) {
             }
             lastVolumeSample = now;
             currentBluetoothWeight = weight;
-        } catch (...) {
-            // If there's any exception processing weight data, ignore this update
+        } else {
+            // If weight data is invalid, ignore this update
             // This prevents crashes if BLE data is corrupted or connection is unstable
         }
     });
@@ -81,7 +72,6 @@ void ShotHistoryPlugin::record() {
         if (extendedRecording) {
             const unsigned long now = millis();
             
-            // Explicit safety checks instead of try/catch for embedded systems
             bool canProcessWeight = (controller != nullptr);
             if (canProcessWeight) {
                 canProcessWeight = controller->isVolumetricAvailable();
