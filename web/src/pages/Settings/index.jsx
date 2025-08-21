@@ -399,6 +399,20 @@ export function Settings() {
                 onChange={onChange('wifiPassword')}
               />
             </div>
+            <div>
+              <label htmlFor="strSrv" className="mb-2 block text-sm font-medium">
+                Store Server (NAS URL)
+              </label>
+              <input 
+                id="strSrv" 
+                name="strSrv"
+                type="text"
+                className='input input-bordered w-full'
+                placeholder="http://storeserver.local:port"
+                value={formData.strSrv || ''} 
+                onChange={onChange('strSrv')} 
+                />
+            </div>  
 
             <div className='form-control'>
               <label htmlFor='mdnsName' className='mb-2 block text-sm font-medium'>
