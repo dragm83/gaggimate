@@ -12,6 +12,7 @@ ShotHistoryPlugin ShotHistory;
 void ShotHistoryPlugin::setup(Controller *c, PluginManager *pm) {
     controller = c;
     pluginManager = pm;
+    syncHistoryIndex();
     pm->on("controller:brew:start", [this](Event const &) { startRecording(); });
     pm->on("controller:brew:end", [this](Event const &) { endRecording(); });
     pm->on("controller:volumetric-measurement:estimation:change",
