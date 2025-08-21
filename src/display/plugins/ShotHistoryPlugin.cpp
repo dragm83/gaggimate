@@ -123,6 +123,21 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
 
     if (type == "req:history:list") {
         JsonArray arr = response["history"].to<JsonArray>();
+
+        // Try to get history list from WebDAV server first
+        String remoteList = httpGetString("/history");
+        if (remoteList.length() > 0) {
+            // Parse remote JSON response and populate array
+            JsonDocument remoteDoc;
+            if (deserializeJson(remoteDoc, remoteList) == DeserializationError::Ok && remoteDoc.containsKey("history")) {
+                JsonArray remoteArr = remoteDoc["history"];
+                for (JsonVariant item : remoteArr) {
+                    arr.add(item);
+                }
+                return; // Successfully got remote data
+            }
+        }
+
         File root = SPIFFS.open("/h");
         if (root && root.isDirectory()) {
             File file = root.openNextFile();
@@ -140,6 +155,14 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
         }
     } else if (type == "req:history:get") {
         auto id = request["id"].as<String>();
+
+        // Try remote first
+        String remoteData = httpGetString("/history/" + id);
+        if (remoteData.length() > 0) {
+            response["history"] = remoteData;
+            return;
+        }
+
         File file = SPIFFS.open("/h/" + id + ".dat", "r");
         if (file) {
             String data = file.readString();
@@ -150,8 +173,10 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
         }
     } else if (type == "req:history:delete") {
         auto id = request["id"].as<String>();
+
+        bool remoteDeleted = httpDelete("/history/" + id);
         SPIFFS.remove("/h/" + id + ".dat");
-        response["msg"] = "Ok";
+        response["msg"] = remoteDeleted ? "Ok (remote + local)" : "Ok (local only)";
     }
 }
 
