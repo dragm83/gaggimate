@@ -133,14 +133,31 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
         JsonArray arr = response["history"].to<JsonArray>();
 
         // Try to get history list from WebDAV server first
-        String remoteList = httpGetString("/history");
+        String remoteList = httpGetString("/list");
         if (remoteList.length() > 0) {
-            // Parse remote JSON response and populate array
             JsonDocument remoteDoc;
-            if (deserializeJson(remoteDoc, remoteList) == DeserializationError::Ok && remoteDoc.containsKey("history")) {
-                JsonArray remoteArr = remoteDoc["history"];
+            if (deserializeJson(remoteDoc, remoteList) == DeserializationError::Ok && remoteDoc.containsKey("files")) {
+                JsonArray remoteArr = remoteDoc["files"];
                 for (JsonVariant item : remoteArr) {
-                    arr.add(item);
+                    String filename = item.as<String>();
+                    if (filename.endsWith(".dat")) {
+                        auto o = arr.add<JsonObject>();
+                        String id = filename.substring(0, filename.length() - 4); // Remove .dat
+                        o["id"] = id;
+                        
+                        // Get the actual shot data
+                        String historyData = httpGetString("/get/" + id);
+                        o["history"] = historyData;
+                        
+                        // Get metadata/notes if available
+                        String metaData = httpGetString("/meta/get/" + id);
+                        if (metaData.length() > 0) {
+                            JsonDocument metaDoc;
+                            if (deserializeJson(metaDoc, metaData) == DeserializationError::Ok) {
+                                o["notes"] = metaDoc;
+                            }
+                        }
+                    }
                 }
                 return; // Successfully got remote data
             }
@@ -165,9 +182,18 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
         auto id = request["id"].as<String>();
 
         // Try remote first
-        String remoteData = httpGetString("/history/" + id);
+        String remoteData = httpGetString("/get/" + id);
         if (remoteData.length() > 0) {
             response["history"] = remoteData;
+            
+            // Also get metadata
+            String metaData = httpGetString("/meta/get/" + id);
+            if (metaData.length() > 0) {
+                JsonDocument metaDoc;
+                if (deserializeJson(metaDoc, metaData) == DeserializationError::Ok) {
+                    response["notes"] = metaDoc;
+                }
+            }
             return;
         }
 
@@ -182,9 +208,11 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
     } else if (type == "req:history:delete") {
         auto id = request["id"].as<String>();
 
-        bool remoteDeleted = httpDelete("/history/" + id);
+        httpDelete("/delete/" + id);
+        httpDelete("/meta/delete/" + id);
+        
         SPIFFS.remove("/h/" + id + ".dat");
-        response["msg"] = remoteDeleted ? "Ok (remote + local)" : "Ok (local only)";
+        response["msg"] = "Ok";
     }
 }
 

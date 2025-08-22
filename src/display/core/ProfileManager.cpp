@@ -402,31 +402,78 @@ bool ProfileManager::uploadProfileToWebDAV(const String& uuid) {
 
 std::vector<String> ProfileManager::listRemoteProfiles() {
     std::vector<String> uuids;
-    String remoteList = httpGetString("/profiles");
+    String baseUrlStr = baseUrl();
+    
+    ESP_LOGI("ProfileManager", "Listing remote profiles from: %s", baseUrlStr.c_str());
+    
+    if (baseUrlStr.isEmpty()) {
+        ESP_LOGW("ProfileManager", "WebDAV base URL is empty - check settings");
+        return uuids;
+    }
+    
+    // FIX: Server expects /profiles/list
+    String remoteList = httpGetString("/profiles/list");
+    ESP_LOGI("ProfileManager", "Remote profiles response length: %d", remoteList.length());
     
     if (remoteList.length() > 0) {
+        ESP_LOGI("ProfileManager", "Remote profiles response: %s", remoteList.substring(0, 200).c_str());
         JsonDocument remoteDoc;
-        if (deserializeJson(remoteDoc, remoteList) == DeserializationError::Ok && remoteDoc.containsKey("profiles")) {
-            JsonArray remoteArr = remoteDoc["profiles"];
+        DeserializationError err = deserializeJson(remoteDoc, remoteList);
+        // FIX: Server returns "files" not "profiles"
+        if (err == DeserializationError::Ok && remoteDoc.containsKey("files")) {
+            JsonArray remoteArr = remoteDoc["files"];
+            ESP_LOGI("ProfileManager", "Found %d remote profiles", remoteArr.size());
             for (JsonVariant item : remoteArr) {
-                if (item.containsKey("id")) {
-                    uuids.push_back(item["id"].as<String>());
+                // FIX: Files are filenames like "profile.json", extract ID
+                String filename = item.as<String>();
+                if (filename.endsWith(".json")) {
+                    String uuid = filename.substring(0, filename.length() - 5); // Remove .json
+                    ESP_LOGI("ProfileManager", "Remote profile ID: %s", uuid.c_str());
+                    uuids.push_back(uuid);
                 }
             }
+        } else {
+            ESP_LOGW("ProfileManager", "Failed to parse remote profiles JSON: %s", err.c_str());
+            ESP_LOGW("ProfileManager", "Raw response: %s", remoteList.c_str());
         }
+    } else {
+        ESP_LOGW("ProfileManager", "Empty response from WebDAV /profiles/list endpoint");
     }
+    
+    ESP_LOGI("ProfileManager", "Total remote profiles found: %d", uuids.size());
     return uuids;
 }
 
 bool ProfileManager::loadRemoteProfile(const String& uuid, Profile& outProfile) {
-    String remoteData = httpGetString("/profiles/" + uuid);
-    if (remoteData.length() == 0) return false;
+    String baseUrlStr = baseUrl();
+    ESP_LOGI("ProfileManager", "Loading remote profile %s from %s", uuid.c_str(), baseUrlStr.c_str());
+    
+    if (baseUrlStr.isEmpty()) {
+        ESP_LOGW("ProfileManager", "WebDAV base URL is empty");
+        return false;
+    }
+    
+    // FIX: Server expects /profiles/get/ID
+    String remoteData = httpGetString("/profiles/get/" + uuid);
+    ESP_LOGI("ProfileManager", "Remote profile data length: %d", remoteData.length());
+    
+    if (remoteData.length() == 0) {
+        ESP_LOGW("ProfileManager", "No data received for profile %s", uuid.c_str());
+        return false;
+    }
+    
+    ESP_LOGI("ProfileManager", "Remote profile data preview: %s", remoteData.substring(0, 100).c_str());
     
     JsonDocument doc;
     DeserializationError err = deserializeJson(doc, remoteData);
-    if (err) return false;
+    if (err) {
+        ESP_LOGW("ProfileManager", "Failed to parse remote profile JSON: %s", err.c_str());
+        return false;
+    }
     
-    return parseProfile(doc.as<JsonObject>(), outProfile);
+    bool success = parseProfile(doc.as<JsonObject>(), outProfile);
+    ESP_LOGI("ProfileManager", "Remote profile parse result: %s", success ? "SUCCESS" : "FAILED");
+    return success;
 }
 
 bool ProfileManager::saveProfileToWebDAV(const Profile& profile) {
@@ -437,5 +484,37 @@ bool ProfileManager::saveProfileToWebDAV(const Profile& profile) {
     String json;
     serializeJson(doc, json);
     
-    return httpPostJson("/profiles/" + profile.id, json);
+    // FIX: Server expects /profiles/put/ID
+    return httpPostJson("/profiles/put/" + profile.id, json);
+}
+
+bool ProfileManager::deleteProfile(const String &uuid) {
+    _settings.removeFavoritedProfile(uuid);
+    
+    // FIX: Server expects /profiles/delete/ID
+    bool remoteDeleted = httpDelete("/profiles/delete/" + uuid);
+    
+    // Always try to delete locally
+    bool localDeleted = _fs.remove(profilePath(uuid));
+    
+    if (remoteDeleted && localDeleted) {
+        ESP_LOGI("ProfileManager", "Profile %s deleted from both local and remote", uuid.c_str());
+    } else if (localDeleted) {
+        ESP_LOGW("ProfileManager", "Profile %s deleted locally only", uuid.c_str());
+    } else {
+        ESP_LOGW("ProfileManager", "Failed to delete profile %s locally", uuid.c_str());
+    }
+    
+    return localDeleted;
+}
+
+bool ProfileManager::profileExists(const String &uuid) {
+    // Check remote first - server expects /profiles/get/ID
+    String remoteData = httpGetString("/profiles/get/" + uuid);
+    if (remoteData.length() > 0) {
+        return true;
+    }
+    
+    // Fallback to local
+    return _fs.exists(profilePath(uuid));
 }
