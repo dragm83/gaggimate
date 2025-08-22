@@ -66,6 +66,8 @@ void NimBLEServerController::initServer(const String infoString) {
     tofMeasurementChar = pService->createCharacteristic(TOF_MEASUREMENT_UUID, NIMBLE_PROPERTY::NOTIFY);
     ledControlChar = pService->createCharacteristic(LED_CONTROL_UUID, NIMBLE_PROPERTY::WRITE);
     ledControlChar->setCallbacks(this);
+    simpleLedControlChar = pService->createCharacteristic(SIMPLE_LED_CONTROL_UUID, NIMBLE_PROPERTY::WRITE);
+    simpleLedControlChar->setCallbacks(this);
 
     pService->start();
 

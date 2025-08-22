@@ -38,12 +38,14 @@ void GaggiMateController::setup() {
     this->steamBtn = new DigitalInput(_config.steamButtonPin, [this](const bool state) { _ble.sendSteamBtnState(state); });
 
     // Simple LED Controller
+    
     this->simpleLedController = new SimpleLedController();
 
     if (_config.capabilites.simpleLed) {
         if (this->simpleLedController->isAvailable()) {
             _ble.registerSimpleLedControlCallback(
                 [this](uint8_t r, uint8_t g, uint8_t b, uint8_t w) { simpleLedController->setChannel(r, g, b, w); });
+                ESP_LOGI(LOG_TAG, "Registered Simple LED Controls");
         }
 
     } 
@@ -52,7 +54,7 @@ void GaggiMateController::setup() {
         this->ledController->setup();
     }
 
-
+    /*
     // 5-Pin peripheral port
     Wire.begin(_config.sunriseSdaPin, _config.sunriseSclPin, 400000);
     this->ledController = new LedController(&Wire);
@@ -62,7 +64,7 @@ void GaggiMateController::setup() {
         _config.capabilites.tof = true;
         _ble.registerLedControlCallback(
             [this](uint8_t channel, uint8_t brightness) { ledController->setChannel(channel, brightness); });
-    }
+    }*/
 
     String systemInfo = make_system_info(_config);
     _ble.initServer(systemInfo);
@@ -158,7 +160,7 @@ void GaggiMateController::detectBoard() {
     digitalWrite(DETECT_EN_PIN, HIGH);
     uint16_t millivolts = analogReadMilliVolts(DETECT_VALUE_PIN);
     digitalWrite(DETECT_EN_PIN, LOW);
-    int boardId = round(((float)millivolts) / 100.0f - 0.5f);
+    int boardId = 3;//round(((float)millivolts) / 100.0f - 0.5f);
     ESP_LOGI(LOG_TAG, "Detected Board ID: %d", boardId);
     for (ControllerConfig config : configs) {
         if (config.autodetectValue == boardId) {

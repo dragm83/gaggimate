@@ -197,8 +197,8 @@ void NimBLEClientController::sendLedControl(uint8_t channel, uint8_t brightness)
 
 
 void NimBLEClientController::sendSimpleLedControl(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
-    if (client->isConnected() && ledControlChar != nullptr) {
-        ledControlChar->writeValue(String(r) + "," + String(g) + "," + String(b) + "," + String(w));
+    if (client->isConnected() && simpleLedControlChar != nullptr) {
+        simpleLedControlChar->writeValue(String(r) + "," + String(g) + "," + String(b) + "," + String(w));
     }
 }
 
