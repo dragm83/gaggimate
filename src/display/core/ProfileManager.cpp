@@ -1,7 +1,8 @@
 #include "ProfileManager.h"
 #include <ArduinoJson.h>
-
+#include <display/core/WebDAVUtils.h>
 #include <utility>
+#include <set>
 
 ProfileManager::ProfileManager(fs::FS &fs, String dir, Settings &settings, PluginManager *plugin_manager)
     : _plugin_manager(plugin_manager), _settings(settings), _fs(fs), _dir(std::move(dir)) {}
@@ -92,19 +93,34 @@ void ProfileManager::migrate() {
 
 std::vector<String> ProfileManager::listProfiles() {
     std::vector<String> uuids;
-    File root = _fs.open(_dir);
-    if (!root || !root.isDirectory())
-        return uuids;
+    std::set<String> uniqueUuids; // To avoid duplicates
 
-    File file = root.openNextFile();
-    while (file) {
-        String name = file.name();
-        if (name.endsWith(".json")) {
-            int start = name.lastIndexOf('/') + 1;
-            int end = name.lastIndexOf('.');
-            uuids.push_back(name.substring(start, end));
+    // First, try to get profiles from WebDAV
+    std::vector<String> remoteUuids = listRemoteProfiles();
+    for (const String& uuid : remoteUuids) {
+        if (uniqueUuids.find(uuid.c_str()) == uniqueUuids.end()) {
+            uuids.push_back(uuid);
+            uniqueUuids.insert(uuid.c_str());
         }
-        file = root.openNextFile();
+    }
+
+    // Then add local profiles that aren't already in the list
+    File root = _fs.open(_dir);
+    if (root && root.isDirectory()) {
+        File file = root.openNextFile();
+        while (file) {
+            String name = file.name();
+            if (name.endsWith(".json")) {
+                int start = name.lastIndexOf('/') + 1;
+                int end = name.lastIndexOf('.');
+                String uuid = name.substring(start, end);
+                if (uniqueUuids.find(uuid.c_str()) == uniqueUuids.end()) {
+                    uuids.push_back(uuid);
+                    uniqueUuids.insert(uuid.c_str());
+                }
+            }
+            file = root.openNextFile();
+        }
     }
 
     std::vector<String> ordered;
@@ -124,6 +140,26 @@ std::vector<String> ProfileManager::listProfiles() {
 }
 
 bool ProfileManager::loadProfile(const String &uuid, Profile &outProfile) {
+    // Try remote first
+    if (loadRemoteProfile(uuid, outProfile)) {
+        // Save a local backup if we got it from remote
+        File file = _fs.open(profilePath(uuid), "w");
+        if (file) {
+            JsonDocument doc;
+            JsonObject obj = doc.to<JsonObject>();
+            writeProfile(obj, outProfile);
+            serializeJson(doc, file);
+            file.close();
+        }
+        
+        // Set metadata
+        outProfile.selected = outProfile.id == _settings.getSelectedProfile();
+        std::vector<String> favoritedProfiles = _settings.getFavoritedProfiles();
+        outProfile.favorite = std::find(favoritedProfiles.begin(), favoritedProfiles.end(), outProfile.id) != favoritedProfiles.end();
+        return true;
+    }
+    
+    // Fallback to local
     File file = _fs.open(profilePath(uuid), "r");
     if (!file)
         return false;
@@ -155,6 +191,7 @@ bool ProfileManager::saveProfile(Profile &profile) {
 
     ESP_LOGI("ProfileManager", "Saving profile %s", profile.id.c_str());
 
+    // Save to local SPIFFS first
     File file = _fs.open(profilePath(profile.id), "w");
     if (!file)
         return false;
@@ -163,8 +200,23 @@ bool ProfileManager::saveProfile(Profile &profile) {
     JsonObject obj = doc.to<JsonObject>();
     writeProfile(obj, profile);
 
-    bool ok = serializeJson(doc, file) > 0;
+    bool localSaved = serializeJson(doc, file) > 0;
     file.close();
+    
+    if (!localSaved) {
+        ESP_LOGW("ProfileManager", "Failed to save profile %s locally", profile.id.c_str());
+        return false;
+    }
+
+    // Try to save to WebDAV
+    bool remoteSaved = saveProfileToWebDAV(profile);
+    if (remoteSaved) {
+        ESP_LOGI("ProfileManager", "Profile %s saved to both local and remote", profile.id.c_str());
+    } else {
+        ESP_LOGW("ProfileManager", "Profile %s saved locally only, remote save failed", profile.id.c_str());
+    }
+
+    // Update internal state
     if (profile.id == selectedProfile.id) {
         selectedProfile = Profile{};
         loadSelectedProfile(selectedProfile);
@@ -174,15 +226,39 @@ bool ProfileManager::saveProfile(Profile &profile) {
     if (isNew) {
         _settings.addFavoritedProfile(profile.id);
     }
-    return ok;
+    return true; // Return true if at least local save succeeded
 }
 
 bool ProfileManager::deleteProfile(const String &uuid) {
     _settings.removeFavoritedProfile(uuid);
-    return _fs.remove(profilePath(uuid));
+    
+    // Try to delete from remote
+    bool remoteDeleted = httpDelete("/profiles/" + uuid);
+    
+    // Always try to delete locally
+    bool localDeleted = _fs.remove(profilePath(uuid));
+    
+    if (remoteDeleted && localDeleted) {
+        ESP_LOGI("ProfileManager", "Profile %s deleted from both local and remote", uuid.c_str());
+    } else if (localDeleted) {
+        ESP_LOGW("ProfileManager", "Profile %s deleted locally only", uuid.c_str());
+    } else {
+        ESP_LOGW("ProfileManager", "Failed to delete profile %s locally", uuid.c_str());
+    }
+    
+    return localDeleted; // Return true if at least local deletion succeeded
 }
 
-bool ProfileManager::profileExists(const String &uuid) { return _fs.exists(profilePath(uuid)); }
+bool ProfileManager::profileExists(const String &uuid) {
+    // Check remote first
+    String remoteData = httpGetString("/profiles/" + uuid);
+    if (remoteData.length() > 0) {
+        return true;
+    }
+    
+    // Fallback to local
+    return _fs.exists(profilePath(uuid));
+}
 
 void ProfileManager::selectProfile(const String &uuid) {
     ESP_LOGI("ProfileManager", "Selecting profile %s", uuid.c_str());
@@ -228,4 +304,138 @@ std::vector<String> ProfileManager::getFavoritedProfiles(bool validate) {
         }
     }
     return result;
+}
+
+
+// WebDAV helper methods
+String ProfileManager::baseUrl() const {
+    return _settings.getStoreServer();
+}
+
+String ProfileManager::httpGetString(const String& path) const {
+    return WebDAVUtils::httpGetString(baseUrl(), path);
+}
+
+bool ProfileManager::httpPostJson(const String& path, const String& json) const {
+    return WebDAVUtils::httpPostJson(baseUrl(), path, json);
+}
+
+bool ProfileManager::httpDelete(const String& path) const {
+    return WebDAVUtils::httpDelete(baseUrl(), path);
+}
+
+bool ProfileManager::uploadProfileToWebDAV(const String& uuid) {
+    File f = _fs.open(profilePath(uuid), FILE_READ);
+    if (!f) return false;
+    
+    bool success = WebDAVUtils::httpUploadFile(baseUrl(), "/profiles/" + uuid, f);
+    f.close();
+    return success;
+}
+
+std::vector<String> ProfileManager::listRemoteProfiles() {
+    std::vector<String> uuids;
+    String remoteList = httpGetString("/profiles");
+    
+    if (remoteList.length() > 0) {
+        JsonDocument remoteDoc;
+        if (deserializeJson(remoteDoc, remoteList) == DeserializationError::Ok && remoteDoc.containsKey("profiles")) {
+            JsonArray remoteArr = remoteDoc["profiles"];
+            for (JsonVariant item : remoteArr) {
+                if (item.containsKey("id")) {
+                    uuids.push_back(item["id"].as<String>());
+                }
+            }
+        }
+    }
+    return uuids;
+}
+
+bool ProfileManager::loadRemoteProfile(const String& uuid, Profile& outProfile) {
+    String remoteData = httpGetString("/profiles/" + uuid);
+    if (remoteData.length() == 0) return false;
+    
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, remoteData);
+    if (err) return false;
+    
+    return parseProfile(doc.as<JsonObject>(), outProfile);
+}
+
+bool ProfileManager::saveProfileToWebDAV(const Profile& profile) {
+    JsonDocument doc;
+    JsonObject obj = doc.to<JsonObject>();
+    writeProfile(obj, profile);
+    
+    String json;
+    serializeJson(doc, json);
+    
+    return httpPostJson("/profiles/" + profile.id, json);
+}
+
+
+// WebDAV helper methods
+String ProfileManager::baseUrl() const {
+    return _settings.getStoreServer();
+}
+
+String ProfileManager::httpGetString(const String& path) const {
+    return WebDAVUtils::httpGetString(baseUrl(), path);
+}
+
+bool ProfileManager::httpPostJson(const String& path, const String& json) const {
+    return WebDAVUtils::httpPostJson(baseUrl(), path, json);
+}
+
+bool ProfileManager::httpDelete(const String& path) const {
+    return WebDAVUtils::httpDelete(baseUrl(), path);
+}
+
+bool ProfileManager::uploadProfileToWebDAV(const String& uuid) {
+    File f = _fs.open(profilePath(uuid), FILE_READ);
+    if (!f) return false;
+    
+    bool success = WebDAVUtils::httpUploadFile(baseUrl(), "/profiles/" + uuid, f);
+    f.close();
+    return success;
+}
+
+std::vector<String> ProfileManager::listRemoteProfiles() {
+    std::vector<String> uuids;
+    String remoteList = httpGetString("/profiles");
+    
+    if (remoteList.length() > 0) {
+        JsonDocument remoteDoc;
+        if (deserializeJson(remoteDoc, remoteList) == DeserializationError::Ok && remoteDoc.containsKey("profiles")) {
+            JsonArray remoteArr = remoteDoc["profiles"];
+            for (JsonVariant item : remoteArr) {
+                if (item.containsKey("id")) {
+                    uuids.push_back(item["id"].as<String>());
+                }
+            }
+        }
+    }
+    return uuids;
+}
+
+bool ProfileManager::loadRemoteProfile(const String& uuid, Profile& outProfile) {
+    String remoteData = httpGetString("/profiles/" + uuid);
+    if (remoteData.length() == 0) return false;
+    
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, remoteData);
+    if (err) return false;
+    
+    return parseProfile(doc.as<JsonObject>(), outProfile);
+}
+
+bool ProfileManager::saveProfileToWebDAV(const Profile& profile) {
+    JsonDocument doc;
+    JsonObject obj = doc.to<JsonObject>();
+    writeProfile(obj, profile);
+    
+    String json;
+    serializeJson(doc, json);
+    
+    return httpPostJson("/profiles/" + profile.id, json);
 }

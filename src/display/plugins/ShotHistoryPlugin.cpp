@@ -5,7 +5,7 @@
 #include <display/core/ProfileManager.h>
 #include <display/core/utils.h>
 #include <WiFi.h>
-#include <HTTPClient.h>
+#include <display/core/WebDAVUtils.h>
 
 ShotHistoryPlugin ShotHistory;
 
@@ -199,103 +199,30 @@ void ShotHistoryPlugin::loopTask(void *arg) {
 
 // Webdav helpers
 
-static String normalizeBase(const String& raw) {
-  if (!raw.length()) return "";
-  String b = raw;
-  if (!b.startsWith("http://") && !b.startsWith("https://")) b = "http://" + b;
-  while (b.endsWith("/")) b.remove(b.length()-1);
-  return b;
-}
-
 String ShotHistoryPlugin::baseUrl() const {
-  return normalizeBase(controller->getSettings().getStoreServer());  // SAME as ProfileManager
-}
-
-String ShotHistoryPlugin::urlJoin(const String& path) const {
-  const String b = baseUrl();
-  if (!b.length()) return "";
-  return path.startsWith("/") ? (b + path) : (b + "/" + path);
+    return controller->getSettings().getStoreServer();
 }
 
 String ShotHistoryPlugin::httpGetString(const String& path) const {
-    if (WiFi.status() != WL_CONNECTED) {
-        ESP_LOGW("ShotHistory", "WiFi not connected; skipping GET request");
-        return "";
-    }
-    
-    String url = urlJoin(path);
-    if (!url.length()) return "";           // no remote configured
-    HTTPClient http; WiFiClient client;
-    String out;
-    if (!http.begin(client, url)) return out;
-    int code = http.GET();
-    if (code == 200) out = http.getString();
-    http.end();
-    return out;
+    return WebDAVUtils::httpGetString(baseUrl(), path);
 }
 
 bool ShotHistoryPlugin::httpPostJson(const String& path, const String& json) const {
-    if (WiFi.status() != WL_CONNECTED) {
-        ESP_LOGW("ShotHistory", "WiFi not connected; skipping POST request");
-        return false;
-    }
-    
-    String url = urlJoin(path);
-    if (!url.length()) return false;
-    HTTPClient http; WiFiClient client;
-    if (!http.begin(client, url)) return false;
-    http.addHeader("Content-Type", "application/json");
-    int code = http.POST((uint8_t*)json.c_str(), json.length());
-    http.end();
-    return (code >= 200 && code < 300);
+    return WebDAVUtils::httpPostJson(baseUrl(), path, json);
 }
 
 bool ShotHistoryPlugin::httpDelete(const String& path) const {
-    if (WiFi.status() != WL_CONNECTED) {
-        ESP_LOGW("ShotHistory", "WiFi not connected; skipping DELETE request");
-        return false;
-    }
-    
-    String url = urlJoin(path);
-    if (!url.length()) return false;
-    HTTPClient http; WiFiClient client;
-    if (!http.begin(client, url)) return false;
-    int code = http.sendRequest("DELETE");
-    http.end();
-    return (code >= 200 && code < 300);
+    return WebDAVUtils::httpDelete(baseUrl(), path);
 }
 
 bool ShotHistoryPlugin::uploadShotToNAS(const String& id) {
-    if (WiFi.status() != WL_CONNECTED) {
-        ESP_LOGW("ShotHistory", "WiFi not connected; keeping shot locally");
-        return false;
-    }
-    
-    const String upUrl = urlJoin("/upload");
-    if (!upUrl.length()) {
-        ESP_LOGW("ShotHistory", "No store server set; keeping shot locally");
-        return false;
-    }
-
     const String path = "/h/" + id + ".dat";
     File f = SPIFFS.open(path, FILE_READ);
     if (!f) return false;
-
-    HTTPClient http; WiFiClient client;
-    if (!http.begin(client, upUrl)) { f.close(); return false; }
-    http.addHeader("Content-Type", "text/plain");
-    http.addHeader("X-Shot-Id", id.c_str());
-
-    const size_t len = f.size();
-    int httpCode = http.sendRequest("POST", &f, len);
-
+    
+    bool success = WebDAVUtils::httpUploadFile(baseUrl(), "/upload", f, id);
     f.close();
-    http.end();
-    if (httpCode < 200 || httpCode >= 300) {
-        ESP_LOGW("ShotHistory", "NAS upload failed, HTTP code: %d", httpCode);
-        return false;
-    }
-    return true;
+    return success;
 }
 
 void ShotHistoryPlugin::syncHistoryIndex() {

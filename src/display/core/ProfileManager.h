@@ -31,6 +31,18 @@ class ProfileManager {
     bool ensureDirectory() const;
     String profilePath(const String &uuid) const;
     void migrate();
+
+    // WebDAV helper methods
+    String baseUrl() const;
+    String httpGetString(const String& path) const;
+    bool httpPostJson(const String& path, const String& json) const;
+    bool httpDelete(const String& path) const;
+    bool uploadProfileToWebDAV(const String& uuid);
+    
+    // Enhanced methods with WebDAV support
+    std::vector<String> listRemoteProfiles();
+    bool loadRemoteProfile(const String& uuid, Profile& outProfile);
+    bool saveProfileToWebDAV(const Profile& profile);    
 };
 
 #endif // PROFILEMANAGER_H
