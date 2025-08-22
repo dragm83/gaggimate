@@ -229,36 +229,8 @@ bool ProfileManager::saveProfile(Profile &profile) {
     return true; // Return true if at least local save succeeded
 }
 
-bool ProfileManager::deleteProfile(const String &uuid) {
-    _settings.removeFavoritedProfile(uuid);
-    
-    // Try to delete from remote
-    bool remoteDeleted = httpDelete("/profiles/" + uuid);
-    
-    // Always try to delete locally
-    bool localDeleted = _fs.remove(profilePath(uuid));
-    
-    if (remoteDeleted && localDeleted) {
-        ESP_LOGI("ProfileManager", "Profile %s deleted from both local and remote", uuid.c_str());
-    } else if (localDeleted) {
-        ESP_LOGW("ProfileManager", "Profile %s deleted locally only", uuid.c_str());
-    } else {
-        ESP_LOGW("ProfileManager", "Failed to delete profile %s locally", uuid.c_str());
-    }
-    
-    return localDeleted; // Return true if at least local deletion succeeded
-}
 
-bool ProfileManager::profileExists(const String &uuid) {
-    // Check remote first
-    String remoteData = httpGetString("/profiles/" + uuid);
-    if (remoteData.length() > 0) {
-        return true;
-    }
-    
-    // Fallback to local
-    return _fs.exists(profilePath(uuid));
-}
+
 
 void ProfileManager::selectProfile(const String &uuid) {
     ESP_LOGI("ProfileManager", "Selecting profile %s", uuid.c_str());

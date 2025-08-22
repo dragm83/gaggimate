@@ -130,14 +130,27 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
     response["rid"] = request["rid"].as<String>();
 
     if (type == "req:history:list") {
+        // Get pagination parameters (only used for remote requests)
+        int offset = request.containsKey("offset") ? request["offset"].as<int>() : 0;
+        int limit = request.containsKey("limit") ? request["limit"].as<int>() : 5;
+        
         JsonArray arr = response["history"].to<JsonArray>();
 
-        // Try to get history list from WebDAV server first
-        String remoteList = httpGetString("/list");
+        // Try to get history list from WebDAV server first (with pagination)
+        String remoteList = httpGetString("/list?offset=" + String(offset) + "&limit=" + String(limit));
         if (remoteList.length() > 0) {
+            ESP_LOGI("ShotHistory", "Loading remote history: offset=%d, limit=%d", offset, limit);
+            
             JsonDocument remoteDoc;
             if (deserializeJson(remoteDoc, remoteList) == DeserializationError::Ok && remoteDoc.containsKey("files")) {
                 JsonArray remoteArr = remoteDoc["files"];
+                
+                // Set pagination info from server response
+                response["total"] = remoteDoc.containsKey("total") ? remoteDoc["total"].as<int>() : remoteArr.size();
+                response["offset"] = offset;
+                response["limit"] = limit;
+                response["hasMore"] = remoteDoc.containsKey("hasMore") ? remoteDoc["hasMore"].as<bool>() : false;
+                
                 for (JsonVariant item : remoteArr) {
                     String filename = item.as<String>();
                     if (filename.endsWith(".dat")) {
@@ -165,18 +178,46 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
 
         File root = SPIFFS.open("/h");
         if (root && root.isDirectory()) {
+            std::vector<String> localFiles;
             File file = root.openNextFile();
             while (file) {
                 if (String(file.name()).endsWith(".dat")) {
-                    auto o = arr.add<JsonObject>();
-                    auto name = String(file.name());
-                    int start = name.lastIndexOf('/') + 1;
-                    int end = name.lastIndexOf('.');
-                    o["id"] = name.substring(start, end);
-                    o["history"] = file.readString();
+                    localFiles.push_back(String(file.name()));
                 }
                 file = root.openNextFile();
             }
+            
+            // Sort newest first
+            std::sort(localFiles.begin(), localFiles.end(), [](const String& a, const String& b) {
+                return a > b;
+            });
+            
+            // Load all local files (since there are max 3)
+            for (const String& filename : localFiles) {
+                File file = SPIFFS.open(filename, "r");
+                if (file) {
+                    auto o = arr.add<JsonObject>();
+                    int start = filename.lastIndexOf('/') + 1;
+                    int end = filename.lastIndexOf('.');
+                    String id = filename.substring(start, end);
+                    o["id"] = id;
+                    o["history"] = file.readString();
+                    file.close();
+                    
+                    // Load local notes if they exist
+                    JsonDocument notes;
+                    loadNotes(id, notes);
+                    if (!notes.isNull() && notes.size() > 0) {
+                        o["notes"] = notes;
+                    }
+                }
+            }
+            
+            // Set pagination info for local files
+            response["total"] = localFiles.size();
+            response["offset"] = 0;
+            response["limit"] = localFiles.size();
+            response["hasMore"] = false;
         }
     } else if (type == "req:history:get") {
         auto id = request["id"].as<String>();
