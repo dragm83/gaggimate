@@ -213,7 +213,31 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
         
         SPIFFS.remove("/h/" + id + ".dat");
         response["msg"] = "Ok";
-    }
+    } else if (type == "req:history:notes:get") {
+        String id = request["id"].as<String>();
+        String body = httpGetString("/meta/get/" + id);
+        if (!body.length()) {
+            // Load from local storage if NAS doesn't have it
+            DynamicJsonDocument notes(1024);
+            
+            if (!notes.isNull()) {
+                serializeJson(notes, body);
+            }
+        }
+        response["notes"] = body.length() ? body : "{}";
+    } else if (type == "req:history:notes:save") {
+        const String id = request["id"].as<String>();
+        const JsonDocument& notesDoc = request["notes"];
+        
+        // Save locally first using existing function
+        
+
+        // FIX: Server expects POST to /meta/put/ID
+        String json; 
+        serializeJson(notesDoc, json);
+        bool ok = httpPostJson("/meta/put/" + id, json);
+        response["msg"] = ok ? "Ok" : "Saved local; NAS offline";
+    } 
 }
 
 void ShotHistoryPlugin::loopTask(void *arg) {
