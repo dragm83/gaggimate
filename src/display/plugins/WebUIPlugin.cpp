@@ -435,6 +435,10 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setEmptyTankDistance(request->arg("emptyTankDistance").toInt());
             if (request->hasArg("fullTankDistance"))
                 settings->setFullTankDistance(request->arg("fullTankDistance").toInt());
+            if (request->hasArg("haUser"))
+                settings->setHomeAssistantUser(request->arg("haUser"));
+            if (request->hasArg("storeServer"))
+                settings->setStoreServer(request->arg("storeServer"));
             settings->save(true);
         });
         controller->setTargetTemp(controller->getTargetTemp());
@@ -486,6 +490,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["sunriseExtBrightness"] = settings.getSunriseExtBrightness();
     doc["emptyTankDistance"] = settings.getEmptyTankDistance();
     doc["fullTankDistance"] = settings.getFullTankDistance();
+    doc["storeServer"] = settings.getStoreServer();    
     serializeJson(doc, *response);
     request->send(response);
 
