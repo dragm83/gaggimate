@@ -215,11 +215,11 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
         response["msg"] = "Ok";
     } else if (type == "req:history:notes:get") {
         String id = request["id"].as<String>();
+        JsonDocument notes;
         String body = httpGetString("/meta/get/" + id);
         if (!body.length()) {
             // Load from local storage if NAS doesn't have it
-            DynamicJsonDocument notes(1024);
-            
+            loadNotes(id, notes);
             if (!notes.isNull()) {
                 serializeJson(notes, body);
             }
@@ -230,9 +230,8 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
         const JsonDocument& notesDoc = request["notes"];
         
         // Save locally first using existing function
-        
+        saveNotes(id, notesDoc);
 
-        // FIX: Server expects POST to /meta/put/ID
         String json; 
         serializeJson(notesDoc, json);
         bool ok = httpPostJson("/meta/put/" + id, json);
