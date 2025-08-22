@@ -214,7 +214,7 @@ void ShotHistoryPlugin::handleRequest(JsonDocument &request, JsonDocument &respo
         SPIFFS.remove("/h/" + id + ".dat");
         response["msg"] = "Ok";
     } else if (type == "req:history:notes:get") {
-        String id = request["id"].as<String>();
+        auto id = request["id"].as<String>();
         JsonDocument notes;
         String body = httpGetString("/meta/get/" + id);
         if (!body.length()) {
