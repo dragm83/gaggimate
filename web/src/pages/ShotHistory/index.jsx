@@ -28,6 +28,12 @@ import HistoryCard from './HistoryCard.jsx';
 
 const connected = computed(() => machine.value.connected);
 
+// Helper function to ensure numeric values are valid
+const ensureValidNumber = (value, fallback = 0) => {
+  const num = Number(value);
+  return isNaN(num) || !isFinite(num) ? fallback : num;
+};
+
 export function ShotHistory() {
   const apiService = useContext(ApiServiceContext);
   const [history, setHistory] = useState([]);
@@ -38,8 +44,8 @@ export function ShotHistory() {
   const [offset, setOffset] = useState(0);
   const LIMIT = 5;
 
-  const loadHistory = async (reset = false) => {
-    const currentOffset = reset ? 0 : offset;
+  const loadHistory = useCallback(async (reset = false) => {
+    const currentOffset = reset ? 0 : ensureValidNumber(offset, 0);
     
     if (reset) {
       setLoading(true);
@@ -56,7 +62,9 @@ export function ShotHistory() {
         limit: LIMIT
       });
       
-      const newHistory = response.history
+      // Validate response data
+      const responseHistory = Array.isArray(response.history) ? response.history : [];
+      const newHistory = responseHistory
         .map(parseHistoryData)
         .filter(e => !!e);
       
@@ -66,23 +74,42 @@ export function ShotHistory() {
         setHistory(prev => [...prev, ...newHistory]);
       }
       
-      setTotal(response.total || 0);
-      setHasMore(response.hasMore || false);
+      // Ensure all numeric values are valid
+      const responseTotal = ensureValidNumber(response.total, 0);
+      const responseHasMore = Boolean(response.hasMore);
+      
+      setTotal(responseTotal);
+      setHasMore(responseHasMore);
       setOffset(currentOffset + LIMIT);
+      
+      console.log('History loaded:', {
+        offset: currentOffset,
+        limit: LIMIT,
+        total: responseTotal,
+        hasMore: responseHasMore,
+        historyCount: newHistory.length
+      });
       
     } catch (error) {
       console.error('Failed to load history:', error);
+      // Reset to safe values on error
+      setTotal(0);
+      setHasMore(false);
+      if (reset) {
+        setHistory([]);
+        setOffset(0);
+      }
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [apiService, offset]); // Remove offset from deps to prevent infinite loops
 
   useEffect(() => {
     if (connected.value) {
       loadHistory(true);
     }
-  }, [connected.value]);
+  }, [connected.value]); // Remove loadHistory from deps
 
   const onDelete = useCallback(
     async id => {
@@ -90,20 +117,26 @@ export function ShotHistory() {
       try {
         await apiService.request({ tp: 'req:history:delete', id });
         // Reload from the beginning after deletion
+        setOffset(0); // Reset offset before reloading
         await loadHistory(true);
       } catch (error) {
         console.error('Failed to delete shot:', error);
         setLoadingMore(false);
       }
     },
-    [apiService],
+    [apiService, loadHistory],
   );
 
   const loadMore = useCallback(() => {
-    if (!loadingMore && hasMore) {
+    if (!loadingMore && hasMore && !isNaN(offset)) {
       loadHistory(false);
     }
-  }, [loadingMore, hasMore, loadHistory]);
+  }, [loadingMore, hasMore, offset]); // Don't include loadHistory in deps
+
+  // Add validation for render guards
+  const safeTotal = ensureValidNumber(total, 0);
+  const safeHistoryLength = ensureValidNumber(history.length, 0);
+  const safeOffset = ensureValidNumber(offset, 0);
 
   if (loading) {
     return (
@@ -118,7 +151,7 @@ export function ShotHistory() {
       <div className='mb-4 flex flex-row items-center gap-2'>
         <h2 className='flex-grow text-2xl font-bold sm:text-3xl'>Shot History</h2>
         <div className='text-sm text-gray-500'>
-          Showing {history.length} of {total} shots
+          Showing {safeHistoryLength} of {safeTotal} shots
         </div>
       </div>
 
@@ -133,7 +166,7 @@ export function ShotHistory() {
           </div>
         )}
         
-        {hasMore && (
+        {hasMore && safeTotal > safeHistoryLength && (
           <div className='flex flex-row items-center justify-center py-8 lg:col-span-12'>
             <button
               onClick={loadMore}
@@ -146,7 +179,7 @@ export function ShotHistory() {
                   Loading...
                 </>
               ) : (
-                `Load More (${total - history.length} remaining)`
+                `Load More (${Math.max(0, safeTotal - safeHistoryLength)} remaining)`
               )}
             </button>
           </div>
