@@ -50,9 +50,6 @@ void GaggiMateController::setup() {
 
     } 
 
-    if (_config.capabilites.ledControls) {
-        this->ledController->setup();
-    }
 
     /*
     // 5-Pin peripheral port
@@ -80,9 +77,10 @@ void GaggiMateController::setup() {
         pressureSensor->setup();
         _ble.registerPressureScaleCallback([this](float scale) { this->pressureSensor->setScale(scale); });
     }
+    /*
     if (_config.capabilites.ledControls) {
         this->ledController->setup();
-    }
+    }*/
     if (_config.capabilites.tof) {
         this->distanceSensor->setup();
     }
