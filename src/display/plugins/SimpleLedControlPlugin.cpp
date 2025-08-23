@@ -41,6 +41,10 @@ void SimpleLedControlPlugin::updateControl() {
         sendControl(0, 255, 0, 40, 255);
         return;
     }
+    if (this->controller->isLowWaterLevel()) {
+        sendControl(255, 0, 0, 200, 255);
+        return;
+    }
     sendControl(settings.getSunriseR(), settings.getSunriseG(), settings.getSunriseB(), settings.getSunriseW(),
                 settings.getSunriseExtBrightness());
 }
