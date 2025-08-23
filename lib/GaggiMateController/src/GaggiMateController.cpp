@@ -51,7 +51,6 @@ void GaggiMateController::setup() {
     } 
 
 
-    /*
     // 5-Pin peripheral port
     Wire.begin(_config.sunriseSdaPin, _config.sunriseSclPin, 400000);
     this->ledController = new LedController(&Wire);
@@ -61,7 +60,7 @@ void GaggiMateController::setup() {
         _config.capabilites.tof = true;
         _ble.registerLedControlCallback(
             [this](uint8_t channel, uint8_t brightness) { ledController->setChannel(channel, brightness); });
-    }*/
+    }
 
     String systemInfo = make_system_info(_config);
     _ble.initServer(systemInfo);
@@ -77,10 +76,10 @@ void GaggiMateController::setup() {
         pressureSensor->setup();
         _ble.registerPressureScaleCallback([this](float scale) { this->pressureSensor->setScale(scale); });
     }
-    /*
+    
     if (_config.capabilites.ledControls) {
         this->ledController->setup();
-    }*/
+    }
     if (_config.capabilites.tof) {
         this->distanceSensor->setup();
     }
