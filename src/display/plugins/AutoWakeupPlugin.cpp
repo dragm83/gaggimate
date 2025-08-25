@@ -25,7 +25,7 @@ void AutoWakeupPlugin::setup(Controller *controller, PluginManager *pluginManage
 }
 
 void AutoWakeupPlugin::loop() {
-    if (!settings->isAutoWakeupEnabled() || settings->getAutoWakeupTimes().empty()) {
+    if (!settings->isAutoWakeupEnabled() || settings->getAutoWakeupSchedules().empty()) {
         return;
     }
     
@@ -48,6 +48,7 @@ void AutoWakeupPlugin::checkAutoWakeup() {
     }
     
     String currentTime = getCurrentTimeString();
+    int currentDayOfWeek = getCurrentDayOfWeek(); // 1=Monday, 7=Sunday
     
     // Don't check the same minute twice
     if (lastCheckedTime == currentTime) {
@@ -55,17 +56,17 @@ void AutoWakeupPlugin::checkAutoWakeup() {
     }
     lastCheckedTime = currentTime;
     
-    // Check if current time matches any of the target times
-    for (const String &targetTime : settings->getAutoWakeupTimes()) {
-        if (targetTime == currentTime) {
-            ESP_LOGI(LOG_TAG.c_str(), "Auto-wakeup time reached (%s), switching to brew mode", 
-                     targetTime.c_str());
+    // Check if current time and day matches any of the schedules
+    for (const AutoWakeupSchedule &schedule : settings->getAutoWakeupSchedules()) {
+        if (schedule.time == currentTime && schedule.isDayEnabled(currentDayOfWeek)) {
+            ESP_LOGI(LOG_TAG.c_str(), "Auto-wakeup schedule matched (time: %s, day: %d), switching to brew mode", 
+                     schedule.time.c_str(), currentDayOfWeek);
             
             controller->setMode(MODE_BREW);
             
             // Trigger plugin events
-            pluginManager->trigger("autowakeup:activated", "time", targetTime);
-            pluginManager->trigger("controller:auto-brew:activated", "time", targetTime);
+            pluginManager->trigger("autowakeup:activated", "time", schedule.time);
+            pluginManager->trigger("controller:auto-brew:activated", "time", schedule.time);
             
             return; // Only trigger once per minute
         }
@@ -93,4 +94,19 @@ String AutoWakeupPlugin::getCurrentTimeString() {
     strftime(currentTime, sizeof(currentTime), "%H:%M", &timeinfo);
     
     return String(currentTime);
+}
+
+int AutoWakeupPlugin::getCurrentDayOfWeek() {
+    time_t now;
+    struct tm timeinfo;
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    
+    // Convert tm_wday (0=Sunday, 1=Monday, ..., 6=Saturday) to our format (1=Monday, ..., 7=Sunday)
+    int dayOfWeek = timeinfo.tm_wday;
+    if (dayOfWeek == 0) {
+        return 7; // Sunday
+    } else {
+        return dayOfWeek; // Monday=1, Tuesday=2, ..., Saturday=6
+    }
 }

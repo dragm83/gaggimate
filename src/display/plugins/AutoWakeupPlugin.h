@@ -25,6 +25,7 @@ private:
     void checkAutoWakeup();
     bool isTimeValid();
     String getCurrentTimeString();
+    int getCurrentDayOfWeek();
 };
 
 #endif // AUTO_WAKEUP_PLUGIN_H
