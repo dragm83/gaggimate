@@ -377,11 +377,17 @@ export function Settings() {
                         <button
                           type='button'
                           onClick={() => removeAutoWakeupSchedule(scheduleIndex)}
-                          className='btn btn-ghost btn-sm'
+                          className='btn btn-error btn-sm text-white'
                           disabled={!formData.autowakeupEnabled}
+                          title='Delete this schedule'
                         >
                           <i className='fa fa-trash' />
                         </button>
+                      )}
+                      {autowakeupSchedules.length === 1 && (
+                        <div className='btn btn-ghost btn-sm opacity-30 cursor-not-allowed' title='Cannot delete the last schedule'>
+                          <i className='fa fa-trash' />
+                        </div>
                       )}
                     </div>
                     
@@ -407,7 +413,7 @@ export function Settings() {
                 <button
                   type='button'
                   onClick={addAutoWakeupSchedule}
-                  className='btn btn-ghost btn-sm'
+                  className='btn btn-primary btn-sm'
                   disabled={!formData.autowakeupEnabled}
                 >
                   <i className='fa fa-plus mr-1' />
