@@ -66,7 +66,6 @@ void AutoWakeupPlugin::checkAutoWakeup() {
             
             // Trigger plugin events
             pluginManager->trigger("autowakeup:activated", "time", schedule.time);
-            pluginManager->trigger("controller:auto-brew:activated", "time", schedule.time);
             
             return; // Only trigger once per minute
         }
