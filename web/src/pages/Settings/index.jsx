@@ -340,7 +340,7 @@ export function Settings() {
 
             <div className='divider'>Auto Warmup Schedule</div>
             <div className='mb-2 text-sm opacity-70'>
-              Automatically switch to brew mode at specific time(s) each day. 
+              Automatically switch to brew mode at specific time(s) of day. 
             </div>
 
             <div className='form-control'>
@@ -360,7 +360,7 @@ export function Settings() {
 
             <div className='form-control'>
               <label className='mb-2 block text-sm font-medium'>
-                Auto Warmup Schedules
+                Auto Warmup Schedule
               </label>
               <div className='space-y-4'>
                 {autowakeupSchedules.map((schedule, scheduleIndex) => (
@@ -377,7 +377,7 @@ export function Settings() {
                         <button
                           type='button'
                           onClick={() => removeAutoWakeupSchedule(scheduleIndex)}
-                          className='btn btn-error btn-sm'
+                          className='btn btn-ghost btn-sm'
                           disabled={!formData.autowakeupEnabled}
                           title='Delete this schedule'
                         >
