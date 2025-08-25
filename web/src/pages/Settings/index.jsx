@@ -215,7 +215,7 @@ export function Settings() {
       setFormData(updatedData);
       setSubmitting(false);
     },
-    [setFormData, formRef, formData, autowakeupTimes],
+    [setFormData, formRef, formData, autowakeupSchedules],
   );
 
   const onExport = useCallback(() => {
