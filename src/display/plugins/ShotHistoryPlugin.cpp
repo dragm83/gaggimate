@@ -17,19 +17,14 @@ void ShotHistoryPlugin::setup(Controller *c, PluginManager *pm) {
     pm->on("controller:volumetric-measurement:bluetooth:change", [this](Event const &event) {
         const float weight = event.getFloat("value");
         const unsigned long now = millis();
-        // Explicit check: Only process if weight is a valid number (not NaN or Inf)
-        if (!isnan(weight) && isfinite(weight)) {
-            if (lastVolumeSample != 0) {
-                const unsigned long timeDiff = now - lastVolumeSample;
-                const float volumeDiff = weight - currentBluetoothWeight;
-                currentBluetoothFlow = volumeDiff / static_cast<float>(timeDiff) * 1000.0f;
-            }
-            lastVolumeSample = now;
-            currentBluetoothWeight = weight;
-        } else {
-            // If weight data is invalid, ignore this update
-            // This prevents crashes if BLE data is corrupted or connection is unstable
+        if (lastVolumeSample != 0) {
+            const unsigned long timeDiff = now - lastVolumeSample;
+            const float volumeDiff = weight - currentBluetoothWeight;
+            const float volumeFlow = volumeDiff / static_cast<float>(timeDiff) * 1000.0f;
+            currentBluetoothFlow = currentBluetoothFlow * 0.9f + volumeFlow * 0.1f;
         }
+        lastVolumeSample = now;
+        currentBluetoothWeight = weight;
     });
     pm->on("boiler:currentTemperature:change", [this](Event const &event) { currentTemperature = event.getFloat("value"); });
     xTaskCreatePinnedToCore(loopTask, "ShotHistoryPlugin::loop", configMINIMAL_STACK_SIZE * 3, this, 1, &taskHandle, 0);
