@@ -29,6 +29,7 @@ class GaggiMateController {
   private:
     void detectBoard();
     void detectAddon();
+    void handlePing();
     void handlePingTimeout(void);
     void thermalRunawayShutdown(void);
     void startPidAutotune(void);
@@ -53,6 +54,7 @@ class GaggiMateController {
 
     String _version;
     unsigned long lastPingTime = 0;
+    size_t errorState = ERROR_CODE_NONE;
 
     const char *LOG_TAG = "GaggiMateController";
 };

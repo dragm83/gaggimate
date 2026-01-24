@@ -29,6 +29,7 @@
 #define SCALE_CALIBRATE_UUID "e1b3a4d2-3f0d-4f5c-9b6d-7f8c1e2b3a4e"
 #define SCALE_WEIGHT_MEASUREMENT_UUID "f1b3a4d2-3f0d-4f5c-9b6d-7f8c1e2b3a4e"
 
+constexpr size_t ERROR_CODE_NONE = 0;
 constexpr size_t ERROR_CODE_COMM_SEND = 1;
 constexpr size_t ERROR_CODE_COMM_RCV = 2;
 constexpr size_t ERROR_CODE_PROTO_ERR = 3;
@@ -36,7 +37,7 @@ constexpr size_t ERROR_CODE_RUNAWAY = 4;
 constexpr size_t ERROR_CODE_TIMEOUT = 5;
 
 using pin_control_callback_t = std::function<void(bool isActive)>;
-using pid_control_callback_t = std::function<void(float Kp, float Ki, float Kd)>;
+using pid_control_callback_t = std::function<void(float Kp, float Ki, float Kd, float Kf)>;
 using pump_model_coeffs_callback_t = std::function<void(float a, float b, float c, float d)>;
 using ping_callback_t = std::function<void()>;
 using remote_err_callback_t = std::function<void(int errorCode)>;

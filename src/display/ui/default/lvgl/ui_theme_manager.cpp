@@ -8,11 +8,10 @@
 _ui_local_style_t* _ui_local_styles;
 uint32_t _ui_local_style_count = 0;
 
-
-inline void ui_object_set_local_style_property
-(lv_obj_t* object_p, lv_style_selector_t selector, lv_style_prop_t property, ui_style_variable_t value ) {
-    if ( object_p!=NULL /*&& lv_obj_is_valid(object_p)*/ ) {
-        lv_obj_set_local_style_prop( object_p, property, _ui_style_value_convert( property, value ), selector );
+inline void ui_object_set_local_style_property(lv_obj_t *object_p, lv_style_selector_t selector, lv_style_prop_t property,
+                                               ui_style_variable_t value) {
+    if (object_p != NULL /*&& lv_obj_is_valid(object_p)*/) {
+        lv_obj_set_local_style_prop(object_p, property, _ui_style_value_convert(property, value), selector);
     }
 }
 
@@ -22,11 +21,14 @@ void ui_object_set_themeable_style_property
     static _ui_local_style_t* local_style_p;
     static _ui_local_style_property_setting_t* property_setting_p;
 
-    if (object_p==NULL /*|| !lv_obj_is_valid(object_p)*/ || theme_variable_p==NULL) return;
-    local_style_p = _ui_local_style_create( theme_variable_p, true );
-    if (local_style_p == NULL) return;
-    property_setting_p = _ui_local_style_property_setting_create( local_style_p, object_p, selector, property );
-    if (property_setting_p == NULL) return;
+    if (object_p == NULL /*|| !lv_obj_is_valid(object_p)*/ || theme_variable_p == NULL)
+        return;
+    local_style_p = _ui_local_style_create(theme_variable_p, true);
+    if (local_style_p == NULL)
+        return;
+    property_setting_p = _ui_local_style_property_setting_create(local_style_p, object_p, selector, property);
+    if (property_setting_p == NULL)
+        return;
 
     lv_obj_set_local_style_prop( object_p, property, _ui_style_value_convert( property, ui_get_theme_value(theme_variable_p) ), selector ); //ui_object_set_local_style_property( object_p, selector, property, ui_get_theme_value(theme_variable_p) );
 }
@@ -117,52 +119,56 @@ _ui_local_style_t* _ui_local_style_create (const ui_style_variable_t* style_vari
     return local_style_p;
 }
 
+void _ui_local_style_property_setting_delete(lv_event_t *event) { *(lv_obj_t **)lv_event_get_user_data(event) = NULL; }
 
-void _ui_local_style_property_setting_delete (lv_event_t* event) { * (lv_obj_t**) lv_event_get_user_data( event ) = NULL; }
-
-//auto-update dynamic local style-array's 2nd dimension (object part+state style-property settings for a given style-variable)
-_ui_local_style_property_setting_t* _ui_local_style_property_setting_create
-(_ui_local_style_t* local_style_p, lv_obj_t* object_p, lv_style_selector_t selector, lv_style_prop_t property) {
-    static uint32_t i; //auto-update 
+// auto-update dynamic local style-array's 2nd dimension (object part+state style-property settings for a given style-variable)
+_ui_local_style_property_setting_t *_ui_local_style_property_setting_create(_ui_local_style_t *local_style_p, lv_obj_t *object_p,
+                                                                            lv_style_selector_t selector,
+                                                                            lv_style_prop_t property) {
+    static uint32_t i; // auto-update
     static _ui_local_style_property_setting_t *style_property_setting_p, *empty_style_property_setting_p;
 
     /*#ifdef LV_SQUARELINE_THEME__EXPLICIT_GARBAGE_COLLECTOR_PERIOD
     style_property_setting_p = local_style_p->style_property_settings; //first item of linked list
     if (style_property_setting_p != NULL) { //checking might be unnecessary if count is properly initialized to 0
-        if (local_style_p->garbage_collector_couter > 0) --local_style_p->garbage_collector_couter; //avoid calling garbage collector every time
-        else if (LV_SQUARELINE_THEME__EXPLICIT_GARBAGE_COLLECTOR_PERIOD > 0) {
+        if (local_style_p->garbage_collector_couter > 0) --local_style_p->garbage_collector_couter; //avoid calling garbage
+    collector every time else if (LV_SQUARELINE_THEME__EXPLICIT_GARBAGE_COLLECTOR_PERIOD > 0) {
             local_style_p->garbage_collector_couter = LV_SQUARELINE_THEME__EXPLICIT_GARBAGE_COLLECTOR_PERIOD - 1;
             for (i = 0; i < local_style_p->style_property_setting_count; ++i) {
                 if (style_property_setting_p->object_p != NULL) { //check only valid object entry (skip already emptied positions{
-                    #if ( defined(LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE) && LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE )  //Not recommended inside explicit garbage collector.
-                    if ( style_property_setting_p->validcheck_counter > 0 ) --style_property_setting_p->validcheck_counter; //avoids calling complex lv_obj_is_valid() many times
-                    else { //check objects with expired positive vaidity check
-                        if ( lv_obj_is_valid( style_property_setting_p->object_p ) ) style_property_setting_p->validcheck_counter = LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE;
-                        else style_property_setting_p->object_p = NULL; //free up an entry of a deleted widget
+                    #if ( defined(LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE) && LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE )
+    //Not recommended inside explicit garbage collector. if ( style_property_setting_p->validcheck_counter > 0 )
+    --style_property_setting_p->validcheck_counter; //avoids calling complex lv_obj_is_valid() many times else { //check objects
+    with expired positive vaidity check if ( lv_obj_is_valid( style_property_setting_p->object_p ) )
+    style_property_setting_p->validcheck_counter = LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE; else
+    style_property_setting_p->object_p = NULL; //free up an entry of a deleted widget
                     }
                     #else  //this is the recommended variant inside explicit garbage collector:
-                    if ( !lv_obj_is_valid( style_property_setting_p->object_p ) ) style_property_setting_p->object_p = NULL; //free up an entry of a deleted widget
-                    #endif
+                    if ( !lv_obj_is_valid( style_property_setting_p->object_p ) ) style_property_setting_p->object_p = NULL;
+    //free up an entry of a deleted widget #endif
                 }
-                if (style_property_setting_p->next_p != NULL) style_property_setting_p = (_ui_local_style_property_setting_t*) style_property_setting_p->next_p; //get next item in linked-list for next round
-                else break; //this shouldn't happen
+                if (style_property_setting_p->next_p != NULL) style_property_setting_p = (_ui_local_style_property_setting_t*)
+    style_property_setting_p->next_p; //get next item in linked-list for next round else break; //this shouldn't happen
             }
         }
     }
     #endif*/
-    style_property_setting_p = local_style_p->style_property_settings; //first item of linked list
+    style_property_setting_p = local_style_p->style_property_settings; // first item of linked list
     empty_style_property_setting_p = NULL;
     if (style_property_setting_p != NULL) { //checking might be unnecessary if count is properly initialized to 0
         for (i = 0; i < local_style_p->style_property_setting_count; ++i) {
-            if (empty_style_property_setting_p == NULL) { //search and register one empty position that might be needed for a newly created entry
-                if (style_property_setting_p->object_p == NULL) empty_style_property_setting_p = style_property_setting_p; //if found empty position, register it
+            if (empty_style_property_setting_p ==
+                NULL) { // search and register one empty position that might be needed for a newly created entry
+                if (style_property_setting_p->object_p == NULL)
+                    empty_style_property_setting_p = style_property_setting_p; // if found empty position, register it
                 /*#ifdef LV_SQUARELINE_THEME__IMPLICIT_GARBAGE_COLLECTOR
                 else { //if not, check for possible empty positions of deleted objects (garbage-collection)
-                    #if ( defined(LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE) && LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE )  //for slow hardware, adding this and setting to 5..10 in lv_conf.h might make it faster
-                    if ( style_property_setting_p->validcheck_counter > 0 ) --style_property_setting_p->validcheck_counter; //avoids calling complex lv_obj_is_valid() many times
-                    else { //check objects with expired positive vaidity check
-                        if ( lv_obj_is_valid( style_property_setting_p->object_p ) ) style_property_setting_p->validcheck_counter = LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE;
-                        else { //free up an entry of a deleted widget
+                    #if ( defined(LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE) && LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE )
+                //for slow hardware, adding this and setting to 5..10 in lv_conf.h might make it faster if (
+                style_property_setting_p->validcheck_counter > 0 ) --style_property_setting_p->validcheck_counter; //avoids
+                calling complex lv_obj_is_valid() many times else { //check objects with expired positive vaidity check if (
+                lv_obj_is_valid( style_property_setting_p->object_p ) ) style_property_setting_p->validcheck_counter =
+                LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE; else { //free up an entry of a deleted widget
                             style_property_setting_p->object_p = NULL;
                             empty_style_property_setting_p = style_property_setting_p;
                         }
@@ -198,7 +204,8 @@ _ui_local_style_property_setting_t* _ui_local_style_property_setting_create
     else { //reuse empty
         style_property_setting_p = empty_style_property_setting_p;
     }
-    style_property_setting_p->object_p = object_p; lv_obj_add_event_cb( object_p, _ui_local_style_property_setting_delete, LV_EVENT_DELETE, &style_property_setting_p->object_p );
+    style_property_setting_p->object_p = object_p;
+    lv_obj_add_event_cb(object_p, _ui_local_style_property_setting_delete, LV_EVENT_DELETE, &style_property_setting_p->object_p);
     style_property_setting_p->selector = selector;
     style_property_setting_p->property = property;
     /*#ifdef LV_SQUARELINE_THEME__OBJECT_VALIDITY_CACHE

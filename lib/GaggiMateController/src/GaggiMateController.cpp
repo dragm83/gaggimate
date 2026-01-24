@@ -13,6 +13,7 @@ GaggiMateController::GaggiMateController(String version) : _version(std::move(ve
     configs.push_back(GM_STANDARD_REV_2X);
     configs.push_back(GM_PRO_REV_1x);
     configs.push_back(GM_PRO_LEGO);
+    configs.push_back(GM_PRO_REV_11);
 }
 
 void GaggiMateController::setup() {
@@ -44,9 +45,11 @@ void GaggiMateController::setup() {
                                               [this](float scaleFactor1, float scaleFactor2) { _ble.sendScaleCalibration(scaleFactor1, scaleFactor2); });
     
 
-// 5-Pin peripheral port
+// 4-Pin peripheral port
 
-    Wire.begin(_config.sunriseSdaPin, _config.sunriseSclPin, 400000);
+    if (!Wire.begin(_config.sunriseSdaPin, _config.sunriseSclPin, 400000)) {
+        ESP_LOGE(LOG_TAG, "Failed to initialize I2C bus");
+    }
     
     
     this->ledController = new LedController(&Wire);
@@ -61,6 +64,13 @@ void GaggiMateController::setup() {
     String systemInfo = make_system_info(_config, _version);
     _ble.initServer(systemInfo);
 
+    if (_config.capabilites.ledControls) {
+        this->ledController->setup();
+    }
+    if (_config.capabilites.tof) {
+        this->distanceSensor->setup();
+    }
+
     this->thermocouple->setup();
     this->heater->setup();
     this->valve->setup();
@@ -72,13 +82,17 @@ void GaggiMateController::setup() {
         pressureSensor->setup();
         _ble.registerPressureScaleCallback([this](float scale) { this->pressureSensor->setScale(scale); });
     }
-    if (_config.capabilites.ledControls) {
-        this->ledController->setup();
-    }
-    if (_config.capabilites.tof) {
-        this->distanceSensor->setup();
-    }
+   // Set up thermal feedforward for main heater if pressure/dimming capability exists
+    if (heater && _config.capabilites.dimming && _config.capabilites.pressure) {
+        auto dimmedPump = static_cast<DimmedPump *>(pump);
+        float* pumpFlowPtr = dimmedPump->getPumpFlowPtr();
+        int* valveStatusPtr = dimmedPump->getValveStatusPtr();
+        
+        heater->setThermalFeedforward(pumpFlowPtr, 23.0f, valveStatusPtr);
+        heater->setFeedforwardScale(0.0f);
+        
 
+    } 
     // Initialize last ping time
     lastPingTime = millis();
 
@@ -102,6 +116,10 @@ void GaggiMateController::setup() {
 
 
     _ble.registerOutputControlCallback([this](bool valve, float pumpSetpoint, float heaterSetpoint) {
+        handlePing();
+        if (errorState != ERROR_CODE_NONE) {
+            return;
+        }
         this->pump->setPower(pumpSetpoint);
         this->valve->set(valve);
         this->heater->setSetpoint(heaterSetpoint);
@@ -113,6 +131,10 @@ void GaggiMateController::setup() {
     });
     _ble.registerAdvancedOutputControlCallback(
         [this](bool valve, float heaterSetpoint, bool pressureTarget, float pressure, float flow) {
+            handlePing();
+            if (errorState != ERROR_CODE_NONE) {
+                return;
+            }
             this->valve->set(valve);
             this->heater->setSetpoint(heaterSetpoint);
             if (!_config.capabilites.dimming) {
@@ -127,7 +149,13 @@ void GaggiMateController::setup() {
             dimmedPump->setValveState(valve);
         });
     _ble.registerAltControlCallback([this](bool state) { this->alt->set(state); });
-    _ble.registerPidControlCallback([this](float Kp, float Ki, float Kd) { this->heater->setTunings(Kp, Ki, Kd); });
+    _ble.registerPidControlCallback([this](float Kp, float Ki, float Kd, float Kf) { 
+        this->heater->setTunings(Kp, Ki, Kd); 
+        
+        // Apply thermal feedforward parameters if available
+        this->heater->setFeedforwardScale(Kf);
+
+    });
     _ble.registerPumpModelCoeffsCallback([this](float a, float b, float c, float d) {
         if (_config.capabilites.dimming) {
             auto dimmedPump = static_cast<DimmedPump *>(pump);
@@ -139,10 +167,7 @@ void GaggiMateController::setup() {
             }
         }
     });
-    _ble.registerPingCallback([this]() {
-        lastPingTime = millis();
-        ESP_LOGV(LOG_TAG, "Ping received, system is alive");
-    });
+    _ble.registerPingCallback([this]() { handlePing(); });
     _ble.registerAutotuneCallback([this](int goal, int windowSize) { this->heater->autotune(goal, windowSize); });
     _ble.registerTareCallback([this]() {
         if (!_config.capabilites.dimming) {
@@ -156,7 +181,7 @@ void GaggiMateController::setup() {
 
 void GaggiMateController::loop() {
     unsigned long now = millis();
-    if ((now - lastPingTime) / 1000 > PING_TIMEOUT_SECONDS) {
+    if (lastPingTime < now && (now - lastPingTime) / 1000 > PING_TIMEOUT_SECONDS) {
         handlePingTimeout();
     }
     sendSensorData();
@@ -189,6 +214,14 @@ void GaggiMateController::detectAddon() {
     // TODO: Add I2C scanning for extensions
 }
 
+void GaggiMateController::handlePing() {
+    if (errorState == ERROR_CODE_TIMEOUT) {
+        errorState = ERROR_CODE_NONE;
+    }
+    lastPingTime = millis();
+    ESP_LOGV(LOG_TAG, "Ping received, system is alive");
+}
+
 void GaggiMateController::handlePingTimeout() {
     ESP_LOGE(LOG_TAG, "Ping timeout detected. Turning off heater and pump for safety.\n");
     // Turn off the heater and pump as a safety measure
@@ -196,6 +229,7 @@ void GaggiMateController::handlePingTimeout() {
     this->pump->setPower(0);
     this->valve->set(false);
     this->alt->set(false);
+    errorState = ERROR_CODE_TIMEOUT;
 }
 
 void GaggiMateController::thermalRunawayShutdown() {
@@ -205,6 +239,7 @@ void GaggiMateController::thermalRunawayShutdown() {
     this->pump->setPower(0);
     this->valve->set(false);
     this->alt->set(false);
+    errorState = ERROR_CODE_RUNAWAY;
     _ble.sendError(ERROR_CODE_RUNAWAY);
 }
 

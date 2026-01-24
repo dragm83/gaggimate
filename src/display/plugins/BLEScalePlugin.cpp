@@ -244,6 +244,8 @@ void BLEScalePlugin::onProcessStart() const {
     }
 }
 
+void BLEScalePlugin::tare() const { onProcessStart(); }
+
 void BLEScalePlugin::establishConnection() {
     if (uuid.empty()) {
         ESP_LOGE("BLEScalePlugin", "Cannot establish connection with empty UUID");
