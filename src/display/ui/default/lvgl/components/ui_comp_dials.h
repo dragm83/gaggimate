@@ -22,9 +22,8 @@ extern "C" {
 #define UI_COMP_DIALS_TEMPTEXT 6
 #define UI_COMP_DIALS_TEMPICON 7
 #define UI_COMP_DIALS_IMAGE6 8
-#define UI_COMP_DIALS_WEIGHTTEXT 9
-#define _UI_COMP_DIALS_NUM 10
-lv_obj_t * ui_dials_create(lv_obj_t * comp_parent);
+#define _UI_COMP_DIALS_NUM 9
+lv_obj_t *ui_dials_create(lv_obj_t *comp_parent);
 
 #ifdef __cplusplus
 } /*extern "C"*/

@@ -22,10 +22,10 @@ extern "C" {
 #include "lvgl.h"
 #endif
 
-#include "ui_helpers.h"
 #include "components/ui_comp.h"
 #include "components/ui_comp_hook.h"
 #include "ui_events.h"
+#include "ui_helpers.h"
 #include "ui_theme_manager.h"
 #include "ui_themes.h"
 
@@ -42,7 +42,7 @@ extern "C" {
 ///////////////////// VARIABLES ////////////////////
 
 // EVENTS
-extern lv_obj_t * ui____initial_actions0;
+extern lv_obj_t *ui____initial_actions0;
 
 // IMAGES AND IMAGE SETS
 LV_IMG_DECLARE(ui_img_logo_png);      // assets/logo.png

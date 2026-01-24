@@ -98,10 +98,9 @@ void ui_SimpleProcessScreen_screen_init(void) {
     lv_obj_set_width(ui_SimpleProcessScreen_contentPanel5, 360);
     lv_obj_set_height(ui_SimpleProcessScreen_contentPanel5, 360);
     lv_obj_set_align(ui_SimpleProcessScreen_contentPanel5, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_SimpleProcessScreen_contentPanel5, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_clear_flag(ui_SimpleProcessScreen_contentPanel5, LV_OBJ_FLAG_SCROLLABLE); /// Flags
     lv_obj_set_style_radius(ui_SimpleProcessScreen_contentPanel5, 180, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_SimpleProcessScreen_contentPanel5, lv_color_hex(0x000000),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_SimpleProcessScreen_contentPanel5, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_SimpleProcessScreen_contentPanel5, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     ui_object_set_themeable_style_property(ui_SimpleProcessScreen_contentPanel5, LV_PART_MAIN | LV_STATE_DEFAULT,
                                            LV_STYLE_BORDER_COLOR, _ui_theme_color_NiceWhite);
@@ -110,16 +109,16 @@ void ui_SimpleProcessScreen_screen_init(void) {
     lv_obj_set_style_border_width(ui_SimpleProcessScreen_contentPanel5, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_SimpleProcessScreen_mainLabel5 = lv_label_create(ui_SimpleProcessScreen_contentPanel5);
-    lv_obj_set_width(ui_SimpleProcessScreen_mainLabel5, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_SimpleProcessScreen_mainLabel5, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_width(ui_SimpleProcessScreen_mainLabel5, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_SimpleProcessScreen_mainLabel5, LV_SIZE_CONTENT); /// 1
     lv_obj_set_x(ui_SimpleProcessScreen_mainLabel5, 0);
     lv_obj_set_y(ui_SimpleProcessScreen_mainLabel5, -140);
     lv_obj_set_align(ui_SimpleProcessScreen_mainLabel5, LV_ALIGN_CENTER);
     lv_label_set_text(ui_SimpleProcessScreen_mainLabel5, "Steam");
     ui_object_set_themeable_style_property(ui_SimpleProcessScreen_mainLabel5, LV_PART_MAIN | LV_STATE_DEFAULT,
                                            LV_STYLE_TEXT_COLOR, _ui_theme_color_NiceWhite);
-    ui_object_set_themeable_style_property(ui_SimpleProcessScreen_mainLabel5, LV_PART_MAIN | LV_STATE_DEFAULT,
-                                           LV_STYLE_TEXT_OPA, _ui_theme_alpha_NiceWhite);
+    ui_object_set_themeable_style_property(ui_SimpleProcessScreen_mainLabel5, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_NiceWhite);
     lv_obj_set_style_text_font(ui_SimpleProcessScreen_mainLabel5, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_SimpleProcessScreen_goButton = lv_imgbtn_create(ui_SimpleProcessScreen_contentPanel5);
@@ -129,8 +128,8 @@ void ui_SimpleProcessScreen_screen_init(void) {
     lv_obj_set_x(ui_SimpleProcessScreen_goButton, 0);
     lv_obj_set_y(ui_SimpleProcessScreen_goButton, 130);
     lv_obj_set_align(ui_SimpleProcessScreen_goButton, LV_ALIGN_CENTER);
-    ui_object_set_themeable_style_property(ui_SimpleProcessScreen_goButton, LV_PART_MAIN | LV_STATE_DEFAULT,
-                                           LV_STYLE_IMG_RECOLOR, _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_SimpleProcessScreen_goButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
+                                           _ui_theme_color_NiceWhite);
     ui_object_set_themeable_style_property(ui_SimpleProcessScreen_goButton, LV_PART_MAIN | LV_STATE_DEFAULT,
                                            LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
 
@@ -165,8 +164,8 @@ void ui_SimpleProcessScreen_screen_init(void) {
     lv_label_set_text(ui_SimpleProcessScreen_targetTemp, "145°C");
     ui_object_set_themeable_style_property(ui_SimpleProcessScreen_targetTemp, LV_PART_MAIN | LV_STATE_DEFAULT,
                                            LV_STYLE_TEXT_COLOR, _ui_theme_color_NiceWhite);
-    ui_object_set_themeable_style_property(ui_SimpleProcessScreen_targetTemp, LV_PART_MAIN | LV_STATE_DEFAULT,
-                                           LV_STYLE_TEXT_OPA, _ui_theme_alpha_NiceWhite);
+    ui_object_set_themeable_style_property(ui_SimpleProcessScreen_targetTemp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_NiceWhite);
     lv_obj_set_style_text_align(ui_SimpleProcessScreen_targetTemp, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_SimpleProcessScreen_targetTemp, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -177,55 +176,24 @@ void ui_SimpleProcessScreen_screen_init(void) {
     lv_obj_set_x(ui_SimpleProcessScreen_Image9, 0);
     lv_obj_set_y(ui_SimpleProcessScreen_Image9, -60);
     lv_obj_set_align(ui_SimpleProcessScreen_Image9, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_SimpleProcessScreen_Image9, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
-    lv_obj_clear_flag(ui_SimpleProcessScreen_Image9, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    ui_object_set_themeable_style_property(ui_SimpleProcessScreen_Image9, LV_PART_MAIN | LV_STATE_DEFAULT,
-                                           LV_STYLE_IMG_RECOLOR, _ui_theme_color_NiceWhite);
+    lv_obj_add_flag(ui_SimpleProcessScreen_Image9, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
+    lv_obj_clear_flag(ui_SimpleProcessScreen_Image9, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    ui_object_set_themeable_style_property(ui_SimpleProcessScreen_Image9, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
+                                           _ui_theme_color_NiceWhite);
     ui_object_set_themeable_style_property(ui_SimpleProcessScreen_Image9, LV_PART_MAIN | LV_STATE_DEFAULT,
                                            LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
 
     lv_obj_add_event_cb(ui_SimpleProcessScreen_ImgButton6, ui_event_SimpleProcessScreen_ImgButton6, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_SimpleProcessScreen_goButton, ui_event_SimpleProcessScreen_goButton, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_SimpleProcessScreen_downTempButton, ui_event_SimpleProcessScreen_downTempButton, LV_EVENT_ALL,
-                        NULL);
+    lv_obj_add_event_cb(ui_SimpleProcessScreen_downTempButton, ui_event_SimpleProcessScreen_downTempButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_SimpleProcessScreen_upTempButton, ui_event_SimpleProcessScreen_upTempButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_SimpleProcessScreen, ui_event_SimpleProcessScreen, LV_EVENT_ALL, NULL);
     uic_SimpleProcessScreen_dials_tempGauge = ui_comp_get_child(ui_SimpleProcessScreen_dials, UI_COMP_DIALS_TEMPGAUGE);
     uic_SimpleProcessScreen_dials_tempTarget = ui_comp_get_child(ui_SimpleProcessScreen_dials, UI_COMP_DIALS_TEMPTARGET);
-    uic_SimpleProcessScreen_dials_pressureGauge = ui_comp_get_child(ui_SimpleProcessScreen_dials,
-                                                                    UI_COMP_DIALS_PRESSUREGAUGE);
-    uic_SimpleProcessScreen_dials_pressureTarget = ui_comp_get_child(ui_SimpleProcessScreen_dials,
-                                                                     UI_COMP_DIALS_PRESSURETARGET);
-    uic_SimpleProcessScreen_dials_pressureText = ui_comp_get_child(ui_SimpleProcessScreen_dials,
-                                                                   UI_COMP_DIALS_PRESSURETEXT);
+    uic_SimpleProcessScreen_dials_pressureGauge = ui_comp_get_child(ui_SimpleProcessScreen_dials, UI_COMP_DIALS_PRESSUREGAUGE);
+    uic_SimpleProcessScreen_dials_pressureTarget = ui_comp_get_child(ui_SimpleProcessScreen_dials, UI_COMP_DIALS_PRESSURETARGET);
+    uic_SimpleProcessScreen_dials_pressureText = ui_comp_get_child(ui_SimpleProcessScreen_dials, UI_COMP_DIALS_PRESSURETEXT);
     uic_SimpleProcessScreen_dials_tempText = ui_comp_get_child(ui_SimpleProcessScreen_dials, UI_COMP_DIALS_TEMPTEXT);
-    uic_SimpleProcessScreen_dials_weightText = ui_comp_get_child(ui_SimpleProcessScreen_dials, UI_COMP_DIALS_WEIGHTTEXT);
-
-}
-
-void ui_SimpleProcessScreen_screen_destroy(void)
-{
-    if(ui_SimpleProcessScreen) lv_obj_del(ui_SimpleProcessScreen);
-
-    // NULL screen variables
-    ui_SimpleProcessScreen = NULL;
-    ui_SimpleProcessScreen_dials = NULL;
-    uic_SimpleProcessScreen_dials_tempGauge = NULL;
-    uic_SimpleProcessScreen_dials_tempTarget = NULL;
-    uic_SimpleProcessScreen_dials_pressureGauge = NULL;
-    uic_SimpleProcessScreen_dials_pressureTarget = NULL;
-    uic_SimpleProcessScreen_dials_pressureText = NULL;
-    uic_SimpleProcessScreen_dials_tempText = NULL;
-    uic_SimpleProcessScreen_dials_weightText = NULL;
-    ui_SimpleProcessScreen_ImgButton6 = NULL;
-    ui_SimpleProcessScreen_contentPanel5 = NULL;
-    ui_SimpleProcessScreen_mainLabel5 = NULL;
-    ui_SimpleProcessScreen_goButton = NULL;
-    ui_SimpleProcessScreen_downTempButton = NULL;
-    ui_SimpleProcessScreen_upTempButton = NULL;
-    ui_SimpleProcessScreen_targetTemp = NULL;
-    ui_SimpleProcessScreen_Image9 = NULL;
-
 }
 
 void ui_SimpleProcessScreen_screen_destroy(void) {
