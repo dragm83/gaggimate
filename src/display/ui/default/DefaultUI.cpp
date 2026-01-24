@@ -613,21 +613,21 @@ void DefaultUI::setupReactive() {
     effect_mgr.use_effect([=] { return currentScreen == ui_BrewScreen; },
                           [=]() {
                               if (volumetricAvailable && bluetoothScales) {
-                                  lv_label_set_text_fmt(ui_BrewScreen_weightLabel, "%.1fg", bluetoothWeight);
+                                  lv_label_set_text_fmt(ui_BrewScreen_weightLabel, "%.1fg", currentWeight);
                               } else {
                                   lv_label_set_text(ui_BrewScreen_weightLabel, "-");
                               }
                           },
-                          &bluetoothWeight, &volumetricAvailable, &bluetoothScales);
+                          &currentWeight, &volumetricAvailable, &bluetoothScales);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
                           [=]() {
                               if (volumetricAvailable && bluetoothScales) {
-                                  lv_label_set_text_fmt(ui_GrindScreen_weightLabel, "%.1fg", bluetoothWeight);
+                                  lv_label_set_text_fmt(ui_GrindScreen_weightLabel, "%.1fg", currentWeight);
                               } else {
                                   lv_label_set_text(ui_GrindScreen_weightLabel, "-");
                               }
                           },
-                          &bluetoothWeight, &volumetricAvailable, &bluetoothScales);
+                          &currentWeight, &volumetricAvailable, &bluetoothScales);
     effect_mgr.use_effect(
         [=] { return currentScreen == ui_BrewScreen; },
         [=]() {
