@@ -639,7 +639,6 @@ void Controller::activateGrind() {
         return;
     clear();
     if (settings.isVolumetricTarget() && isVolumetricAvailable()) {
-        currentVolumetricSource = VolumetricMeasurementSource::BLUETOOTH;
         startProcess(new GrindProcess(ProcessTarget::VOLUMETRIC, 0, settings.getTargetGrindVolume(), settings.getGrindDelay()));
     } else {
         startProcess(

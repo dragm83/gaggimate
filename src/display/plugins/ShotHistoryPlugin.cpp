@@ -212,7 +212,7 @@ void ShotHistoryPlugin::record() {
         // Patch header with sampleCount and duration
         header.sampleCount = sampleCount;
         header.durationMs = millis() - shotStart;
-        float finalWeight = currentBluetoothWeight;
+        float finalWeight = currentActiveWeight;
         header.finalWeight = finalWeight > 0.0f ? encodeUnsigned(finalWeight, WEIGHT_SCALE, WEIGHT_MAX_VALUE) : 0;
         currentFile.seek(0, SeekSet);
         currentFile.write(reinterpret_cast<const uint8_t *>(&header), sizeof(header));
@@ -358,7 +358,7 @@ uint16_t ShotHistoryPlugin::getSystemInfo() {
     }
 
     // Bit 2: Bluetooth scale connected
-    if (controller != nullptr && controller->isBluetoothScaleHealthy()) {
+    if (controller != nullptr && BLEScales.isConnected();) {
         systemInfo |= SYSTEM_INFO_BLUETOOTH_SCALE_CONNECTED;
     }
 
