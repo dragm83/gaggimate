@@ -8,6 +8,7 @@
 #include <display/core/process/BrewProcess.h>
 #include <display/core/utils.h>
 #include <display/models/shot_log_format.h>
+#include <display/plugins/BLEScalePlugin.h>
 
 namespace {
 constexpr float TEMP_SCALE = 10.0f;
@@ -268,7 +269,7 @@ void ShotHistoryPlugin::startRecording() {
     currentActiveWeight = 0.0f;
     lastStableWeight = 0.0f;
     currentEstimatedWeight = 0.0f;
-    currentActiveFlow = 0.0f;          // Changed from currentBluetoothFlow
+    currentActiveFlow = 0.0f;
     currentProfileName = controller->getProfileManager()->getSelectedProfile().label;
     recording = true;
     extendedRecording = false;
@@ -358,7 +359,7 @@ uint16_t ShotHistoryPlugin::getSystemInfo() {
     }
 
     // Bit 2: Bluetooth scale connected
-    if (controller != nullptr && BLEScales.isConnected();) {
+    if (BLEScales.isConnected()) {
         systemInfo |= SYSTEM_INFO_BLUETOOTH_SCALE_CONNECTED;
     }
 

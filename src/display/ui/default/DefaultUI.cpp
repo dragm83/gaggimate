@@ -13,6 +13,7 @@
 #include <display/ui/default/lvgl/ui_theme_manager.h>
 #include <display/ui/default/lvgl/ui_themes.h>
 #include <display/ui/utils/effects.h>
+#include <display/plugins/BLEScalePlugin.h>
 
 #include "esp_sntp.h"
 
@@ -233,7 +234,7 @@ void DefaultUI::loop() {
         autotuning = controller->isAutotuning();
         const Settings &settings = controller->getSettings();
         volumetricAvailable = controller->isVolumetricAvailable();
-        bluetoothScales = controller->isBluetoothScaleHealthy();
+        bluetoothScales = BLEScales.isConnected();
         volumetricMode = volumetricAvailable && settings.isVolumetricTarget();
         grindActive = controller->isGrindActive();
         active = controller->isActive();
@@ -415,7 +416,6 @@ void DefaultUI::setupReactive() {
     effect_mgr.use_effect([=] { return currentScreen == ui_BrewScreen; },
                           [=]() {
                               lv_label_set_text_fmt(ui_BrewScreen_targetTemp, "%d°C", targetTemp);
-                              lv_label_set_text_fmt(ui_BrewScreen_brewTargetTemp, "%d°C", targetTemp);
                               adjustTempTarget(ui_BrewScreen_dials);
                           },
                           &targetTemp);
@@ -465,49 +465,6 @@ void DefaultUI::setupReactive() {
                               lv_label_set_text_fmt(uic_ProfileScreen_dials_pressureText, "%.1f bar", pressure);
                           },
                           &pressure);
-
-    effect_mgr.use_effect([=] { return currentScreen == ui_MenuScreen; },
-                          [=]() {
-                              if (volumetricAvailable) {
-                                  lv_label_set_text_fmt(uic_MenuScreen_dials_weightText, "%.1fg", currentWeight);
-                              }
-                          },
-                          &currentWeight, &volumetricAvailable);
-    effect_mgr.use_effect([=] { return currentScreen == ui_StatusScreen; },
-                          [=]() {
-                              if (volumetricAvailable) {
-                                  lv_label_set_text_fmt(uic_StatusScreen_dials_weightText, "%.1fg", currentWeight);
-                              }
-                          },
-                          &currentWeight, &volumetricAvailable);
-    effect_mgr.use_effect([=] { return currentScreen == ui_BrewScreen; },
-                          [=]() {
-                              if (volumetricAvailable) {
-                                  lv_label_set_text_fmt(uic_BrewScreen_dials_weightText, "%.1fg", currentWeight);
-                              }
-                          },
-                          &currentWeight, &volumetricAvailable);
-    effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
-                          [=]() {
-                              if (volumetricAvailable) {
-                                  lv_label_set_text_fmt(uic_GrindScreen_dials_weightText, "%.1fg", currentWeight);
-                              }
-                          },
-                          &currentWeight, &volumetricAvailable);
-    effect_mgr.use_effect([=] { return currentScreen == ui_SimpleProcessScreen; },
-                          [=]() {
-                              if (volumetricAvailable) {
-                                  lv_label_set_text_fmt(uic_SimpleProcessScreen_dials_weightText, "%.1fg", currentWeight);
-                              }
-                          },
-                          &currentWeight, &volumetricAvailable);
-    effect_mgr.use_effect([=] { return currentScreen == ui_ProfileScreen; },
-                          [=]() {
-                              if (volumetricAvailable) {
-                                  lv_label_set_text_fmt(uic_ProfileScreen_dials_weightText, "%.1fg", currentWeight);
-                              }
-                          },
-                          &currentWeight, &volumetricAvailable);
 
     effect_mgr.use_effect([=] { return currentScreen == ui_StandbyScreen; },
                           [=]() {
