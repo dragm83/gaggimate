@@ -76,10 +76,11 @@ void DefaultUI::adjustHeatingIndicator(lv_obj_t *dials) {
 
 DefaultUI::DefaultUI(Controller *controller, Driver *driver, PluginManager *pluginManager)
     : controller(controller), panelDriver(driver), pluginManager(pluginManager) {
-    profileManager = controller->getProfileManager();
+    setupPanel();
 }
 
 void DefaultUI::init() {
+    profileManager = controller->getProfileManager();
     auto triggerRender = [this](Event const &) { rerender = true; };
     pluginManager->on("boiler:currentTemperature:change", [=](Event const &event) {
         int newTemp = static_cast<int>(event.getFloat("value"));
@@ -206,7 +207,6 @@ void DefaultUI::init() {
             rerender = true;
         }
     });
-    setupPanel();
     setupState();
     setupReactive();
     xTaskCreatePinnedToCore(loopTask, "DefaultUI::loop", configMINIMAL_STACK_SIZE * 6, this, 1, &taskHandle, 1);
@@ -312,7 +312,9 @@ void DefaultUI::onProfileSelect() {
 
 void DefaultUI::setupPanel() {
     ui_init();
+    lv_task_handler();
 
+    delay(100);
     // Set initial brightness based on settings
     const Settings &settings = controller->getSettings();
     setBrightness(settings.getMainBrightness());
