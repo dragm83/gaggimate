@@ -234,7 +234,8 @@ void DefaultUI::loop() {
         autotuning = controller->isAutotuning();
         const Settings &settings = controller->getSettings();
         volumetricAvailable = controller->isVolumetricAvailable();
-        bluetoothScales = BLEScales.isConnected();
+        bluetoothScales = controller->isScaleSourceHealthy(VolumetricMeasurementSource::BLUETOOTH);
+        scalesAvailable = bluetoothScales || controller->isScaleSourceHealthy(VolumetricMeasurementSource::HARDWARE);
         volumetricMode = volumetricAvailable && settings.isVolumetricTarget();
         grindActive = controller->isGrindActive();
         active = controller->isActive();
@@ -612,22 +613,22 @@ void DefaultUI::setupReactive() {
                           &grindAvailable);
     effect_mgr.use_effect([=] { return currentScreen == ui_BrewScreen; },
                           [=]() {
-                              if (volumetricAvailable && bluetoothScales) {
+                              if (volumetricAvailable && scalesAvailable) {
                                   lv_label_set_text_fmt(ui_BrewScreen_weightLabel, "%.1fg", currentWeight);
                               } else {
                                   lv_label_set_text(ui_BrewScreen_weightLabel, "-");
                               }
                           },
-                          &currentWeight, &volumetricAvailable, &bluetoothScales);
+                          &currentWeight, &volumetricAvailable, &scalesAvailable);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
                           [=]() {
                               if (volumetricAvailable && bluetoothScales) {
-                                  lv_label_set_text_fmt(ui_GrindScreen_weightLabel, "%.1fg", currentWeight);
+                                  lv_label_set_text_fmt(ui_GrindScreen_weightLabel, "%.1fg", bluetoothWeight);
                               } else {
                                   lv_label_set_text(ui_GrindScreen_weightLabel, "-");
                               }
                           },
-                          &currentWeight, &volumetricAvailable, &bluetoothScales);
+                          &bluetoothWeight, &volumetricAvailable, &bluetoothScales);
     effect_mgr.use_effect(
         [=] { return currentScreen == ui_BrewScreen; },
         [=]() {
@@ -640,10 +641,10 @@ void DefaultUI::setupReactive() {
             _ui_flag_modify(ui_BrewScreen_modeSwitch, LV_OBJ_FLAG_HIDDEN,
                             brewScreenState == BrewScreenState::Brew && volumetricAvailable);
             if (volumetricAvailable) {
-                lv_img_set_src(ui_BrewScreen_volumetricButton, bluetoothScales ? &ui_img_1424216268 : &ui_img_flowmeter_png);
+                lv_img_set_src(ui_BrewScreen_volumetricButton, scalesAvailable ? &ui_img_1424216268 : &ui_img_flowmeter_png);
             }
         },
-        &brewScreenState, &volumetricAvailable, &bluetoothScales);
+        &brewScreenState, &volumetricAvailable, &scalesAvailable);
     effect_mgr.use_effect([=] { return currentScreen == ui_StandbyScreen; },
                           [=]() { lv_img_set_src(ui_StandbyScreen_logo, christmasMode ? &ui_img_1510335 : &ui_img_logo_png); },
                           &christmasMode);
