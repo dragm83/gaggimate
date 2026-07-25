@@ -61,7 +61,7 @@ function OtaProgressView({ phase, progress }) {
 function StorageAndMemorySection({ formData }) {
   return (
     <Section title='Storage & Memory' className='h-full'>
-      <div className='grid grid-cols-1 gap-6 '>
+      <div className='grid grid-cols-1 gap-6'>
         {formData.spiffsTotal !== undefined && (
           <div className='flex flex-col space-y-2'>
             <span className='text-base-content/70 text-sm font-medium'>Storage (LittleFS)</span>
@@ -159,7 +159,7 @@ function MaintenanceSection({
           )}
           {rebuilt && (
             <span className='text-success ml-2'>
-              <FontAwesomeIcon icon={faCheck}></FontAwesomeIcon>
+              <FontAwesomeIcon icon={faCheck} />
             </span>
           )}
         </button>
@@ -284,7 +284,14 @@ export function SystemTab() {
 
   const onUpdate = useCallback(
     component => {
-      apiService.send({ tp: 'req:ota-start', cp: component });
+      const confirmed = window.confirm(
+        `Install the Official GaggiMate ${component} update?\n\n` +
+          'This replaces the Hardware Scales fork on that component. ' +
+          'Update both the display and controller when returning to stock.',
+      );
+      if (confirmed) {
+        apiService.send({ tp: 'req:ota-start', cp: component });
+      }
     },
     [apiService],
   );
@@ -312,21 +319,34 @@ export function SystemTab() {
     <div className='space-y-4 sm:space-y-6 lg:grid lg:grid-cols-2 lg:gap-4'>
       {/* Firmware updates channel */}
       <Section title='System Version & Updates' className='h-full'>
+        <div className='alert alert-info mb-6'>
+          <div>
+            <div className='font-semibold'>
+              Installed distribution: {formData.firmwareFlavor || 'Hardware Scales fork'}
+            </div>
+            <div className='mt-1 text-sm'>
+              The updater below uses {formData.otaSource || 'Official GaggiMate'} firmware.
+              Installing an update replaces this fork on the selected component. Update both the
+              display and controller when returning to stock.
+            </div>
+          </div>
+        </div>
+
         <form ref={formRef} onSubmit={onSubmit} className='space-y-4'>
           <div className='form-control max-w-md'>
             <label htmlFor='channel' className='mb-2 block text-sm font-medium'>
-              Update Channel
+              Official GaggiMate Update Channel
             </label>
-            <div className='flex items-center gap-2 w-full'>
-              <select id='channel' name='channel' className='select select-bordered grow'>
+            <div className='flex w-full flex-col gap-2 sm:flex-row sm:items-center'>
+              <select id='channel' name='channel' className='select select-bordered w-full sm:grow'>
                 <option value='latest' selected={formData.channel === 'latest'}>
-                  Stable
+                  Official GaggiMate — Stable
                 </option>
                 <option value='nightly' selected={formData.channel === 'nightly'}>
-                  Nightly
+                  Official GaggiMate — Nightly
                 </option>
               </select>
-              <button type='submit' className='btn btn-secondary' disabled={submitting}>
+              <button type='submit' className='btn btn-secondary sm:shrink-0' disabled={submitting}>
                 Save Channel & Refresh
               </button>
             </div>
@@ -345,7 +365,7 @@ export function SystemTab() {
             </span>
             <span className='text-base-content flex items-center gap-2 font-semibold'>
               {rssi}dB (Roundtrip: {lat} ms)
-              <span className={`indicator-item status ${getRssiStatusClass(rssi)}`}/>
+              <span className={`indicator-item status ${getRssiStatusClass(rssi)}`} />
             </span>
           </div>
 
@@ -366,7 +386,7 @@ export function SystemTab() {
                 disabled={!formData.controllerUpdateAvailable || submitting}
                 onClick={() => onUpdate('controller')}
               >
-                Update Controller
+                Install Official Controller Update
               </button>
             </div>
           </div>
@@ -388,7 +408,7 @@ export function SystemTab() {
                 disabled={!formData.displayUpdateAvailable || submitting}
                 onClick={() => onUpdate('display')}
               >
-                Update Display
+                Install Official Display Update
               </button>
             </div>
           </div>
@@ -396,7 +416,9 @@ export function SystemTab() {
 
         <div className='alert alert-warning mt-6'>
           <span>
-            Make sure to backup your profiles from the profiles screen before updating the display.
+            Back up your profiles before updating. Official OTA updates are only offered when their
+            version is newer; use the official factory flasher when returning to an equal or older
+            stock version.
           </span>
         </div>
       </Section>

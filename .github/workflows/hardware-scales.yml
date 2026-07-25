@@ -1,0 +1,145 @@
+name: Hardware Scales Builds
+
+on:
+  push:
+    branches:
+      - "features/hw-scales"
+    tags:
+      - "v*-hwscales.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          submodules: "recursive"
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio-hardware-scales
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: pip install --upgrade platformio esptool
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Prepare output
+        run: |
+          mkdir -p out site
+          cp docs/hardware-scales-flasher/index.html site/
+          cp docs/hardware-scales-flasher/display-manifest.json site/
+          cp docs/hardware-scales-flasher/controller-manifest.json site/
+          git describe --tags --dirty \
+            --exclude nightly \
+            --exclude db \
+            --exclude hardware-scales-latest > out/version.txt
+
+      - name: Build web UI
+        run: ./scripts/build_webui.sh
+
+      - name: Build controller
+        run: pio run -e controller
+
+      - name: Build display filesystem
+        run: pio run -e display -t buildfs
+
+      - name: Build display
+        run: pio run -e display
+
+      - name: Generate complete factory images
+        run: |
+          python -m esptool --chip esp32s3 merge-bin \
+            -o out/controller-complete.bin \
+            --flash-mode qio \
+            --flash-freq 80m \
+            --flash-size 8MB \
+            0x0000 .pio/build/controller/bootloader.bin \
+            0x8000 .pio/build/controller/partitions.bin \
+            0xe000 docs/boot_app0.bin \
+            0x10000 .pio/build/controller/firmware.bin
+
+          python -m esptool --chip esp32s3 merge-bin \
+            -o out/display-complete.bin \
+            --flash-mode qio \
+            --flash-freq 80m \
+            --flash-size 16MB \
+            0x0000 .pio/build/display/bootloader.bin \
+            0x8000 .pio/build/display/partitions.bin \
+            0xe000 docs/boot_app0.bin \
+            0x10000 .pio/build/display/firmware.bin \
+            0xc90000 .pio/build/display/littlefs.bin
+
+          cp .pio/build/controller/firmware.bin out/controller-firmware.bin
+          cp .pio/build/display/firmware.bin out/display-firmware.bin
+          cp .pio/build/display/littlefs.bin out/display-filesystem.bin
+          sha256sum out/*.bin > out/SHA256SUMS
+
+          cp out/controller-complete.bin site/
+          cp out/display-complete.bin site/
+          cp out/SHA256SUMS site/
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardware-scales-firmware-${{ github.sha }}
+          path: out/
+          retention-days: 30
+
+      - name: Publish rolling development release
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: andelf/nightly-release@c5ed4bdb7c1da04a4fa1e40bc5e67306f682563b
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: hardware-scales-latest
+          name: "Hardware Scales - Latest Development Build"
+          prerelease: true
+          body: |
+            Automated build of the GaggiMate Hardware Scales fork.
+
+            These files install the Hardware Scales fork, not official GaggiMate firmware.
+            Use display-complete.bin for the display and controller-complete.bin for the controller.
+          files: |
+            out/*
+
+      - name: Publish versioned Hardware Scales release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        uses: ncipollo/release-action@bcfe5470707e8832e12347755757cec0eb3c22af
+        with:
+          artifacts: "out/*"
+          generateReleaseNotes: true
+          allowUpdates: true
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: |
+            This release installs the GaggiMate Hardware Scales fork, not official stock firmware.
+
+      - name: Deploy web flasher to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          destination_dir: hardware-scales
+          publish_branch: gh-pages

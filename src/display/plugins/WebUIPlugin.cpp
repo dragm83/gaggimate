@@ -22,6 +22,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <firmware_brand.h>
 #include <version.h>
 
 // Incoming WebSocket payloads (profile uploads reserve up to 64 KB) are
@@ -986,6 +987,8 @@ void WebUIPlugin::updateOTAStatus(const String &version) {
     doc["displayVersion"] = BUILD_GIT_VERSION;
     doc["controllerVersion"] = controller->getSystemInfo().version;
     doc["hardware"] = controller->getSystemInfo().hardware;
+    doc["firmwareFlavor"] = GM_FIRMWARE_FLAVOR;
+    doc["otaSource"] = GM_OTA_SOURCE;
     doc["latestVersion"] = ota->getCurrentVersion();
     doc["channel"] = settings.getOTAChannel();
     doc["updating"] = updating;

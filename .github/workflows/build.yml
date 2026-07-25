@@ -6,6 +6,9 @@ on:
 name: Build
 jobs:
   build:
+    # Fork release tags have their own workflow and must never be uploaded to
+    # the official stable OTA channel below.
+    if: ${{ !contains(github.ref_name, '-hwscales.') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo

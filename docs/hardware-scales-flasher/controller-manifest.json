@@ -1,0 +1,16 @@
+{
+  "name": "GaggiMate Hardware Scales - Controller",
+  "version": "latest",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "controller-complete.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

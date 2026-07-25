@@ -11,6 +11,35 @@
 
 </p>
 
+> [!IMPORTANT]
+> This branch contains the **GaggiMate Hardware Scales fork**. Its installer and release downloads
+> flash the Hardware Scales fork, not official stock GaggiMate firmware.
+
+## Hardware Scales firmware
+
+- [Install the Hardware Scales fork with the web flasher](https://dragm83.github.io/gaggimate/hardware-scales/)
+- [Download the latest Hardware Scales firmware](https://github.com/dragm83/gaggimate/releases/tag/hardware-scales-latest)
+
+The System & Updates page intentionally continues to use official GaggiMate OTA releases. Installing
+an official OTA update replaces the Hardware Scales fork on the selected component. Update both the
+display and controller when returning to stock. Because OTA only offers newer versions, use the
+[official GaggiMate releases](https://github.com/jniebuhr/gaggimate/releases) for an equal-version or
+downgrade recovery.
+
+### Manual factory flashing
+
+Install [esptool](https://docs.espressif.com/projects/esptool/en/latest/esp32/installation.html), then
+download the appropriate `*-complete.bin` file from the Hardware Scales release:
+
+```sh
+python -m esptool --chip esp32s3 --port PORT erase-flash
+python -m esptool --chip esp32s3 --port PORT write-flash 0x0 display-complete.bin
+```
+
+Replace `PORT` with the serial port and use `controller-complete.bin` for the controller. Connect only
+the component being flashed. A factory installation can erase stored configuration, so back up
+profiles and settings first.
+
 This project upgrades a Gaggia espresso machine with smart controls to improve your coffee-making experience. By adding a display and custom electronics, you can monitor and control the machine more easily.
 
 <img src="docs/assets/gaggimate_poster.jpg" alt="Gaggia Classic Installation" width="500" />

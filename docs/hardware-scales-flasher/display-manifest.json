@@ -1,0 +1,16 @@
+{
+  "name": "GaggiMate Hardware Scales - Display",
+  "version": "latest",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "display-complete.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
