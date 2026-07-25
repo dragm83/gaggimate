@@ -27,8 +27,17 @@ export function Tooltip({ content, children, placement = 'top', disabled = false
   useEffect(() => {
     if (!isVisible || !triggerRef.current || !tooltipRef.current || disabled) return;
 
-    const cleanup = autoUpdate(triggerRef.current, tooltipRef.current, () => {
-      computePosition(triggerRef.current, tooltipRef.current, {
+    // Snapshot both elements for the lifetime of this effect. The refs are
+    // cleared as soon as a profile-list refresh unmounts the trigger/portal,
+    // while Floating UI may still have a queued observer callback. Reading
+    // ref.current inside that callback can therefore pass null to
+    // getComputedStyle().
+    const triggerElement = triggerRef.current;
+    const tooltipElement = tooltipRef.current;
+    let cancelled = false;
+
+    const cleanup = autoUpdate(triggerElement, tooltipElement, () => {
+      computePosition(triggerElement, tooltipElement, {
         placement,
         strategy: 'fixed',
         middleware: [
@@ -37,6 +46,7 @@ export function Tooltip({ content, children, placement = 'top', disabled = false
           shift({ padding: 8 }), // Shift along axis to stay in viewport
         ],
       }).then(({ x, y, placement: finalPlacement }) => {
+        if (cancelled) return;
         setPosition(pos => {
           // Only update if changed to prevent render loops
           if (pos.x === x && pos.y === y) return pos;
@@ -46,7 +56,10 @@ export function Tooltip({ content, children, placement = 'top', disabled = false
       });
     });
 
-    return cleanup;
+    return () => {
+      cancelled = true;
+      cleanup();
+    };
   }, [disabled, isVisible, placement]);
 
   const show = useCallback(() => {
