@@ -67,13 +67,23 @@ jobs:
         run: ./scripts/build_webui.sh
 
       - name: Build controller
-        run: pio run -e controller
+        run: |
+          pio run -e controller
+          cp .pio/build/controller/bootloader.bin out/controller-bootloader.bin
+          cp .pio/build/controller/partitions.bin out/controller-partitions.bin
+          cp .pio/build/controller/firmware.bin out/controller-firmware.bin
 
       - name: Build display filesystem
-        run: pio run -e display -t buildfs
+        run: |
+          pio run -e display -t buildfs
+          cp .pio/build/display/littlefs.bin out/display-filesystem.bin
 
       - name: Build display
-        run: pio run -e display
+        run: |
+          pio run -e display
+          cp .pio/build/display/bootloader.bin out/display-bootloader.bin
+          cp .pio/build/display/partitions.bin out/display-partitions.bin
+          cp .pio/build/display/firmware.bin out/display-firmware.bin
 
       - name: Generate complete factory images
         run: |
@@ -82,25 +92,22 @@ jobs:
             --flash-mode qio \
             --flash-freq 80m \
             --flash-size 8MB \
-            0x0000 .pio/build/controller/bootloader.bin \
-            0x8000 .pio/build/controller/partitions.bin \
+            0x0000 out/controller-bootloader.bin \
+            0x8000 out/controller-partitions.bin \
             0xe000 docs/boot_app0.bin \
-            0x10000 .pio/build/controller/firmware.bin
+            0x10000 out/controller-firmware.bin
 
           python -m esptool --chip esp32s3 merge-bin \
             -o out/display-complete.bin \
             --flash-mode qio \
             --flash-freq 80m \
             --flash-size 16MB \
-            0x0000 .pio/build/display/bootloader.bin \
-            0x8000 .pio/build/display/partitions.bin \
+            0x0000 out/display-bootloader.bin \
+            0x8000 out/display-partitions.bin \
             0xe000 docs/boot_app0.bin \
-            0x10000 .pio/build/display/firmware.bin \
-            0xc90000 .pio/build/display/littlefs.bin
+            0x10000 out/display-firmware.bin \
+            0xc90000 out/display-filesystem.bin
 
-          cp .pio/build/controller/firmware.bin out/controller-firmware.bin
-          cp .pio/build/display/firmware.bin out/display-firmware.bin
-          cp .pio/build/display/littlefs.bin out/display-filesystem.bin
           sha256sum out/*.bin > out/SHA256SUMS
 
           cp out/controller-complete.bin site/
