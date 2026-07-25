@@ -1,5 +1,6 @@
 import subprocess
 import datetime
+import os
 
 Import("env")
 
@@ -18,9 +19,20 @@ def get_firmware_specifier_build_flag():
             "hardware-scales-latest",
         ],
         stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
         text=True,
     )  # Uses release tags, excluding rolling build tags.
     build_version = ret.stdout.strip()
+    if not build_version:
+        sha_result = subprocess.run(
+            ["git", "rev-parse", "--short=8", "HEAD"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        short_sha = sha_result.stdout.strip() or "unknown"
+        run_number = os.environ.get("GITHUB_RUN_NUMBER", "0")
+        build_version = f"v0.0.0-hwscales.{run_number}+g{short_sha}"
     build_flag = "#define BUILD_GIT_VERSION \"" + build_version + "\""
     print ("Build version: " + build_version)
     return build_flag

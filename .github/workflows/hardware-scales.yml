@@ -51,10 +51,17 @@ jobs:
           cp docs/hardware-scales-flasher/index.html site/
           cp docs/hardware-scales-flasher/display-manifest.json site/
           cp docs/hardware-scales-flasher/controller-manifest.json site/
-          git describe --tags --dirty \
-            --exclude nightly \
-            --exclude db \
-            --exclude hardware-scales-latest > out/version.txt
+          version="$(
+            git describe --tags --dirty \
+              --exclude nightly \
+              --exclude db \
+              --exclude hardware-scales-latest 2>/dev/null || true
+          )"
+          if [[ -z "${version}" ]]; then
+            version="v0.0.0-hwscales.${GITHUB_RUN_NUMBER}+g$(git rev-parse --short=8 HEAD)"
+          fi
+          printf '%s\n' "${version}" > out/version.txt
+          echo "Hardware Scales build version: ${version}"
 
       - name: Build web UI
         run: ./scripts/build_webui.sh
