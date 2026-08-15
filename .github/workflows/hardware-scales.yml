@@ -89,9 +89,9 @@ jobs:
         run: |
           python -m esptool --chip esp32s3 merge-bin \
             -o out/controller-complete.bin \
-            --flash-mode qio \
-            --flash-freq 80m \
-            --flash-size 8MB \
+            --flash-mode keep \
+            --flash-freq keep \
+            --flash-size keep \
             0x0000 out/controller-bootloader.bin \
             0x8000 out/controller-partitions.bin \
             0xe000 docs/boot_app0.bin \
@@ -99,14 +99,23 @@ jobs:
 
           python -m esptool --chip esp32s3 merge-bin \
             -o out/display-complete.bin \
-            --flash-mode qio \
-            --flash-freq 80m \
-            --flash-size 16MB \
+            --flash-mode keep \
+            --flash-freq keep \
+            --flash-size keep \
             0x0000 out/display-bootloader.bin \
             0x8000 out/display-partitions.bin \
             0xe000 docs/boot_app0.bin \
             0x10000 out/display-firmware.bin \
             0xc90000 out/display-filesystem.bin
+
+          # A merged factory image must retain the exact PlatformIO-generated
+          # bootloader. Overriding its flash mode here previously changed the
+          # controller from DIO to QIO, causing the ESP32-S3 ROM to reset while
+          # loading the second bootloader segment.
+          cmp -n "$(stat -c '%s' out/controller-bootloader.bin)" \
+            out/controller-bootloader.bin out/controller-complete.bin
+          cmp -n "$(stat -c '%s' out/display-bootloader.bin)" \
+            out/display-bootloader.bin out/display-complete.bin
 
           sha256sum out/*.bin > out/SHA256SUMS
 
