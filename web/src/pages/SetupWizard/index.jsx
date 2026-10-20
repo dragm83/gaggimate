@@ -104,7 +104,7 @@ export function SetupWizard() {
       ...presetPlugins.map(key => [key, pluginForm.initial[key]]),
       ...next.map(key => [key, true]),
     ]);
-    pluginForm.setFormData(formData => ({ ...formData, ...changes }));
+    pluginForm.setFields(changes);
     setPresetPlugins(next);
   };
 
@@ -154,7 +154,7 @@ export function SetupWizard() {
     }
   };
 
-  const skip = async () => {
+  const skip = async (target = '/') => {
     if (!confirm(t`Skip the setup wizard? You can run it later from Settings → System.`)) return;
     try {
       await postSettings({ setupDone: true });
@@ -162,7 +162,7 @@ export function SetupWizard() {
       // Still let the user in; the wizard shows again next time.
     }
     setupNeeded.value = false;
-    location.route('/');
+    location.route(target);
   };
 
   const skipWifi = () => {
@@ -171,6 +171,8 @@ export function SetupWizard() {
   };
 
   const next = async () => {
+    if (current === 'plugins' && (pluginForm.loading || pluginForm.loadError || pluginForm.saving))
+      return;
     if (current === 'plugins') {
       setBusy(true);
       setError(false);
@@ -195,7 +197,12 @@ export function SetupWizard() {
           <Trans>Welcome to GaggiMate</Trans>
         </h1>
         {current !== 'done' && (
-          <button type='button' className='btn btn-ghost btn-sm' onClick={skip}>
+          <button
+            type='button'
+            className='btn btn-ghost btn-sm'
+            disabled={busy || pluginForm.saving}
+            onClick={() => skip()}
+          >
             <Trans>Skip setup</Trans>
           </button>
         )}
@@ -209,7 +216,9 @@ export function SetupWizard() {
       </ul>
       <Card title={stepLabels[current]}>
         {current === 'tests' && <TestStep />}
-        {current === 'machine' && <MachineStep onSaved={applyPresetPlugins} />}
+        {current === 'machine' && (
+          <MachineStep onSaved={applyPresetPlugins} onConfigure={() => skip('/settings/machine')} />
+        )}
         {current === 'plugins' && <PluginsStep form={pluginForm} />}
         {current === 'wifi' && <WifiStep wifi={wifi} onChange={setWifi} />}
         {current === 'done' && (
@@ -224,7 +233,7 @@ export function SetupWizard() {
           <button
             type='button'
             className='btn btn-ghost'
-            disabled={step === 0 || busy}
+            disabled={step === 0 || busy || pluginForm.saving}
             onClick={() => setStep(step - 1)}
           >
             <Trans>Back</Trans>
@@ -238,7 +247,12 @@ export function SetupWizard() {
             <button
               type='button'
               className='btn btn-primary'
-              disabled={busy || (current === 'wifi' && !isWifiChoiceValid(wifi))}
+              disabled={
+                busy ||
+                pluginForm.saving ||
+                (current === 'plugins' && (pluginForm.loading || !!pluginForm.loadError)) ||
+                (current === 'wifi' && !isWifiChoiceValid(wifi))
+              }
               onClick={next}
             >
               {busy && <Spinner size={4} />}

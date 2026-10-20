@@ -1,3 +1,4 @@
+import { requestSettings } from '../../utils/settingsRequest.js';
 import { signal } from '@preact/signals';
 import {
   invalidateSettingsCache,
@@ -26,13 +27,11 @@ export async function postSettings(fields) {
     if (value === undefined || value === null) continue;
     body.set(key, typeof value === 'boolean' ? (value ? '1' : '0') : String(value));
   }
-  const response = await fetch('/api/settings', {
+  const data = await requestSettings({
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
   });
-  if (!response.ok) throw new Error(`POST /api/settings ${response.status}`);
-  const data = await response.json();
   updateSettingsCache(data);
   return data;
 }
