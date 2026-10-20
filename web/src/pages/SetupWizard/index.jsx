@@ -89,7 +89,17 @@ export function SetupWizard() {
   const { t } = useLingui();
   const location = useLocation();
   const pluginForm = usePluginForm();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(() => {
+    const order = ['machine', 'tests', 'plugins', 'wifi', 'done'];
+    const saved = getCachedSettings();
+    return saved?.machineHardwareReady === false ? 0 : Math.max(0, order.indexOf(saved?.setupStep));
+  });
+  const [machineSaved, setMachineSaved] = useState(
+    () =>
+      !!getCachedSettings()?.setupStep &&
+      getCachedSettings()?.setupStep !== 'machine' &&
+      getCachedSettings()?.machineHardwareReady !== false,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   const [offerWifi] = useState(() => getCachedSettings()?.apMode === true);
@@ -99,6 +109,7 @@ export function SetupWizard() {
   // Plugins switched on by the last applied preset; another preset (or a custom machine) resets them first
   const [presetPlugins, setPresetPlugins] = useState([]);
   const applyPresetPlugins = preset => {
+    setMachineSaved(true);
     const next = preset?.plugins || [];
     const changes = Object.fromEntries([
       ...presetPlugins.map(key => [key, pluginForm.initial[key]]),
@@ -108,7 +119,7 @@ export function SetupWizard() {
     setPresetPlugins(next);
   };
 
-  const stepIds = ['tests', 'machine', 'plugins', ...(offerWifi ? ['wifi'] : []), 'done'];
+  const stepIds = ['machine', 'tests', 'plugins', ...(offerWifi ? ['wifi'] : []), 'done'];
   const stepLabels = {
     tests: t`Testing`,
     machine: t`Machine`,
@@ -116,7 +127,7 @@ export function SetupWizard() {
     wifi: t`Wi-Fi`,
     done: t`Done`,
   };
-  const current = stepIds[step];
+  const current = stepIds[Math.min(step, stepIds.length - 1)];
 
   const savePlugins = async () => {
     const fields = Object.fromEntries(PLUGIN_KEYS.map(key => [key, pluginForm.formData[key]]));
@@ -185,6 +196,12 @@ export function SetupWizard() {
       }
       setBusy(false);
     }
+    try {
+      await postSettings({ setupStep: stepIds[step + 1] });
+    } catch {
+      setError(true);
+      return;
+    }
     setStep(step + 1);
   };
 
@@ -217,7 +234,11 @@ export function SetupWizard() {
       <Card title={stepLabels[current]}>
         {current === 'tests' && <TestStep />}
         {current === 'machine' && (
-          <MachineStep onSaved={applyPresetPlugins} onConfigure={() => skip('/settings/machine')} />
+          <MachineStep
+            onSaved={applyPresetPlugins}
+            onDirty={() => setMachineSaved(false)}
+            onConfigure={() => skip('/settings/machine')}
+          />
         )}
         {current === 'plugins' && <PluginsStep form={pluginForm} />}
         {current === 'wifi' && <WifiStep wifi={wifi} onChange={setWifi} />}
@@ -251,6 +272,7 @@ export function SetupWizard() {
                 busy ||
                 pluginForm.saving ||
                 (current === 'plugins' && (pluginForm.loading || !!pluginForm.loadError)) ||
+                (current === 'machine' && !machineSaved) ||
                 (current === 'wifi' && !isWifiChoiceValid(wifi))
               }
               onClick={next}

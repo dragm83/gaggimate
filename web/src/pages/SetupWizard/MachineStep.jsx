@@ -9,6 +9,7 @@ import {
   profileToForm,
   profileProblems,
   confirmProfileApply,
+  waitForMachineHardware,
 } from '../../utils/machineProfiles.js';
 import { useEffect, useState } from 'preact/hooks';
 import { Trans, useLingui } from '@lingui/react/macro';
@@ -19,7 +20,7 @@ import { splitPidString } from '../Settings/settingsForm.js';
 import { InfoNote } from './InfoNote.jsx';
 import { postSettings } from './setupState.js';
 
-export function MachineStep({ onSaved, onConfigure }) {
+export function MachineStep({ onSaved, onDirty, onConfigure }) {
   const { t } = useLingui();
   const [formData, setFormData] = useState(() => {
     const settings = getCachedSettings() || {};
@@ -59,6 +60,7 @@ export function MachineStep({ onSaved, onConfigure }) {
   const setFields = values => {
     setFormData(previous => ({ ...previous, ...values }));
     setApplied(false);
+    onDirty?.();
   };
   const caps = formData.machineProfileCapabilities || {};
   const detectedCapabilities = [
@@ -95,6 +97,7 @@ export function MachineStep({ onSaved, onConfigure }) {
         machineProfileSelection: appliedData.machineProfileSelection || '',
       });
       setFormData(appliedData);
+      updateSettingsCache(await waitForMachineHardware());
       setApplied(true);
       onSaved?.(profile);
     } catch (err) {
@@ -147,7 +150,12 @@ export function MachineStep({ onSaved, onConfigure }) {
           disabled={loading || saving || !profile || problems.length > 0}
           onClick={apply}
         >
-          {saving && <Spinner size={4} />}
+          {saving && (
+            <>
+              <Spinner size={4} />
+              <Trans>Applying and waiting for controller…</Trans>
+            </>
+          )}
           {!saving && <Trans>Apply Preset</Trans>}
         </button>
       </div>

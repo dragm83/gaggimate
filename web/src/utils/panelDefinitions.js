@@ -2,6 +2,7 @@ import { ModeCard } from '../pages/Home/cards/ModeCard.jsx';
 import { ProfileCard } from '../pages/Home/cards/ProfileCard.jsx';
 import { FavoriteProfilesCard } from '../pages/Home/cards/FavoriteProfilesCard.jsx';
 import { MetricsPanelWrapper } from '../pages/Home/cards/MetricsPanelWrapper.jsx';
+import { MachineLevelsCard } from '../pages/Home/cards/MachineLevelsCard.jsx';
 import { WaterLevelCard } from '../pages/Home/cards/WaterLevelCard.jsx';
 import { ActionCard } from '../pages/Home/cards/ActionCard.jsx';
 import { msg } from '@lingui/core/macro';
@@ -89,6 +90,21 @@ export const PANEL_DEFINITIONS = [
     available: () => true,
     component: MetricsPanelWrapper,
     props: ds => ({ ds }),
+  },
+  {
+    id: 'machinelevels',
+    label: 'Water Levels',
+    required: false,
+    available: ds => !!ds.hasTankLevel || !!ds.hasSteamLevel,
+    component: MachineLevelsCard,
+    props: ds => ({
+      hasTankLevel: ds.hasTankLevel,
+      tankLevelKnown: ds.tankLevelKnown,
+      tankLevelOK: ds.tankLevelOK,
+      hasSteamLevel: ds.hasSteamLevel,
+      steamLevelKnown: ds.steamLevelKnown,
+      steamBoilerLow: ds.steamBoilerLow,
+    }),
   },
   {
     id: 'watertank',

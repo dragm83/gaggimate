@@ -188,6 +188,10 @@ void GaggiMateServer::registerHandlers() {
         if (_autotuneCb)
             _autotuneCb(p.content.autotune.test_time, p.content.autotune.samples, p.content.autotune.heater_wattage);
     });
+    _endpoint.on(gaggimate_Payload_machine_hardware_tag, [this](const gm::Payload &p) {
+        if (_machineHardwareCb)
+            _machineHardwareCb(p.content.machine_hardware);
+    });
     _endpoint.on(gaggimate_Payload_pressure_scale_tag, [this](const gm::Payload &p) {
         if (_pressureScaleCb)
             _pressureScaleCb(p.content.pressure_scale.scale);
@@ -210,4 +214,13 @@ void GaggiMateServer::registerHandlers() {
             _ledCb(static_cast<uint8_t>(p.content.led.channels[i].channel),
                    static_cast<uint8_t>(p.content.led.channels[i].brightness));
     });
+}
+
+void GaggiMateServer::sendMachineHardwareStatus(uint32_t hash, bool ready, bool error) {
+    gm::Payload p = gaggimate_Payload_init_zero;
+    p.which_content = gaggimate_Payload_machine_hardware_status_tag;
+    p.content.machine_hardware_status.hash = hash;
+    p.content.machine_hardware_status.ready = ready;
+    p.content.machine_hardware_status.error = error;
+    _endpoint.send(p);
 }

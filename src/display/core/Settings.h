@@ -3,8 +3,10 @@
 #define SETTINGS_H
 
 #include <Arduino.h>
+#include <MachineHardwareSettings.h>
 #include <Preferences.h>
 #include <atomic>
+#include <cmath>
 #include <esp_err.h>
 #include <display/core/Property.h>
 #include <display/core/constants.h>
@@ -89,6 +91,70 @@ class Settings {
     bool save(bool noDelay = false);
     String getSaveError() const;
 
+    // Controller hardware settings (applied at controller startup).
+    gm::MachineHardwareSettings getMachineHardware() const;
+    float getNtcBrewNominalResistance() const { return ntcBrewNominalResistance.get(); }
+    float getNtcBrewSeriesResistance() const { return ntcBrewSeriesResistance.get(); }
+    float getNtcBrewSupplyVoltage() const { return ntcBrewSupplyVoltage.get(); }
+    float getNtcBrewBeta() const { return ntcBrewBeta.get(); }
+    float getNtcSteamNominalResistance() const { return ntcSteamNominalResistance.get(); }
+    float getNtcSteamSeriesResistance() const { return ntcSteamSeriesResistance.get(); }
+    float getNtcSteamSupplyVoltage() const { return ntcSteamSupplyVoltage.get(); }
+    float getNtcSteamBeta() const { return ntcSteamBeta.get(); }
+    bool getTankLevelEnabled() const { return tankLevelEnabled.get(); }
+    bool getSteamLevelEnabled() const { return steamLevelEnabled.get(); }
+    bool getSystemLedEnabled() const { return systemLedEnabled.get(); }
+    int getSteamRefillMode() const { return steamRefillMode.get(); }
+    int getSteamRefillPostClearSeconds() const { return steamRefillPostClearSeconds.get(); }
+    int getSteamLevelDebounceChecks() const { return steamLevelDebounceChecks.get(); }
+    void setNtcBrewNominalResistance(float value) {
+        if (std::isfinite(value) && value >= 100 && value <= 1000000)
+            ntcBrewNominalResistance.set(value);
+    }
+    void setNtcBrewSeriesResistance(float value) {
+        if (std::isfinite(value) && value >= 100 && value <= 1000000)
+            ntcBrewSeriesResistance.set(value);
+    }
+    void setNtcBrewSupplyVoltage(float value) {
+        if (std::isfinite(value) && value >= 0.5 && value <= 5.5)
+            ntcBrewSupplyVoltage.set(value);
+    }
+    void setNtcBrewBeta(float value) {
+        if (std::isfinite(value) && value >= 1000 && value <= 10000)
+            ntcBrewBeta.set(value);
+    }
+    void setNtcSteamNominalResistance(float value) {
+        if (std::isfinite(value) && value >= 100 && value <= 1000000)
+            ntcSteamNominalResistance.set(value);
+    }
+    void setNtcSteamSeriesResistance(float value) {
+        if (std::isfinite(value) && value >= 100 && value <= 1000000)
+            ntcSteamSeriesResistance.set(value);
+    }
+    void setNtcSteamSupplyVoltage(float value) {
+        if (std::isfinite(value) && value >= 0.5 && value <= 5.5)
+            ntcSteamSupplyVoltage.set(value);
+    }
+    void setNtcSteamBeta(float value) {
+        if (std::isfinite(value) && value >= 1000 && value <= 10000)
+            ntcSteamBeta.set(value);
+    }
+    void setTankLevelEnabled(bool value) { tankLevelEnabled.set(value); }
+    void setSteamLevelEnabled(bool value) { steamLevelEnabled.set(value); }
+    void setSystemLedEnabled(bool value) { systemLedEnabled.set(value); }
+    void setSteamRefillMode(int value) {
+        if (value >= 0 && value <= 2)
+            steamRefillMode.set(value);
+    }
+    void setSteamRefillPostClearSeconds(int value) {
+        if (value >= 0 && value <= 120)
+            steamRefillPostClearSeconds.set(value);
+    }
+    void setSteamLevelDebounceChecks(int value) {
+        if (value >= 1 && value <= 100)
+            steamLevelDebounceChecks.set(value);
+    }
+
     // Getters and setters
     int getTargetSteamTemp() const { return targetSteamTemp.get(); }
     int getTargetWaterTemp() const { return targetWaterTemp.get(); }
@@ -124,10 +190,19 @@ class Settings {
     String getOTAChannel() const { return otaChannel.get(); }
     String getSavedScale() const { return savedScale.get(); }
     String getSavedScaleName() const { return savedScaleName.get(); }
+    bool isIndependentSteamControl() const { return independentSteamControl.get(); }
+    void setIndependentSteamControl(bool value) { independentSteamControl.set(value); }
+    bool isSteamStateRemembered() const { return rememberSteamState.get(); }
+    bool getPersistentSteamState() const { return persistentSteamState.get(); }
+    void setSteamStateRemembered(bool enabled);
+    void setPersistentSteamState(bool enabled);
+
     bool isBoilerFillActive() const { return boilerFillActive.get(); }
     int getStartupFillTime() const { return startupFillTime.get(); }
     int getSteamFillTime() const { return steamFillTime.get(); }
     bool isSmartGrindActive() const { return smartGrindActive.get(); }
+    String getSetupStep() const { return setupStep.get(); }
+    void setSetupStep(const String &value) { setupStep.set(value); }
     bool isSetupDone() const { return setupDone.get(); }
     bool isMahlkonigActive() const { return mahlkonigActive.get(); }
     String getMahlkonigRecipeProfiles() const { return mahlkonigRecipeProfiles.get(); }
@@ -320,6 +395,21 @@ class Settings {
     Preferences preferences;
     PropertyRegistry registry; // must precede the properties, they register themselves here
 
+    Property<float> ntcBrewNominalResistance{registry, "nbr0", 50000.0f};
+    Property<float> ntcBrewSeriesResistance{registry, "nbrs", 10000.0f};
+    Property<float> ntcBrewSupplyVoltage{registry, "nbvs", 4.096f};
+    Property<float> ntcBrewBeta{registry, "nbbt", 3988.0f};
+    Property<float> ntcSteamNominalResistance{registry, "nsr0", 50000.0f};
+    Property<float> ntcSteamSeriesResistance{registry, "nsrs", 10000.0f};
+    Property<float> ntcSteamSupplyVoltage{registry, "nsvs", 4.096f};
+    Property<float> ntcSteamBeta{registry, "nsbt", 3988.0f};
+    Property<bool> tankLevelEnabled{registry, "tl_en", false};
+    Property<bool> steamLevelEnabled{registry, "sl_en", true};
+    Property<bool> systemLedEnabled{registry, "led_sys", true};
+    Property<int> steamRefillMode{registry, "rf_mode", 1};
+    Property<int> steamRefillPostClearSeconds{registry, "rf_post", 0};
+    Property<int> steamLevelDebounceChecks{registry, "sl_db", 25};
+
     Property<String> selectedProfile{registry, "sp", ""};
     Property<String> startupProfile{registry, "sup", ""}; // Empty = last used profile, otherwise profile ID
     Property<int> targetSteamTemp{registry, "ts", 145};
@@ -374,6 +464,9 @@ class Settings {
     Property<String> otaChannel{registry, "oc", DEFAULT_OTA_CHANNEL};
     Property<std::vector<String>> favoritedProfiles{registry, "fp", {}};
     Property<std::vector<String>> profileOrder{registry, "po", {}}; // persisted profile ordering
+    Property<bool> independentSteamControl{registry, "steam_ind", false};
+    Property<bool> rememberSteamState{registry, "rss", false};
+    Property<bool> persistentSteamState{registry, "sst", false};
     Property<float> steamPumpPercentage{registry, "spp", DEFAULT_STEAM_PUMP_PERCENTAGE};
     Property<float> steamPumpCutoff{registry, "spc", DEFAULT_STEAM_PUMP_CUTOFF};
     Property<int> historyIndex{registry, "hi", 0};
@@ -381,6 +474,7 @@ class Settings {
     Property<bool> heaterCoordinationEnabled{registry, "hco", true};
     Property<int> heaterHandoverMs{registry, "hcg", DEFAULT_HEATER_HANDOVER_MS};
 
+    Property<String> setupStep{registry, "setup_step", "machine"};
     Property<String, MachineProfileSelectionCodec> machineProfileSelection{registry, "mc_profile", ""};
 
     // Display settings

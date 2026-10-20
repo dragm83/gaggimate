@@ -1,7 +1,9 @@
 #include "GaggiMateController.h"
+#include "MachineHardwareSettings.h"
 #include "utilities.h"
 #include <Arduino.h>
 #include <ExtensionIOXL9555.hpp>
+#include <Preferences.h>
 #include <peripherals/DimmedPump.h>
 #include <peripherals/SimplePump.h>
 
@@ -36,7 +38,10 @@ bool GaggiMateController::isSteamSwitchOn() const {
 
 void GaggiMateController::setup() {
     delay(5000);
+    hardwareRequests = xQueueCreate(1, sizeof(gm::MachineHardwareSettings));
+    configASSERT(hardwareRequests);
     detectBoard();
+    loadMachineHardware();
     detectAddon();
 
     if (!_config.capabilites.dualBoiler) {
@@ -49,9 +54,21 @@ void GaggiMateController::setup() {
         pressureSensor = new PressureSensor(this->adc, _config.pressureControlRate);
         if (_config.capabilites.dualBoiler) {
             this->brewTemperature = new NtcThermistor(
-                this->adc, 2, [this]() { thermalRunawayShutdown(); }, 50000.0f, 10000.0f, 4.096f, 3988.0f, _config.ntcTiming[2]);
+                this->adc, 2,
+                [this]() {
+                    if (hardwareSessionReady)
+                        thermalRunawayShutdown();
+                },
+                machineHardware.ntc_brew_nominal_resistance, machineHardware.ntc_brew_series_resistance,
+                machineHardware.ntc_brew_supply_voltage, machineHardware.ntc_brew_beta, _config.ntcTiming[2]);
             this->steamTemperature = new NtcThermistor(
-                this->adc, 3, [this]() { thermalRunawayShutdown(); }, 50000.0f, 10000.0f, 4.096f, 3988.0f, _config.ntcTiming[3]);
+                this->adc, 3,
+                [this]() {
+                    if (hardwareSessionReady)
+                        thermalRunawayShutdown();
+                },
+                machineHardware.ntc_steam_nominal_resistance, machineHardware.ntc_steam_series_resistance,
+                machineHardware.ntc_steam_supply_voltage, machineHardware.ntc_steam_beta, _config.ntcTiming[3]);
         }
     }
     heater = new Heater(
@@ -66,8 +83,25 @@ void GaggiMateController::setup() {
         heaterCoordinator = new HeaterCoordinator(heater, heater2);
         refill = new SimpleRelay(_config.refillPin, _config.valveOn);
         aux = new SimpleRelay(_config.auxPin, _config.valveOn);
-        waterSense = new DigitalInput(_config.waterSensePin, [this](const bool state) { _comms.sendButtonState(3, state); }, 25);
-        lights = new SimpleRelay(_config.ledPin, HIGH);
+        if (machineHardware.steam_level_enabled && _config.waterSensePin != 0)
+            waterSense = new DigitalInput(
+                _config.waterSensePin,
+                [this](const bool state) {
+                    steamLevelLow = state;
+                    steamLevelKnown = true;
+                    if (_config.dualBoilerWaterHandling && machineHardware.steam_level_enabled && state && heater2)
+                        heater2->setSetpoint(0);
+                    _comms.sendButtonState(3, state);
+                },
+                machineHardware.steam_level_debounce_checks, 1);
+        if (_config.dualBoilerWaterHandling) {
+            if (machineHardware.tank_level_enabled && _config.tankLevelPin != 0)
+                tankLevel = new DigitalInput(_config.tankLevelPin, [this](bool full) {
+                    tankLevelOK = full;
+                });
+        }
+        if (machineHardware.system_led_enabled && _config.ledPin != 0)
+            lights = new SimpleRelay(_config.ledPin, HIGH);
     } else {
         alt = new SimpleRelay(_config.altPin, _config.altOn);
     }
@@ -108,13 +142,19 @@ void GaggiMateController::setup() {
             _comms.onLedControl([this](uint8_t channel, uint8_t brightness) { ledController->setChannel(channel, brightness); });
         }
     }
-    if (!_config.capabilites.tof && _config.tankLevelPin > 0) {
-        tankLevel = new DigitalInput(_config.tankLevelPin, [this](const bool) { sendTankLevel(); }, 5);
+    if (!_config.dualBoilerWaterHandling && !_config.capabilites.tof && _config.tankLevelPin > 0) {
+        tankLevel = new DigitalInput(
+            _config.tankLevelPin,
+            [this](const bool full) {
+                tankLevelOK = full;
+                sendTankLevel();
+            },
+            5);
     }
     gm::DeviceCapabilities capabilities = gaggimate_Capabilities_init_zero;
     capabilities.dimming = _config.capabilites.dimming;
     capabilities.pressure = _config.capabilites.pressure;
-    capabilities.tof = _config.capabilites.tof || _config.tankLevelPin > 0;
+    capabilities.tof = _config.capabilites.tof || tankLevel != nullptr;
     capabilities.led_control = _config.capabilites.ledControls;
     capabilities.dual_boiler = _config.capabilites.dualBoiler;
 
@@ -170,8 +210,10 @@ void GaggiMateController::setup() {
         heater2->setup();
         refill->setup();
         aux->setup();
-        waterSense->setup();
-        lights->setup();
+        if (waterSense)
+            waterSense->setup();
+        if (lights)
+            lights->setup();
     } else {
         alt->setup();
     }
@@ -197,16 +239,24 @@ void GaggiMateController::setup() {
         if (!_config.capabilites.dualBoiler && index > 0) {
             return;
         }
-        if (_config.capabilites.dualBoiler && index == 0) {
-            lights->set(index == 0 && setpoint > 0.0f);
+        if (_config.capabilites.dualBoiler && !_config.dualBoilerWaterHandling && index == 0) {
+            if (lights)
+                lights->set(index == 0 && setpoint > 0.0f);
         }
+        if (_config.capabilites.dualBoiler && !hardwareSessionReady)
+            return;
         Heater *target = index == 0 ? this->heater : this->heater2;
         handlePing();
         if (errorState != ERROR_CODE_NONE) {
             return;
         }
         if (mode == BoilerControlMode::Temperature) {
-            target->setSetpoint(setpoint);
+            if (_config.dualBoilerWaterHandling && index == 1) {
+                steamRequestedSetpoint = setpoint;
+                target->setSetpoint(machineHardware.steam_level_enabled && (!steamLevelKnown || steamLevelLow) ? 0.0f : setpoint);
+            } else {
+                target->setSetpoint(setpoint);
+            }
         } else {
             // Pressure-regulated boiler not supported by this hardware yet.
             ESP_LOGW(LOG_TAG, "Boiler pressure mode requested but unsupported");
@@ -250,7 +300,7 @@ void GaggiMateController::setup() {
         if (_config.capabilites.dualBoiler) {
             switch (index) {
             case 2:
-                this->refill->set(open);
+                this->refill->set(open && hardwareSessionReady);
                 return;
             case 3:
                 this->aux->set(open);
@@ -274,6 +324,8 @@ void GaggiMateController::setup() {
             static_cast<DimmedPump *>(pump)->setValveState(open);
         }
     });
+    _comms.onMachineHardware(
+        [this](const gm::MachineHardwareSettings &settings) { xQueueOverwrite(hardwareRequests, &settings); });
     // Heaters stay off until the display delivers these; coordination is applied before the gains enable heating.
     _comms.onHeaterSettings([this](const gm::HeaterSettings &settings) {
         if (heaterCoordinator != nullptr) {
@@ -313,6 +365,8 @@ void GaggiMateController::setup() {
             lastPingTime = millis();
     });
     _comms.onAutotune([this](uint32_t testTimeSec, uint32_t windowSize, uint32_t heaterWattage) {
+        if (_config.capabilites.dualBoiler && !hardwareSessionReady)
+            return;
         handlePing();
         if (errorState != ERROR_CODE_NONE) { // don't re-engage the heater while faulted
             return;
@@ -340,20 +394,37 @@ void GaggiMateController::setup() {
 }
 
 void GaggiMateController::loop() {
+    gm::MachineHardwareSettings requested;
+    bool hardwareStatusPending = xQueueReceive(hardwareRequests, &requested, 0) == pdTRUE;
+    if (hardwareStatusPending)
+        storeMachineHardware(requested);
+    if (hardwareConfigurationAccepted && !hardwareConfigurationError && !hardwareSessionReady &&
+        !brewTemperature->isErrorState() && !steamTemperature->isErrorState()) {
+        hardwareSessionReady = true;
+        hardwareStatusPending = true;
+    }
+    if (hardwareStatusPending)
+        _comms.sendMachineHardwareStatus(machineHardwareHash(machineHardware), hardwareSessionReady, hardwareConfigurationError);
     unsigned long now = millis();
 
     // Keep zero tracking and idle display quantization out of the measurement
     // path whenever the brew valve or pump can be adding liquid to the cup.
     if (hardwareScale != nullptr) {
         const float pumpPower = pump != nullptr && pump->getPumpPowerPtr() != nullptr ? *pump->getPumpPowerPtr() : 0.0f;
-        const bool scaleActivity = (valve != nullptr && valve->getState()) || pumpPower > 0.01f;
+        const bool scaleActivity = (valve != nullptr && valve->getState()) || pumpPower > 0.01f ||
+                                   (_config.capabilites.dualBoiler && aux != nullptr && aux->getState());
         hardwareScale->setBrewingActive(scaleActivity);
     }
 
     if (lastPingTime < now && (now - lastPingTime) / 1000 > PING_TIMEOUT_SECONDS) {
         handlePingTimeout();
     }
-    sendSensorData();
+    if (_config.dualBoilerWaterHandling)
+        updateDualBoilerOutputs(now);
+    if (!_config.dualBoilerWaterHandling || lastSensorSend == 0 || now - lastSensorSend >= 250) {
+        sendSensorData();
+        lastSensorSend = now;
+    }
     if (_config.capabilites.ledControls && now - lastLedHealthCheck >= LED_HEALTH_CHECK_INTERVAL_MS) {
         lastLedHealthCheck = now;
         ledController->healthCheck();
@@ -364,7 +435,7 @@ void GaggiMateController::loop() {
     if (errorState != ERROR_CODE_NONE) {
         ESP_LOGW("GaggiMateController", "Error state: %d", errorState);
     }
-    delay(250);
+    delay(_config.dualBoilerWaterHandling ? 50 : 250);
     if (Serial.available()) {
         while (Serial.available()) {
             char c = Serial.read();
@@ -408,6 +479,33 @@ void GaggiMateController::detectBoard() {
     ESP.restart();
 }
 
+void GaggiMateController::updateDualBoilerOutputs(unsigned long now) {
+    const bool safe = errorState == ERROR_CODE_NONE && hardwareSessionReady;
+    const float target = safe && (!machineHardware.steam_level_enabled || (steamLevelKnown && !steamLevelLow))
+                             ? steamRequestedSetpoint.load()
+                             : 0.0f;
+    if (heater2->getSetpoint() != target)
+        heater2->setSetpoint(target);
+    const bool heating = target > 0.0f && steamTemperature->read() < target - 1.0f;
+    if (!lights)
+        return;
+    const uint8_t requested = !safe || (machineHardware.tank_level_enabled && !tankLevelOK) ? 1
+                              : target <= 0.0f                                              ? 0
+                              : heating                                                     ? 2
+                                                                                            : 3;
+    if (requested != statusLedMode) {
+        statusLedMode = requested;
+        ledModeStartedAt = now;
+    }
+    const unsigned long elapsed = now - ledModeStartedAt;
+    const unsigned long phase = elapsed % 1350;
+    const bool on = requested == 1   ? phase < 600 && (phase / 100) % 2 == 0
+                    : requested == 2 ? (elapsed / 500) % 2 == 0
+                                     : requested == 3;
+    if (lights->getState() != on)
+        lights->set(on);
+}
+
 void GaggiMateController::detectAddon() {
     Wire.begin(_config.ext3Pin, _config.ext2Pin, 400000);
     for (uint8_t addr = XL9555_SLAVE_ADDRESS0; addr <= XL9555_SLAVE_ADDRESS7; ++addr) {
@@ -430,7 +528,12 @@ void GaggiMateController::handlePing() {
     ESP_LOGV(LOG_TAG, "Ping received, system is alive");
 }
 
+void GaggiMateController::clearRetainedOutputDemands() {
+    steamRequestedSetpoint = 0.0f;
+}
+
 void GaggiMateController::handlePingTimeout() {
+    clearRetainedOutputDemands();
     // Turn off the heater and pump as a safety measure
     this->heater->stop();
     this->pump->setPower(0);
@@ -458,6 +561,7 @@ void GaggiMateController::handlePingTimeout() {
 }
 
 void GaggiMateController::thermalRunawayShutdown() {
+    clearRetainedOutputDemands();
     ESP_LOGE(LOG_TAG, "Thermal runaway detected! Turning off heater and pump!\n");
     // Turn off the heater and pump immediately
     this->heater->stop();
@@ -499,6 +603,10 @@ void GaggiMateController::sendSensorData() {
     }
     gm::Payload p = gaggimate_Payload_init_zero;
     p.which_content = gaggimate_Payload_sensor_tag;
+    p.content.sensor.has_tank_level = tankLevel != nullptr;
+    p.content.sensor.has_steam_boiler_low = waterSense != nullptr && steamLevelKnown.load();
+    p.content.sensor.steam_boiler_low = steamLevelLow.load();
+    p.content.sensor.tank_level_ok = tankLevelOK;
     p.content.sensor.boilers_count = _config.capabilites.dualBoiler ? 2 : 1; // boiler 0; schema allows more
     p.content.sensor.boilers[0].index = 0;
     p.content.sensor.boilers[0].temperature = this->brewTemperature->read();
@@ -516,6 +624,77 @@ void GaggiMateController::sendSensorData() {
     p.content.sensor.water_pumped = waterPumped;
     batch[n++] = p;
     _comms.sendUnreliableBatch(batch, n);
+}
+
+void GaggiMateController::loadMachineHardware() {
+    machineHardware = defaultMachineHardware();
+    Preferences prefs;
+    if (prefs.begin("machine-hw", true)) {
+        uint8_t bytes[sizeof(gm::MachineHardwareSettings)]{};
+        const size_t size = prefs.getBytesLength("config");
+        gm::MachineHardwareSettings stored = gaggimate_MachineHardwareSettings_init_zero;
+        if (size <= sizeof(bytes) && prefs.getBytes("config", bytes, size) == size &&
+            decodeStoredMachineHardware(bytes, size, stored)) {
+            machineHardware = stored;
+            hardwareConfigurationStored = true;
+        }
+        prefs.end();
+    }
+    if (_config.autodetectValue == 5) {
+        _config.dualBoilerWaterHandling = _config.capabilites.dualBoiler;
+    }
+}
+
+void GaggiMateController::storeMachineHardware(const gm::MachineHardwareSettings &settings) {
+    if (!_config.capabilites.dualBoiler)
+        return;
+    if (!validMachineHardware(settings)) {
+        hardwareConfigurationError = true;
+        return;
+    }
+    const bool changed = machineHardwareHash(settings) != machineHardwareHash(machineHardware);
+    if (changed) {
+        hardwareConfigurationAccepted = false;
+        hardwareSessionReady = false;
+        heater->setSetpoint(0);
+        heater->stop();
+        heater2->setSetpoint(0);
+        heater2->stop();
+        pump->setPower(0);
+        refill->set(false);
+    }
+    if (changed || !hardwareConfigurationStored) {
+        auto stored = settings;
+        stored.restart_if_required = false;
+        Preferences prefs;
+        if (!prefs.begin("machine-hw", false)) {
+            hardwareConfigurationError = true;
+            return;
+        }
+        const bool saved = prefs.putBytes("config", &stored, sizeof(stored)) == sizeof(stored);
+        prefs.end();
+        if (!saved) {
+            hardwareConfigurationError = true;
+            return;
+        }
+        hardwareConfigurationStored = true;
+        ESP_LOGI("MachineHardware", "Saved configuration hash=%lu, structural=%d", (unsigned long)machineHardwareHash(settings),
+                 changed);
+    }
+    hardwareConfigurationError = false;
+    if (changed) {
+        if (settings.restart_if_required) {
+            delay(300);
+            ESP.restart();
+        }
+        return;
+    }
+    machineHardware = settings;
+    hardwareConfigurationAccepted = true;
+    // Do not latch a thermal shutdown against unconfigured/warming-up readings.
+    // The display retries configuration during link setup; correct NTC parameters
+    // can still be applied and restarted from the wizard while outputs stay off.
+    hardwareSessionReady = hardwareSessionReady || (!brewTemperature->isErrorState() && !steamTemperature->isErrorState());
 }
 
 void GaggiMateController::handleSerialCommand(char c) {
@@ -537,7 +716,7 @@ void GaggiMateController::handleSerialCommand(char c) {
             ESP_LOGI("Controller", "║  ├─ Pump Power: %.2f", dimmedPump->getPowerTarget());
         }
         if (_config.capabilites.dualBoiler) {
-            ESP_LOGI("Controller", "║  ├─ Steam Boiler Low: %.2f", waterSense->getState());
+            ESP_LOGI("Controller", "║  ├─ Steam Boiler Low: %.2f", waterSense ? waterSense->getState() : false);
             ESP_LOGI("Controller", "║  ├─ Temperature2: %.2f", steamTemperature->read());
         }
         ESP_LOGI("Controller", "║  └─ Temperature: %.2f", brewTemperature->read());

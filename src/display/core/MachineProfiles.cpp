@@ -153,6 +153,21 @@ bool validateMachineProfile(JsonVariantConst value, String &error) {
 bool validateMachineProfileRequest(AsyncWebServerRequest *request, const SystemInfo &system, bool hardware, String &error) {
     JsonDocument schema;
     deserializeJson(schema, MACHINE_PROFILE_FIELDS);
+    for (auto entry : schema.as<JsonObject>()) {
+        if (!entry.value()["hardware"].as<bool>() || !request->hasArg(entry.key().c_str()))
+            continue;
+        const String raw = request->arg(entry.key().c_str());
+        JsonDocument value;
+        const char *type = entry.value()["type"] | "";
+        if (!strcmp(type, "boolean")) {
+            if (raw != "0" && raw != "1")
+                return fail(error, "Invalid hardware boolean");
+            value.set(raw == "1");
+        } else if (deserializeJson(value, raw))
+            return fail(error, "Invalid hardware number");
+        if (!validateFieldValue(value.as<JsonVariantConst>(), entry.value(), entry.key().c_str()))
+            return fail(error, String("Invalid hardware setting: ") + entry.key().c_str());
+    }
     // Recognized hardware fields must never be silently ignored by an older implementation.
     if (!hardware)
         for (auto entry : schema.as<JsonObject>())

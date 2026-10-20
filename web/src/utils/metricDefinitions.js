@@ -64,7 +64,25 @@ export const METRIC_DEFINITIONS = [
     getTarget: ds => (ds.targetSteamTemperature ?? 0).toFixed(0),
     unit: '°C',
     adjustable: () => false,
-    disabled: ds => (ds.isBrewing && ds.isActive) || ds.mode === 0,
+    onClick: ds => ds.toggleSteam,
+    active: ds => ds.mode !== 0 && !!ds.steamActive,
+    hint: ds =>
+      ds.steamControlsAvailable === false
+        ? 'Steam disabled'
+        : ds.mode === 0
+          ? 'Off in standby'
+          : ds.steamActive
+            ? 'Steam on'
+            : 'Tap to turn on',
+    ariaLabel: ds =>
+      ds.steamControlsAvailable === false
+        ? 'Steam controls disabled'
+        : ds.mode === 0
+          ? 'Steam off in standby'
+          : ds.steamActive
+            ? 'Turn steam off'
+            : 'Turn steam on',
+    disabled: ds => ds.mode === 0 || !ds.systemReady || ds.steamControlsAvailable === false,
   },
   {
     id: 'pumppower',

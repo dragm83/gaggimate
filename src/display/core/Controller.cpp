@@ -273,6 +273,10 @@ void Controller::setupBluetooth() {
     comms.init("GPBLC");
     comms.onSendFailed([this]() { requestStateResend(); });
     comms.onConnectionChanged([this](bool connected) {
+        if (!connected)
+            hardwareSessionReady = false;
+        tankLevelKnown = false;
+        steamLevelKnown = false;
         controlStateSent = false;
         settleResendAt = 0;
         if (connected) {
@@ -314,10 +318,22 @@ void Controller::setupBluetooth() {
         pluginManager->trigger("pump:puck-resistance:change", "value", puckResistance);
         pluginManager->trigger("pump:volume:change", "value", waterPumped);
     });
+    comms.onMachineHardware([this](uint32_t hash, bool ready, bool error) {
+        if (ready && !hardwareSessionReady)
+            requestStateResend();
+        appliedHardwareHash = hash;
+        hardwareSessionReady = ready;
+        hardwareConfigurationError = error;
+    });
+    comms.onTankLevel([this](bool present, bool full) {
+        tankLevelPresent = present;
+        tankLevelOK = full;
+        tankLevelKnown = present;
+    });
+    comms.onSteamLevel([this](bool low) { onSteamLevelRead(low); });
     comms.onButtonState([this](uint8_t index, bool pressed) {
         if (index == 3) {
-            ESP_LOGI("Controller", "Boiler water level changed: %d", pressed);
-            steamBoilerLow = pressed;
+            onSteamLevelRead(pressed);
             return;
         }
         ESP_LOGV(LOG_TAG, "Button %d changed to %d", index, pressed);
@@ -410,6 +426,7 @@ void Controller::onSystemInfo(const char *hardware, const char *version, uint32_
         pluginManager->trigger("controller:protocol:mismatch", "value", static_cast<int>(protocolVersion));
     } else {
         setPressureScale();
+        setMachineHardware();
         setScaleFactors();
         setHeaterSettings();
         setPumpModelCoeffs();
@@ -720,7 +737,7 @@ bool Controller::isUpdating() const { return updating; }
 
 bool Controller::isAutotuning() const { return autotuning; }
 
-bool Controller::isReady() const { return !isUpdating() && !isErrorState() && !isAutotuning(); }
+bool Controller::isReady() const { return !isUpdating() && !isErrorState() && !isAutotuning() && isMachineHardwareReady(); }
 
 const char *systemStateKey(SystemState state) {
     static const char *const KEYS[] = {"starting", "waiting", "ready", "updating", "autotuning", "mismatch", "error"};
@@ -782,6 +799,10 @@ void Controller::autotune(int testTime, int samples, int heaterWattage) {
 }
 
 void Controller::startProcess(Process *process) {
+    if (!isMachineHardwareReady()) {
+        delete process;
+        return;
+    }
     std::vector<const char *> events;
     {
         std::lock_guard<std::recursive_mutex> guard(processMutex);
@@ -844,7 +865,7 @@ float Controller::getTargetTemp() const {
 }
 
 float Controller::getTargetSteamTemp() const {
-    if (mode != MODE_STANDBY) {
+    if (mode != MODE_STANDBY && (!systemInfo.capabilities.dualBoiler || isSteamHeaterActive())) {
         return settings.getTargetSteamTemp();
     }
     return 0.0f;
@@ -872,6 +893,16 @@ void Controller::setPressureScale(void) {
     if (systemInfo.capabilities.pressure) {
         comms.sendPressureScale(settings.getPressureScaling());
     }
+}
+
+void Controller::setMachineHardware() {
+    if (!systemInfo.capabilities.dualBoiler || systemInfo.protocolMismatch)
+        return;
+    auto value = settings.getMachineHardware();
+    if (hardwareSessionReady && !hardwareConfigurationError && appliedHardwareHash == machineHardwareHash(value))
+        return;
+    value.restart_if_required = true;
+    comms.sendMachineHardware(value);
 }
 
 void Controller::setScaleFactors() {
@@ -1097,7 +1128,15 @@ void Controller::updateControl() {
         // the dedicated valve must not start the brew pump or create a PumpProcess.
         water.open = waterValveActive;
 
-        if (!active && mode != MODE_STANDBY && steamBoilerLow) {
+        const int steamRefillMode = settings.getSteamRefillMode();
+        const bool steamLevelEnabled = settings.getSteamLevelEnabled();
+        const uint32_t steamRefillPostClearMs = settings.getSteamRefillPostClearSeconds() * 1000u;
+        if (steamRefillMode == 2) {
+            if (steamRefillPostClear && millis() - steamRefillClearedAt >= steamRefillPostClearMs)
+                steamRefillPostClear = false;
+            refill.open = steamLevelEnabled && isTankLevelOK() && (steamBoilerLow || steamRefillPostClear);
+        } else if (steamRefillMode == 1 && steamLevelEnabled && !active && mode != MODE_STANDBY && steamBoilerLow &&
+                   isTankLevelOK()) {
             targetPressure = 0.0f;
             targetFlow = 0.0f;
             relay.open = false;
@@ -1323,6 +1362,8 @@ bool Controller::isBrewActive() const {
 int Controller::getMode() const { return mode; }
 
 void Controller::setMode(int newMode) {
+    if (systemInfo.capabilities.dualBoiler && (newMode == MODE_STEAM || newMode == MODE_WATER))
+        newMode = MODE_BREW;
     if (newMode == MODE_STANDBY) {
         waterValveActive = false;
         waterButtonPressed = false;
@@ -1330,6 +1371,15 @@ void Controller::setMode(int newMode) {
     Event modeEvent = pluginManager->trigger("controller:mode:change", "value", newMode);
     const int previousMode = mode;
     mode = modeEvent.getInt("value");
+    if (systemInfo.capabilities.dualBoiler) {
+        if (mode == MODE_STANDBY) {
+            if (previousMode != MODE_STANDBY && settings.isSteamStateRemembered())
+                settings.setPersistentSteamState(steamHeaterActive);
+            steamHeaterActive = false;
+        } else if (previousMode == MODE_STANDBY && mode == MODE_BREW) {
+            steamHeaterActive = settings.isSteamStateRemembered() && settings.getPersistentSteamState();
+        }
+    }
     if (mode == MODE_BREW && previousMode != MODE_BREW)
         flushPending = true; // entering brew mode, including wake-up from standby
     steamReady = false;
@@ -1553,6 +1603,8 @@ bool Controller::isHardwareScaleHealthy() const {
 }
 
 void Controller::onFlush() {
+    if (!isMachineHardwareReady())
+        return;
     // Allocate outside the lock; reachable from the UI, AsyncTCP and BLE tasks (GM-147).
     const int duration = settings.getFlushDuration();
     Profile profile = FLUSH_PROFILE;
@@ -1687,6 +1739,11 @@ void Controller::handleBrewButton(bool pressed) {
 }
 
 void Controller::handleSteamButton(bool pressed) {
+    if (systemInfo.capabilities.dualBoiler) {
+        if (pressed)
+            toggleSteamHeater();
+        return;
+    }
     if (pressed) {
         if (getMode() != MODE_STEAM) {
             setMode(MODE_STEAM);
@@ -1793,4 +1850,33 @@ void Controller::loopLogicTask(void *arg) {
         controller->loopLogic();
         xTaskDelayUntil(&lastWake, pdMS_TO_TICKS(controller->getMode() == MODE_STANDBY ? 1000 : PROGRESS_INTERVAL));
     }
+}
+
+void Controller::onSteamLevelRead(bool low) {
+    if (!steamLevelKnown.load() || steamBoilerLow != low)
+        ESP_LOGI("Controller", "Boiler water level: %s", low ? "low" : "OK");
+    if (steamBoilerLow && !low) {
+        steamRefillClearedAt = millis();
+        steamRefillPostClear = true;
+    }
+    if (low)
+        steamRefillPostClear = false;
+    steamBoilerLow = low;
+    steamLevelKnown = true;
+}
+
+void Controller::toggleSteamHeater() {
+    if (!isSteamControlsAvailable() || !systemInfo.capabilities.dualBoiler || mode == MODE_STANDBY)
+        return;
+    steamHeaterActive = !steamHeaterActive;
+    if (settings.isSteamStateRemembered())
+        settings.setPersistentSteamState(steamHeaterActive);
+    pluginManager->trigger(steamHeaterActive ? "boiler:steamHeater:activate" : "boiler:steamHeater:deactivate");
+}
+
+void Controller::toggleWaterValve() {
+    if (!systemInfo.capabilities.dualBoiler || mode == MODE_STANDBY)
+        return;
+    handleWaterButton(true);
+    handleWaterButton(false);
 }

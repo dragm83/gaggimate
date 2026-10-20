@@ -105,6 +105,12 @@ Settings::Settings() {
     // Migrate an older full snapshot without reapplying any machine values.
     setMachineProfileSelection(machineProfileSelection.get());
 
+    if (preferences.isKey("pss") && preferences.getType("pss") == PT_U8) {
+        preferredScaleSource.initDefault("");
+        preferredScaleSource.set("auto");
+        if (!preferences.isKey("sst"))
+            persistentSteamState.set(preferences.getBool("pss", false));
+    }
     // Legacy migrations: derive defaults for keys that were never persisted
     if (!preferences.isKey("sg_m")) {
         smartGrindMode.initDefault(smartGrindToggle.get() ? 1 : 0);
@@ -427,4 +433,39 @@ bool Settings::doSave() {
         settings->doSave();
         vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
+}
+
+void Settings::setSteamStateRemembered(bool enabled) {
+    rememberSteamState.set(enabled);
+    if (!enabled)
+        persistentSteamState.set(false);
+}
+void Settings::setPersistentSteamState(bool enabled) {
+    persistentSteamState.set(enabled);
+    save(true);
+}
+
+gm::MachineHardwareSettings Settings::getMachineHardware() const {
+    auto value = defaultMachineHardware();
+    if (ntcBrewNominalResistance.get() > 0)
+        value.ntc_brew_nominal_resistance = ntcBrewNominalResistance.get();
+    if (ntcBrewSeriesResistance.get() > 0)
+        value.ntc_brew_series_resistance = ntcBrewSeriesResistance.get();
+    if (ntcBrewSupplyVoltage.get() > 0)
+        value.ntc_brew_supply_voltage = ntcBrewSupplyVoltage.get();
+    if (ntcBrewBeta.get() > 0)
+        value.ntc_brew_beta = ntcBrewBeta.get();
+    if (ntcSteamNominalResistance.get() > 0)
+        value.ntc_steam_nominal_resistance = ntcSteamNominalResistance.get();
+    if (ntcSteamSeriesResistance.get() > 0)
+        value.ntc_steam_series_resistance = ntcSteamSeriesResistance.get();
+    if (ntcSteamSupplyVoltage.get() > 0)
+        value.ntc_steam_supply_voltage = ntcSteamSupplyVoltage.get();
+    if (ntcSteamBeta.get() > 0)
+        value.ntc_steam_beta = ntcSteamBeta.get();
+    value.tank_level_enabled = tankLevelEnabled.get();
+    value.steam_level_enabled = steamLevelEnabled.get();
+    value.system_led_enabled = systemLedEnabled.get();
+    value.steam_level_debounce_checks = steamLevelDebounceChecks.get();
+    return value;
 }

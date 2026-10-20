@@ -117,6 +117,13 @@ gm::Payload GaggiMateClient::buildAutotune(uint32_t testTime, uint32_t samples, 
     return p;
 }
 
+void GaggiMateClient::sendMachineHardware(const gm::MachineHardwareSettings &settings) {
+    gm::Payload p = gaggimate_Payload_init_zero;
+    p.which_content = gaggimate_Payload_machine_hardware_tag;
+    p.content.machine_hardware = settings;
+    _endpoint.send(p);
+}
+
 gm::Payload GaggiMateClient::buildPressureScale(float scale) {
     gm::Payload p = gaggimate_Payload_init_zero;
     p.which_content = gaggimate_Payload_pressure_scale_tag;
@@ -195,7 +202,16 @@ void GaggiMateClient::registerHandlers() {
                           p.content.system_info.capabilities.dual_boiler, addonList);
         }
     });
+    _endpoint.on(gaggimate_Payload_machine_hardware_status_tag, [this](const gm::Payload &p) {
+        if (_machineHardwareCb)
+            _machineHardwareCb(p.content.machine_hardware_status.hash, p.content.machine_hardware_status.ready,
+                               p.content.machine_hardware_status.error);
+    });
     _endpoint.on(gaggimate_Payload_sensor_tag, [this](const gm::Payload &p) {
+        if (_tankLevelCb)
+            _tankLevelCb(p.content.sensor.has_tank_level, p.content.sensor.tank_level_ok);
+        if (p.content.sensor.has_steam_boiler_low && _steamLevelCb)
+            _steamLevelCb(p.content.sensor.steam_boiler_low);
         if (!_sensorCb)
             return;
         // The display tracks a single boiler today; read boiler 0 if present.

@@ -1,5 +1,10 @@
 // Shared between the settings page and the setup wizard.
 export const CHECKBOX_KEYS = [
+  'independentSteamControl',
+  'rememberSteamState',
+  'tankLevelEnabled',
+  'steamLevelEnabled',
+  'systemLedEnabled',
   'homekit',
   'boilerFillActive',
   'smartGrindActive',

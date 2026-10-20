@@ -20,7 +20,7 @@ static constexpr const char *LEGACY_ERROR_CHAR_UUID = "d6676ec7-820c-41de-820d-9
 
 // Protocol 8 replaces PidSettings with HeaterSettings; controllers keep heaters off until they receive it.
 // Update controller and display together.
-static constexpr uint32_t PROTOCOL_VERSION = 8;
+static constexpr uint32_t PROTOCOL_VERSION = 10;
 
 // Outbound priorities (higher wins in the queue).
 enum Priority : uint8_t {

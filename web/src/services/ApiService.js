@@ -203,10 +203,18 @@ export default class ApiService {
     map('tt', 'targetTemperature');
     map('cst', 'currentSteamTemperature');
     map('tst', 'targetSteamTemperature');
+    map('steamActive', 'steamActive');
+    map('steamControlsAvailable', 'steamControlsAvailable');
     map('pr', 'currentPressure');
     map('pt', 'targetPressure');
     map('tw', 'targetWeight', v => v || 0);
     map('fl', 'currentFlow');
+    map('hasTankLevel', 'hasTankLevel');
+    map('tankLevelOK', 'tankLevelOK');
+    map('tankLevelKnown', 'tankLevelKnown');
+    map('hasSteamLevel', 'hasSteamLevel');
+    map('steamLevelKnown', 'steamLevelKnown');
+    map('steamBoilerLow', 'steamBoilerLow');
     map('tf', 'targetFlow', v => v || 0);
     map('m', 'mode');
     map('p', 'selectedProfile');

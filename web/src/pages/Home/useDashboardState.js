@@ -77,8 +77,17 @@ export function useDashboardState() {
   // ── handlers ─────────────────────────────────────────────
   const send = tp => apiService.send({ tp });
 
+  const toggleSteam = () => {
+    if (systemReady && caps.dualBoiler && mode !== 0 && s.steamControlsAvailable !== false)
+      send('req:steam:toggle');
+  };
+
   const changeMode = newMode => {
     if (!systemReady) return; // locked in standby until the controller is ready
+    if (caps.dualBoiler && newMode === 2) {
+      toggleSteam();
+      return;
+    }
     apiService.send({ tp: 'req:change-mode', mode: newMode });
   };
 
@@ -126,6 +135,12 @@ export function useDashboardState() {
 
   return {
     // raw status
+    hasTankLevel: !!s.hasTankLevel,
+    tankLevelKnown: !!s.tankLevelKnown,
+    tankLevelOK: !!s.tankLevelOK,
+    hasSteamLevel: !!s.hasSteamLevel,
+    steamLevelKnown: !!s.steamLevelKnown,
+    steamBoilerLow: !!s.steamBoilerLow,
     mode,
     systemReady,
     systemMessage,
@@ -133,6 +148,8 @@ export function useDashboardState() {
     targetTemperature: s.targetTemperature,
     currentSteamTemperature: s.currentSteamTemperature,
     targetSteamTemperature: s.targetSteamTemperature,
+    steamActive: !!s.steamActive,
+    steamControlsAvailable: s.steamControlsAvailable !== false,
     currentPressure: s.currentPressure,
     targetPressure: s.targetPressure,
     currentFlow: s.currentFlow,
@@ -177,6 +194,7 @@ export function useDashboardState() {
     isFlushing,
     // handlers
     changeMode,
+    toggleSteam,
     activate,
     deactivate,
     clear,

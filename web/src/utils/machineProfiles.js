@@ -266,3 +266,25 @@ export async function confirmProfileApply(formData) {
     `Replace these machine settings?\n${changed.map(([key, value]) => `${fields[key].label}: ${String(value)}`).join('\n')}`,
   );
 }
+
+export async function waitForMachineHardware() {
+  const deadline = Date.now() + 45000;
+  while (Date.now() < deadline) {
+    let data;
+    try {
+      data = await requestSettings({}, Math.min(5000, deadline - Date.now()));
+    } catch {
+      // A controller restart or a stale HTTP connection can briefly interrupt
+      // polling. Retry reads within the deadline; never automatically retry saves.
+    }
+    if (data?.machineHardwareError)
+      throw new Error('Controller could not save the hardware configuration.');
+    if (data && data.machineHardwareReady !== false) return data;
+    await new Promise(resolve =>
+      setTimeout(resolve, Math.max(0, Math.min(750, deadline - Date.now()))),
+    );
+  }
+  throw new Error(
+    'Settings were saved, but the controller has not confirmed the configuration. Keep the machine in standby and reload to check its status.',
+  );
+}

@@ -49,6 +49,12 @@ class Controller {
     void setTargetTemp(float temperature);
     void setPressureScale();
     void setScaleFactors();
+    void setMachineHardware();
+    bool isMachineHardwareReady() const {
+        return !systemInfo.capabilities.dualBoiler ||
+               (hardwareSessionReady && appliedHardwareHash == machineHardwareHash(settings.getMachineHardware()));
+    }
+    bool isMachineHardwareError() const { return hardwareConfigurationError; }
     void setPumpModelCoeffs();
     void setHeaterSettings();
     void setTargetGrindDuration(int duration);
@@ -104,6 +110,11 @@ class Controller {
     void updateLastAction();
     void raiseTemp();
     void lowerTemp();
+    void toggleSteamHeater();
+    void toggleWaterValve();
+    bool isWaterValveActive() const { return waterValveActive; }
+    bool isSteamControlsAvailable() const { return systemInfo.capabilities.dualBoiler && settings.isIndependentSteamControl(); }
+    bool isSteamHeaterActive() const { return isSteamControlsAvailable() ? steamHeaterActive : mode != MODE_STANDBY; }
     void raiseSteamTemp();
     void lowerSteamTemp();
     void raiseBrewTarget();
@@ -149,6 +160,12 @@ class Controller {
 
     void onVolumetricDelete();
     bool isLowWaterLevel() const { return getWaterLevel() < 20; };
+    bool isTankLevelOK() const { return !tankLevelPresent || tankLevelOK; }
+    bool hasTankLevel() const { return tankLevelPresent; }
+    bool hasTankLevelReading() const { return tankLevelKnown.load(); }
+    bool hasSteamLevel() const { return systemInfo.capabilities.dualBoiler && settings.getSteamLevelEnabled(); }
+    bool hasSteamLevelReading() const { return steamLevelKnown.load(); }
+    bool isSteamBoilerLow() const { return steamBoilerLow; }
     bool isSteamSwitchOn() const { return steamSwitchOn; }
     bool isFlushPending() const { return flushPending; }
     WarningManager &getWarnings() { return warnings; }
@@ -289,13 +306,24 @@ class Controller {
     static const unsigned long CONFIG_RESEND_WINDOW_MS = 8000;
     static const unsigned long CONFIG_RESEND_INTERVAL_MS = 1000;
     bool processCompleted = false;
+    std::atomic<uint32_t> appliedHardwareHash{0};
+    std::atomic<bool> hardwareSessionReady{false};
+    std::atomic<bool> hardwareConfigurationError{false};
+    bool steamHeaterActive = false;
     bool steamReady = false;
     bool steamSwitchOn = false;
     bool flushPending = false; // no flush since entering brew mode, waking up, or the last shot
     bool waterValveActive = false;
     bool waterButtonPressed = false;
     bool sdcard = false;
+    void onSteamLevelRead(bool low);
     bool steamBoilerLow = false;
+    std::atomic<bool> tankLevelKnown{false};
+    std::atomic<bool> steamLevelKnown{false};
+    bool tankLevelPresent = false;
+    bool tankLevelOK = true;
+    unsigned long steamRefillClearedAt = 0;
+    bool steamRefillPostClear = false;
     int error = 0;
 
     // Bluetooth scale connection monitoring

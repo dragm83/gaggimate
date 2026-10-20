@@ -286,6 +286,8 @@ void WebSocketHandler::handleWebSocketData(AsyncWebSocket *server, AsyncWebSocke
                     client->text(toWsBuffer(resp));
                 } else if (msgType == "req:flush:start") {
                     handleFlushStart(client->id(), doc);
+                } else if (msgType == "req:steam:toggle") {
+                    controller->toggleSteamHeater();
                 } else if (msgType == "req:scale:tare") {
                     controller->getClientController()->tare();
                 } else if (msgType == "req:flush:stop") {
@@ -402,6 +404,8 @@ void WebSocketHandler::publishState(unsigned long now) {
     doc["p"] = profile.label;
     doc["puid"] = profile.id;
     const auto &caps = controller->getSystemInfo().capabilities;
+    doc["steamActive"] = controller->isSteamHeaterActive();
+    doc["steamControlsAvailable"] = controller->isSteamControlsAvailable();
     doc["cp"] = caps.pressure;
     doc["cd"] = caps.dimming;
     doc["gp"] = caps.hasAddon(7);
@@ -410,6 +414,12 @@ void WebSocketHandler::publishState(unsigned long now) {
     doc["led"] = caps.ledControl;
     doc["tofc"] = caps.tof;
     doc["sd"] = controller->isSDCard();
+    doc["hasTankLevel"] = controller->hasTankLevel();
+    doc["tankLevelOK"] = controller->isTankLevelOK();
+    doc["tankLevelKnown"] = controller->hasTankLevelReading();
+    doc["hasSteamLevel"] = controller->hasSteamLevel();
+    doc["steamLevelKnown"] = controller->hasSteamLevelReading();
+    doc["steamBoilerLow"] = controller->isSteamBoilerLow();
     doc["tw"] = profile.getTotalVolume(); // total target weight for the process
     doc["bta"] = controller->isVolumetricAvailable() ? 1 : 0;
     doc["bt"] = controller->isVolumetricAvailable() && profile.isVolumetric() ? 1 : 0;

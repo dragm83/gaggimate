@@ -25,6 +25,9 @@ class GaggiMateClient {
     using VolumetricCallback = std::function<void(float volume)>;
     using ScaleCallback =
         std::function<void(float weight, float cell1Weight, float cell2Weight, bool cell1Valid, bool cell2Valid)>;
+    using SteamLevelCallback = std::function<void(bool low)>;
+    using TankLevelCallback = std::function<void(bool present, bool full)>;
+    using MachineHardwareCallback = std::function<void(uint32_t hash, bool ready, bool error)>;
     using TofCallback = std::function<void(uint32_t distance)>;
     using ErrorCallback = std::function<void(int code)>;
 
@@ -118,7 +121,11 @@ class GaggiMateClient {
     void onAutotuneResult(AutotuneResultCallback cb) { _autotuneResultCb = std::move(cb); }
     void onVolumetricMeasurement(VolumetricCallback cb) { _volumetricCb = std::move(cb); }
     void onScaleMeasurement(ScaleCallback cb) { _scaleCb = std::move(cb); }
+    void onSteamLevel(SteamLevelCallback cb) { _steamLevelCb = std::move(cb); }
+    void onTankLevel(TankLevelCallback cb) { _tankLevelCb = std::move(cb); }
     void onTofMeasurement(TofCallback cb) { _tofCb = std::move(cb); }
+    void sendMachineHardware(const gm::MachineHardwareSettings &settings);
+    void onMachineHardware(MachineHardwareCallback cb) { _machineHardwareCb = std::move(cb); }
     void onError(ErrorCallback cb) { _errorCb = std::move(cb); }
 
   private:
@@ -136,11 +143,14 @@ class GaggiMateClient {
     IncompatibleCallback _incompatibleCb;
     SystemInfoCallback _systemInfoCb;
     SensorCallback _sensorCb;
+    TankLevelCallback _tankLevelCb;
+    SteamLevelCallback _steamLevelCb;
     ButtonCallback _buttonCb;
     AutotuneResultCallback _autotuneResultCb;
     VolumetricCallback _volumetricCb;
     ScaleCallback _scaleCb;
     TofCallback _tofCb;
+    MachineHardwareCallback _machineHardwareCb;
     ErrorCallback _errorCb;
 
     void registerHandlers();
