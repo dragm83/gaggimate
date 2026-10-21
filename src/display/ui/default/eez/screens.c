@@ -1183,7 +1183,7 @@ void create_screen_brew_screen() {
             lv_obj_t *obj = lv_obj_create(parent_obj);
             objects.obj4 = obj;
             lv_obj_set_pos(obj, 0, 0);
-            lv_obj_set_size(obj, 360, 360);
+            lv_obj_set_size(obj, 360, 340);
             lv_obj_set_style_pad_left(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_pad_right(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -2110,7 +2110,7 @@ void create_screen_status_screen() {
                     lv_obj_t *obj = lv_obj_create(parent_obj);
                     objects.progress_view = obj;
                     lv_obj_set_pos(obj, 0, 0);
-                    lv_obj_set_size(obj, 360, 360);
+                    lv_obj_set_size(obj, 360, 340);
                     lv_obj_set_style_pad_left(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_pad_top(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_pad_right(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);

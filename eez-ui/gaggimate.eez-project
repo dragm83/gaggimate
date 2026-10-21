@@ -1700,7 +1700,7 @@
               "left": 0,
               "top": 0,
               "width": 360,
-              "height": 360,
+              "height": 340,
               "customInputs": [],
               "customOutputs": [],
               "style": {
@@ -4173,7 +4173,7 @@
                   "left": 0,
                   "top": 0,
                   "width": 360,
-                  "height": 360,
+                  "height": 340,
                   "customInputs": [],
                   "customOutputs": [],
                   "style": {
