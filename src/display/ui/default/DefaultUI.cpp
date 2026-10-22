@@ -786,6 +786,26 @@ void DefaultUI::updateSystemStatus() {
     if (stringChanged(systemStatus.error_label(), errorLabel.c_str()))
         systemStatus.error_label(errorLabel.c_str());
     systemStatus.volumetric_available(controller->isVolumetricAvailable());
+    systemStatus.dual_boiler_available(controller->getSystemInfo().capabilities.dualBoiler);
+    eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_STEAM_TEMPERATURE, FloatValue(controller->getCurrentSteamTemp()));
+    eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_STEAM_ENABLED, BooleanValue(controller->isSteamHeaterActive()));
+    const char *brewStatus;
+    if (!controller->getClientController()->isConnected() || controller->getSystemInfo().protocolMismatch ||
+        (controller->isErrorState() && controller->getError() == ERROR_CODE_TIMEOUT)) {
+        brewStatus = "!COMMS LOSS!";
+    } else if (!controller->isTankLevelOK()) {
+        brewStatus = "!WATER LEVEL LOW!";
+    } else if (controller->getWarnings().isTemperatureStable()) {
+        brewStatus = "Ready to Brew";
+    } else {
+        brewStatus = "Heating Up";
+    }
+    const bool cleaningDue = controller->getWarnings().isActive(WARNING_BACKFLUSH) ||
+                             controller->getWarnings().isActive(WARNING_DESCALING);
+    char brewStatusText[48];
+    snprintf(brewStatusText, sizeof(brewStatusText), "%s%s", brewStatus, cleaningDue ? " (F)" : "");
+    if (stringChanged(eez::flow::getGlobalVariable(FLOW_GLOBAL_VARIABLE_BREW_STATUS).getString(), brewStatusText))
+        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_BREW_STATUS, StringValue(brewStatusText));
     systemStatus.bluetooth_scales(controller->isScaleSourceHealthy(controller->getEffectiveScaleSource()));
     systemStatus.controller_version(controller->getSystemInfo().version.c_str());
     systemStatus.display_version(BUILD_GIT_VERSION);
