@@ -370,6 +370,14 @@ void WebUIPlugin::handleMachineProfiles(AsyncWebServerRequest *request) {
 
 void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     if (request->method() == HTTP_POST) {
+        if (request->hasArg("setupStep")) {
+            const String step = request->arg("setupStep");
+            if (step != "machine" && step != "tests" && step != "plugins" && step != "wifi" && step != "done" &&
+                step != "custom:plugins" && step != "custom:wifi" && step != "custom:done") {
+                request->send(400, "application/json", "{\"error\":\"Invalid setup step\"}");
+                return;
+            }
+        }
         String profileError;
         if (!validateMachineProfileRequest(request, controller->getSystemInfo(), false, profileError)) {
             JsonDocument failure;
@@ -451,6 +459,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setWifiPassword(request->arg("wifiPassword"));
             if (request->hasArg("apPassword") && request->arg("apPassword").length() >= WIFI_AP_PASSWORD_MIN_LENGTH)
                 settings->setWifiApPassword(request->arg("apPassword"));
+            if (request->hasArg("setupStep"))
+                settings->setSetupStep(request->arg("setupStep"));
             if (request->hasArg("setupDone"))
                 settings->setSetupDone(parseBoolArg(request->arg("setupDone")));
             if (request->hasArg("homekit"))
@@ -637,6 +647,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["targetSteamTemp"] = settings.getTargetSteamTemp();
     doc["targetWaterTemp"] = settings.getTargetWaterTemp();
     addMachineProfileSettings(doc, settings, controller->getSystemInfo(), false);
+    doc["setupStep"] = settings.getSetupStep();
     doc["setupDone"] = settings.isSetupDone();
     doc["homekit"] = settings.isHomekit();
     doc["homeAssistant"] = settings.isHomeAssistant();

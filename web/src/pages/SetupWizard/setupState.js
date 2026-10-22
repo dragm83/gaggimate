@@ -9,6 +9,25 @@ import {
 // True while the machine reports a first run that has not finished the setup wizard.
 export const setupNeeded = signal(false);
 
+export function setupSteps(offerWifi, configureLater) {
+  return [
+    'machine',
+    ...(configureLater ? ['plugins'] : ['tests', 'plugins']),
+    ...(offerWifi ? ['wifi'] : []),
+    'done',
+  ];
+}
+
+// Keep deferred machine setup in the existing persisted wizard progress field.
+export function parseSetupStep(value = '') {
+  const configureLater = value.startsWith('custom:');
+  return { step: configureLater ? value.slice(7) : value, configureLater };
+}
+
+export function savedSetupStep(step, configureLater) {
+  return configureLater ? `custom:${step}` : step;
+}
+
 export async function checkSetup({ fresh = false } = {}) {
   if (fresh) invalidateSettingsCache(); // another machine was selected in the app
   try {

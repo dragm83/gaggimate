@@ -20,7 +20,7 @@ import { splitPidString } from '../Settings/settingsForm.js';
 import { InfoNote } from './InfoNote.jsx';
 import { postSettings } from './setupState.js';
 
-export function MachineStep({ onSaved, onConfigure }) {
+export function MachineStep({ onSaved, onDirty, onConfigure }) {
   const { t } = useLingui();
   const [formData, setFormData] = useState(() => {
     const settings = getCachedSettings() || {};
@@ -62,6 +62,7 @@ export function MachineStep({ onSaved, onConfigure }) {
     setFormData(previous => ({ ...previous, ...values }));
     setApplied(false);
     setConfirmation(null);
+    onDirty?.();
   };
   const caps = formData.machineProfileCapabilities || {};
   const detectedCapabilities = [
@@ -130,7 +131,7 @@ export function MachineStep({ onSaved, onConfigure }) {
         disabled={saving}
         onClick={onConfigure}
       >
-        <Trans>Machine not listed? Configure it later in Machine settings.</Trans>
+        <Trans>Machine not listed? Continue setup and configure it later.</Trans>
       </button>
       {loading && (
         <div role='status' className='flex items-center gap-2 text-sm opacity-70'>

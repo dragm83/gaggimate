@@ -6406,3 +6406,27 @@ msgstr ""
 #: src/pages/SetupWizard/MachineStep.jsx
 msgid "Replace these machine settings?"
 msgstr ""
+
+#: src/pages/SetupWizard/index.jsx
+msgid "A few brew profiles come pre-installed for use after configuring your machine:"
+msgstr ""
+
+#: src/pages/SetupWizard/index.jsx
+msgid "After the restart, reconnect to your Wi-Fi network and open Settings → Machine to configure your machine before use."
+msgstr ""
+
+#: src/pages/SetupWizard/index.jsx
+msgid "Machine configuration required"
+msgstr ""
+
+#: src/pages/SetupWizard/MachineStep.jsx
+msgid "Machine not listed? Continue setup and configure it later."
+msgstr ""
+
+#: src/pages/SetupWizard/index.jsx
+msgid "Open Settings → Machine to configure your machine before use."
+msgstr ""
+
+#: src/pages/SetupWizard/index.jsx
+msgid "Thank you for installing GaggiMate!"
+msgstr ""
