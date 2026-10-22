@@ -167,6 +167,11 @@ class Controller {
             return tankLevelOK;
         return !usesAlbaTankLevel() || (hasTankLevelReading() && !isLowWaterLevel());
     }
+    bool isSteamRefillTankLevelOK() const {
+        if (tankLevelPresent)
+            return tankLevelOK;
+        return !settings.getAlbaRefillInterlock() || isTankLevelOK();
+    }
     bool hasTankLevel() const { return tankLevelPresent || usesAlbaTankLevel(); }
     bool hasTankLevelReading() const {
         if (tankLevelPresent)

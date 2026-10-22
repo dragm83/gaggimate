@@ -1145,9 +1145,9 @@ void Controller::updateControl() {
         if (steamRefillMode == 2) {
             if (steamRefillPostClear && millis() - steamRefillClearedAt >= steamRefillPostClearMs)
                 steamRefillPostClear = false;
-            refill.open = steamLevelEnabled && isTankLevelOK() && (steamBoilerLow || steamRefillPostClear);
+            refill.open = steamLevelEnabled && isSteamRefillTankLevelOK() && (steamBoilerLow || steamRefillPostClear);
         } else if (steamRefillMode == 1 && steamLevelEnabled && !active && mode != MODE_STANDBY && steamBoilerLow &&
-                   isTankLevelOK()) {
+                   isSteamRefillTankLevelOK()) {
             targetPressure = 0.0f;
             targetFlow = 0.0f;
             relay.open = false;
