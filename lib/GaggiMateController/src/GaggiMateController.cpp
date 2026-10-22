@@ -50,7 +50,8 @@ void GaggiMateController::setup() {
             [this]() { thermalRunawayShutdown(); });
     }
     if (_config.capabilites.pressure || _config.capabilites.dualBoiler) {
-        adc = new ADSAdc(_config.pressureSda, _config.pressureScl, _config.adcRates);
+        adc = new ADSAdc(_config.pressureSda, _config.pressureScl, _config.adcRates,
+                         gearpumpAddon ? gearpumpAddon->sharedBusMutex() : nullptr);
         pressureSensor = new PressureSensor(this->adc, _config.pressureControlRate);
         if (_config.capabilites.dualBoiler) {
             this->brewTemperature = new NtcThermistor(
@@ -507,14 +508,21 @@ void GaggiMateController::updateDualBoilerOutputs(unsigned long now) {
 }
 
 void GaggiMateController::detectAddon() {
-    Wire.begin(_config.ext3Pin, _config.ext2Pin, 400000);
+    const bool sharedAdcBus = (_config.capabilites.pressure || _config.capabilites.dualBoiler) &&
+                              _config.ext3Pin == _config.pressureSda && _config.ext2Pin == _config.pressureScl;
+    TwoWire &bus = sharedAdcBus ? Wire1 : Wire;
+    if (!bus.begin(_config.ext3Pin, _config.ext2Pin, ADC_I2C_CLOCK_HZ)) {
+        ESP_LOGE(LOG_TAG, "Could not initialize addon bus");
+        return;
+    }
     for (uint8_t addr = XL9555_SLAVE_ADDRESS0; addr <= XL9555_SLAVE_ADDRESS7; ++addr) {
-        Wire.beginTransmission(addr);
-        if (Wire.endTransmission(addr) == 0) {
+        bus.beginTransmission(addr);
+        if (bus.endTransmission() == 0) {
             ESP_LOGI(LOG_TAG, "Found an extension at address 0x%X", addr);
             if (addr == 0x26) {
                 ESP_LOGI(LOG_TAG, "Identified addon as Gearpump Addon");
-                gearpumpAddon = new GearpumpAddon(addr, _config.ext3Pin, _config.ext2Pin, _config.ext1Pin);
+                gearpumpAddon =
+                    new GearpumpAddon(addr, _config.ext3Pin, _config.ext2Pin, _config.ext1Pin, sharedAdcBus ? &bus : nullptr);
             }
         }
     }
