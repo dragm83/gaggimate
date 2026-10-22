@@ -6406,3 +6406,7 @@ msgstr ""
 #: src/components/MachineProfileControl.jsx
 msgid "Restore profile defaults"
 msgstr ""
+
+#: src/pages/SetupWizard/MachineStep.jsx
+msgid "Replace these machine settings?"
+msgstr ""

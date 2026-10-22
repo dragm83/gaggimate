@@ -240,7 +240,7 @@ export function changedProfileValues(profile, current) {
 }
 
 // Compare against saved device values, rather than unsaved form edits.
-export async function confirmProfileApply(formData) {
+export async function confirmProfileApply(formData, confirmChanges) {
   const saved = await requestSettings();
   const selected = parseProfileSelection(formData.machineProfileSelection);
   if (selected?.settings) {
@@ -262,6 +262,7 @@ export async function confirmProfileApply(formData) {
     currentProfileValues(saved, caps, !!saved.machineHardwareConfiguration),
   );
   if (!changed.length) return true;
+  if (confirmChanges) return confirmChanges(changed);
   return window.confirm(
     `Replace these machine settings?\n${changed.map(([key, value]) => `${fields[key].label}: ${String(value)}`).join('\n')}`,
   );
