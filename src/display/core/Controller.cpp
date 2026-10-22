@@ -319,11 +319,12 @@ void Controller::setupBluetooth() {
         pluginManager->trigger("pump:volume:change", "value", waterPumped);
     });
     comms.onMachineHardware([this](uint32_t hash, bool ready, bool error) {
-        if (ready && !hardwareSessionReady)
-            requestStateResend();
+        const bool wasReady = isMachineHardwareReady();
         appliedHardwareHash = hash;
         hardwareSessionReady = ready;
         hardwareConfigurationError = error;
+        if (!wasReady && isMachineHardwareReady() && !error)
+            requestStateResend();
     });
     comms.onTankLevel([this](bool present, bool full) {
         tankLevelPresent = present;
@@ -612,6 +613,9 @@ void Controller::loop() {
     // and a spurious ACK then stops the reliable layer retrying. Re-send until it lands.
     if (comms.isConnected() && now < configResendUntil && (now - lastConfigResend) >= CONFIG_RESEND_INTERVAL_MS) {
         setPressureScale();
+        // Retry the hardware handshake too: until accepted, the controller
+        // deliberately ignores boiler commands. Matching ready settings are skipped.
+        setMachineHardware();
         setHeaterSettings();
         setPumpModelCoeffs();
         lastConfigResend = now;
