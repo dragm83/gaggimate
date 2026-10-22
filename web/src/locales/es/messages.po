@@ -6418,3 +6418,7 @@ msgstr ""
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Block steam boiler refill when Alba reports a low reservoir level or its reading is unavailable. Leave off if no reservoir distance sensor is installed."
 msgstr ""
+
+#: src/pages/SetupWizard/MachineStep.jsx
+msgid "Replace these machine settings?"
+msgstr ""

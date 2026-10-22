@@ -10,6 +10,7 @@ import {
   profileProblems,
   confirmProfileApply,
   waitForMachineHardware,
+  PROFILE_FIELDS,
 } from '../../utils/machineProfiles.js';
 import { useEffect, useState } from 'preact/hooks';
 import { Trans, useLingui } from '@lingui/react/macro';
@@ -56,10 +57,12 @@ export function MachineStep({ onSaved, onDirty, onConfigure }) {
   }, []);
   const [saving, setSaving] = useState(false);
   const [applied, setApplied] = useState(false);
+  const [confirmation, setConfirmation] = useState(null);
   const [error, setError] = useState('');
   const setFields = values => {
     setFormData(previous => ({ ...previous, ...values }));
     setApplied(false);
+    setConfirmation(null);
     onDirty?.();
   };
   const caps = formData.machineProfileCapabilities || {};
@@ -78,7 +81,7 @@ export function MachineStep({ onSaved, onDirty, onConfigure }) {
       ? resolvedProfile
       : null;
   const problems = profile ? profileProblems(profile, formData) : [];
-  const apply = async () => {
+  const apply = async (confirmed = false) => {
     if (loading || !profile || saving || problems.length) return;
     setSaving(true);
     setError('');
@@ -86,7 +89,13 @@ export function MachineStep({ onSaved, onDirty, onConfigure }) {
       const appliedData = selection?.settings
         ? formData
         : { ...formData, ...profileToForm(profile) };
-      if (!(await confirmProfileApply(appliedData))) return;
+      const accepted = await confirmProfileApply(appliedData, changed => {
+        if (confirmed && JSON.stringify(changed) === JSON.stringify(confirmation)) return true;
+        setConfirmation(changed);
+        return false;
+      });
+      if (!accepted) return;
+      setConfirmation(null);
       const values = currentProfileValues(
         appliedData,
         formData.machineProfileCapabilities || {},
@@ -143,12 +152,41 @@ export function MachineStep({ onSaved, onDirty, onConfigure }) {
         </InfoNote>
       )}
       {applied && <InfoNote tone='success' title={t`Machine settings saved`} />}
+      {confirmation && (
+        <InfoNote tone='warning' title={t`Replace these machine settings?`}>
+          <ul className='list-inside list-disc'>
+            {confirmation.map(([key, value]) => (
+              <li key={key}>
+                {PROFILE_FIELDS[key].label}: {String(value)}
+              </li>
+            ))}
+          </ul>
+          <div className='mt-3 flex justify-end gap-2'>
+            <button
+              type='button'
+              className='btn btn-ghost'
+              disabled={saving}
+              onClick={() => setConfirmation(null)}
+            >
+              <Trans>Cancel</Trans>
+            </button>
+            <button
+              type='button'
+              className='btn btn-primary'
+              disabled={saving}
+              onClick={() => apply(true)}
+            >
+              <Trans>Apply Preset</Trans>
+            </button>
+          </div>
+        </InfoNote>
+      )}
       <div className='flex justify-end'>
         <button
           type='button'
           className='btn btn-primary'
-          disabled={loading || saving || !profile || problems.length > 0}
-          onClick={apply}
+          disabled={loading || saving || !!confirmation || !profile || problems.length > 0}
+          onClick={() => apply()}
         >
           {saving && (
             <>
