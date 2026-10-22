@@ -25,6 +25,11 @@ jobs:
           fetch-tags: true
           submodules: "recursive"
 
+      - name: Fetch upstream release tags
+        # Forks may contain the source history without any release tags.
+        # Both the installer and PlatformIO derive their version from v* tags.
+        run: git fetch --no-tags https://github.com/jniebuhr/gaggimate.git 'refs/tags/v*:refs/tags/v*'
+
       - name: Cache PlatformIO
         uses: actions/cache@v4
         with:
