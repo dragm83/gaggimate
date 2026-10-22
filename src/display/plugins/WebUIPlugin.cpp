@@ -388,7 +388,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     if (request->method() == HTTP_POST) {
         if (request->hasArg("setupStep")) {
             const String step = request->arg("setupStep");
-            if (step != "machine" && step != "tests" && step != "plugins" && step != "wifi" && step != "done") {
+            if (step != "machine" && step != "tests" && step != "plugins" && step != "wifi" && step != "done" &&
+                step != "custom:plugins" && step != "custom:wifi" && step != "custom:done") {
                 request->send(400, "application/json", "{\"error\":\"Invalid setup step\"}");
                 return;
             }

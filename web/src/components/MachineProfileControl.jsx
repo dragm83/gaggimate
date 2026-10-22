@@ -54,14 +54,18 @@ export function MachineProfileControl({
   }, []);
   const [busy, setBusy] = useState(false);
   const [loadingLibrary, setLoadingLibrary] = useState(true);
+  const [libraryError, setLibraryError] = useState('');
+  const [libraryReload, setLibraryReload] = useState(0);
   useEffect(() => {
     let cancelled = false;
+    setLoadingLibrary(true);
+    setLibraryError('');
     requestJson('/api/machine-profiles')
       .then(profiles => {
         if (!cancelled) updateCatalog(profiles);
       })
       .catch(err => {
-        if (!cancelled) setError(err.message);
+        if (!cancelled) setLibraryError(err.message);
       })
       .finally(() => {
         if (!cancelled) setLoadingLibrary(false);
@@ -69,7 +73,7 @@ export function MachineProfileControl({
     return () => {
       cancelled = true;
     };
-  }, [updateCatalog]);
+  }, [updateCatalog, libraryReload]);
   const selection = useMemo(
     () => parseProfileSelection(formData.machineProfileSelection),
     [formData.machineProfileSelection],
@@ -125,7 +129,7 @@ export function MachineProfileControl({
   const changedKeys = new Set(
     selected ? changedProfileValues(selected, currentValues).map(([key]) => key) : [],
   );
-  const modified = selected && !updated && changedKeys.size > 0;
+  const modified = selected && problems.length === 0 && !updated && changedKeys.size > 0;
   const formatValue = (key, value) => {
     if (typeof value === 'boolean') return value ? t`Enabled` : t`Disabled`;
     if (key.endsWith('Resistance')) return `${value / 1000} kΩ`;
@@ -408,6 +412,21 @@ export function MachineProfileControl({
         <p role='alert' className='text-error'>
           {error}
         </p>
+      )}
+      {libraryError && (
+        <div role='alert' className='text-error flex items-center gap-2 text-sm'>
+          <span>{libraryError}</span>
+          <button
+            type='button'
+            className='hover:bg-error/10 rounded-md p-1'
+            aria-label={t`Retry`}
+            title={t`Retry`}
+            disabled={disabled || busy || loadingLibrary}
+            onClick={() => setLibraryReload(value => value + 1)}
+          >
+            <FontAwesomeIcon icon={faRotateRight} />
+          </button>
+        </div>
       )}
     </div>
   );
