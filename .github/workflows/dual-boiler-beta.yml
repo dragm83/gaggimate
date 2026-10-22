@@ -1,0 +1,158 @@
+name: Dual Boiler Beta Builds
+
+on:
+  push:
+    branches:
+      - "feature/dual-boiler-beta"
+  workflow_dispatch:
+
+concurrency:
+  group: dual-boiler-beta-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/feature/dual-boiler-beta'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          submodules: "recursive"
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio-dual-boiler-beta
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: pip install --upgrade platformio esptool
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Prepare output
+        run: |
+          mkdir -p out site
+          cp docs/dual-boiler-beta-flasher/index.html site/
+          cp docs/dual-boiler-beta-flasher/display-manifest.json site/
+          cp docs/dual-boiler-beta-flasher/controller-manifest.json site/
+          git describe --tags --dirty --match "v*" > out/version.txt
+          cp out/version.txt site/version.txt
+          python - <<'PYTHON'
+          import json
+          from pathlib import Path
+          version = Path("out/version.txt").read_text().strip()
+          for path in Path("site").glob("*-manifest.json"):
+              manifest = json.loads(path.read_text())
+              manifest["version"] = version
+              path.write_text(json.dumps(manifest, indent=2) + "\n")
+          PYTHON
+
+      - name: Build web UI
+        run: ./scripts/build_webui.sh
+
+      - name: Build controller
+        run: |
+          pio run -e controller
+          cp .pio/build/controller/bootloader.bin out/controller-bootloader.bin
+          cp .pio/build/controller/partitions.bin out/controller-partitions.bin
+          cp .pio/build/controller/firmware.bin out/controller-firmware.bin
+
+      - name: Build display filesystem
+        run: |
+          pio run -e display -t buildfs
+          cp .pio/build/display/littlefs.bin out/display-filesystem.bin
+
+      - name: Build display
+        run: |
+          pio run -e display
+          cp .pio/build/display/bootloader.bin out/display-bootloader.bin
+          cp .pio/build/display/partitions.bin out/display-partitions.bin
+          cp .pio/build/display/firmware.bin out/display-firmware.bin
+
+      - name: Generate complete factory images
+        run: |
+          python -m esptool --chip esp32s3 merge-bin \
+            -o out/controller-complete.bin \
+            --flash-mode keep \
+            --flash-freq keep \
+            --flash-size keep \
+            0x0000 out/controller-bootloader.bin \
+            0x8000 out/controller-partitions.bin \
+            0xe000 docs/boot_app0.bin \
+            0x10000 out/controller-firmware.bin
+
+          python -m esptool --chip esp32s3 merge-bin \
+            -o out/display-complete.bin \
+            --flash-mode keep \
+            --flash-freq keep \
+            --flash-size keep \
+            0x0000 out/display-bootloader.bin \
+            0x8000 out/display-partitions.bin \
+            0xe000 docs/boot_app0.bin \
+            0x10000 out/display-firmware.bin \
+            0xc90000 out/display-filesystem.bin
+
+          # A merged factory image must retain the exact PlatformIO-generated
+          # bootloader. Overriding its flash mode here previously changed the
+          # controller from DIO to QIO, causing the ESP32-S3 ROM to reset while
+          # loading the second bootloader segment.
+          cmp -n "$(stat -c '%s' out/controller-bootloader.bin)" \
+            out/controller-bootloader.bin out/controller-complete.bin
+          cmp -n "$(stat -c '%s' out/display-bootloader.bin)" \
+            out/display-bootloader.bin out/display-complete.bin
+
+          sha256sum out/*.bin > out/SHA256SUMS
+
+          cp out/controller-complete.bin site/
+          cp out/display-complete.bin site/
+          cp out/SHA256SUMS site/
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dual-boiler-beta-firmware-${{ github.sha }}
+          path: out/
+          retention-days: 30
+
+      - name: Publish rolling development release
+        uses: andelf/nightly-release@c5ed4bdb7c1da04a4fa1e40bc5e67306f682563b
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: dual-boiler-beta-latest
+          name: "Dual Boiler Beta - Latest Development Build"
+          prerelease: true
+          body: |
+            Automated build of the GaggiMate dual-boiler integration beta.
+
+            These files install the Dual Boiler Beta build, not official GaggiMate firmware.
+            Use display-complete.bin for the display and controller-complete.bin for the controller.
+          files: |
+            out/*
+
+      - name: Deploy web flasher to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          destination_dir: dual-boiler-beta
+          publish_branch: gh-pages
