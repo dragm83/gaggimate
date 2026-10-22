@@ -276,6 +276,7 @@ void Controller::setupBluetooth() {
         if (!connected)
             hardwareSessionReady = false;
         tankLevelKnown = false;
+        tofLevelKnown = false;
         steamLevelKnown = false;
         controlStateSent = false;
         settleResendAt = 0;
@@ -395,7 +396,13 @@ void Controller::setupBluetooth() {
         }
     });
     comms.onTofMeasurement([this](uint32_t value) {
+        if (value >= 0xFFFF) {
+            tofLevelKnown = false;
+            return;
+        }
         tofDistance = static_cast<int>(value);
+        lastTofReading = millis();
+        tofLevelKnown = true;
         ESP_LOGV(LOG_TAG, "Received new TOF distance: %d", tofDistance);
         pluginManager->trigger("controller:tof:change", "value", tofDistance);
     });

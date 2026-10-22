@@ -151,6 +151,8 @@ class Controller {
     void onFlush();
     void onFlushRelease(); // ends a hold-to-flush; no-op otherwise
     int getWaterLevel() const {
+        if (tankLevelPresent)
+            return tankLevelOK ? 100 : 0;
         float reversedLevel = static_cast<float>(settings.getEmptyTankDistance()) -
                               static_cast<float>(std::min(settings.getEmptyTankDistance(), tofDistance));
         float range = static_cast<float>(settings.getEmptyTankDistance() - settings.getFullTankDistance());
@@ -160,9 +162,18 @@ class Controller {
 
     void onVolumetricDelete();
     bool isLowWaterLevel() const { return getWaterLevel() < 20; };
-    bool isTankLevelOK() const { return !tankLevelPresent || tankLevelOK; }
-    bool hasTankLevel() const { return tankLevelPresent; }
-    bool hasTankLevelReading() const { return tankLevelKnown.load(); }
+    bool isTankLevelOK() const {
+        if (tankLevelPresent)
+            return tankLevelOK;
+        return !usesAlbaTankLevel() || (hasTankLevelReading() && !isLowWaterLevel());
+    }
+    bool hasTankLevel() const { return tankLevelPresent || usesAlbaTankLevel(); }
+    bool hasTankLevelReading() const {
+        if (tankLevelPresent)
+            return tankLevelKnown.load();
+        return usesAlbaTankLevel() && tofLevelKnown.load() &&
+               uint32_t(millis() - lastTofReading.load()) < ALBA_TANK_READING_TIMEOUT_MS;
+    }
     bool hasSteamLevel() const { return systemInfo.capabilities.dualBoiler && settings.getSteamLevelEnabled(); }
     bool hasSteamLevelReading() const { return steamLevelKnown.load(); }
     bool isSteamBoilerLow() const { return steamBoilerLow; }
@@ -318,6 +329,14 @@ class Controller {
     bool sdcard = false;
     void onSteamLevelRead(bool low);
     bool steamBoilerLow = false;
+    bool usesAlbaTankLevel() const {
+        return systemInfo.capabilities.dualBoiler && !settings.getTankLevelEnabled() && systemInfo.capabilities.tof;
+    }
+    // Alba reports a filtered distance every five seconds; tolerate two missed
+    // reports before preventing refill on a stale reading.
+    static constexpr uint32_t ALBA_TANK_READING_TIMEOUT_MS = 15000;
+    std::atomic<bool> tofLevelKnown{false};
+    std::atomic<uint32_t> lastTofReading{0};
     std::atomic<bool> tankLevelKnown{false};
     std::atomic<bool> steamLevelKnown{false};
     bool tankLevelPresent = false;
