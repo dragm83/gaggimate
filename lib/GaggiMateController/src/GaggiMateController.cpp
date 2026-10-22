@@ -127,7 +127,7 @@ void GaggiMateController::setup() {
         [](float, float) {});
 
     // 4-Pin peripheral port
-    if (!_config.capabilites.dualBoiler) {
+    if (_config.sunriseSdaPin != 0 && _config.sunriseSclPin != 0) {
         albaComms = new SoftWire(_config.sunriseSdaPin, _config.sunriseSclPin);
         albaComms->setTxBuffer(albaSwTxBuffer, sizeof(albaSwTxBuffer));
         albaComms->setRxBuffer(albaSwRxBuffer, sizeof(albaSwRxBuffer));
@@ -136,10 +136,14 @@ void GaggiMateController::setup() {
         albaComms->begin();
         albaBus = new SoftWireBus(albaComms);
         this->ledController = new LedController(albaBus);
-        this->distanceSensor = new DistanceSensor(albaBus, [this](int distance) { _comms.sendTofMeasurement(distance); });
         if (this->ledController->isAvailable()) {
             _config.capabilites.ledControls = true;
-            _config.capabilites.tof = true;
+            // A configured Max tank switch owns tank reporting. Alba lighting
+            // still works, but never starts a competing distance stream.
+            if (tankLevel == nullptr) {
+                distanceSensor = new DistanceSensor(albaBus, [this](int distance) { _comms.sendTofMeasurement(distance); });
+                _config.capabilites.tof = true;
+            }
             _comms.onLedControl([this](uint8_t channel, uint8_t brightness) { ledController->setChannel(channel, brightness); });
         }
     }

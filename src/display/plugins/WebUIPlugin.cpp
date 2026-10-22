@@ -614,6 +614,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setThemeMode(request->arg("themeMode").toInt());
             if (request->hasArg("statusDisplayMode"))
                 settings->setStatusDisplayMode(request->arg("statusDisplayMode").toInt());
+            if (request->hasArg("albaRefillInterlock"))
+                settings->setAlbaRefillInterlock(request->arg("albaRefillInterlock") == "1");
             if (request->hasArg("sunriseIdle"))
                 settings->setSunriseIdle(request->arg("sunriseIdle"));
             if (request->hasArg("sunriseActive"))
@@ -800,6 +802,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["steamPumpCutoff"] = settings.getSteamPumpCutoff();
     doc["themeMode"] = settings.getThemeMode();
     doc["statusDisplayMode"] = settings.getStatusDisplayMode();
+    doc["albaRefillInterlock"] = settings.getAlbaRefillInterlock();
     doc["sunriseIdle"] = settings.getSunriseIdle();
     doc["sunriseActive"] = settings.getSunriseActive();
     doc["sunriseFinished"] = settings.getSunriseFinished();

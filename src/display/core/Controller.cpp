@@ -276,6 +276,7 @@ void Controller::setupBluetooth() {
         if (!connected)
             hardwareSessionReady = false;
         tankLevelKnown = false;
+        tofLevelKnown = false;
         steamLevelKnown = false;
         controlStateSent = false;
         settleResendAt = 0;
@@ -395,7 +396,13 @@ void Controller::setupBluetooth() {
         }
     });
     comms.onTofMeasurement([this](uint32_t value) {
+        if (value >= 0xFFFF) {
+            tofLevelKnown = false;
+            return;
+        }
         tofDistance = static_cast<int>(value);
+        lastTofReading = millis();
+        tofLevelKnown = true;
         ESP_LOGV(LOG_TAG, "Received new TOF distance: %d", tofDistance);
         pluginManager->trigger("controller:tof:change", "value", tofDistance);
     });
@@ -1138,9 +1145,9 @@ void Controller::updateControl() {
         if (steamRefillMode == 2) {
             if (steamRefillPostClear && millis() - steamRefillClearedAt >= steamRefillPostClearMs)
                 steamRefillPostClear = false;
-            refill.open = steamLevelEnabled && isTankLevelOK() && (steamBoilerLow || steamRefillPostClear);
+            refill.open = steamLevelEnabled && isSteamRefillTankLevelOK() && (steamBoilerLow || steamRefillPostClear);
         } else if (steamRefillMode == 1 && steamLevelEnabled && !active && mode != MODE_STANDBY && steamBoilerLow &&
-                   isTankLevelOK()) {
+                   isSteamRefillTankLevelOK()) {
             targetPressure = 0.0f;
             targetFlow = 0.0f;
             relay.open = false;

@@ -269,6 +269,7 @@ class Settings {
     String getSunriseFinished() const { return sunriseFinished.get(); }
     String getSunriseError() const { return sunriseError.get(); }
     int getSunriseExtBrightness() const { return sunriseExtBrightness.get(); }
+    bool getAlbaRefillInterlock() const { return albaRefillInterlock.get(); }
     int getEmptyTankDistance() const { return emptyTankDistance.get(); }
     int getFullTankDistance() const { return fullTankDistance.get(); }
     int getAltRelayFunction() const { return altRelayFunction.get(); }
@@ -377,6 +378,7 @@ class Settings {
     void setSunriseFinished(String hexColor);
     void setSunriseError(String hexColor);
     void setSunriseExtBrightness(int sunrise_ext_brightness);
+    void setAlbaRefillInterlock(bool enabled) { albaRefillInterlock.set(enabled); }
     void setEmptyTankDistance(int empty_tank_distance);
     void setFullTankDistance(int full_tank_distance);
     void setAltRelayFunction(int alt_relay_function);
@@ -515,6 +517,7 @@ class Settings {
     Property<String> sunriseFinished{registry, "sr_f", "#00FF00"};
     Property<String> sunriseError{registry, "sr_e", "#FF0000"};
     Property<int> sunriseExtBrightness{registry, "sr_exb", 75};
+    Property<bool> albaRefillInterlock{registry, "alba_refill", false};
     Property<int> emptyTankDistance{registry, "sr_ed", 210};
     Property<int> fullTankDistance{registry, "sr_fd", 30};
 

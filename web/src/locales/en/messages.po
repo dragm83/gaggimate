@@ -6406,3 +6406,15 @@ msgstr "Settings differ from this profile. Reload to restore profile defaults."
 #: src/components/MachineProfileControl.jsx
 msgid "Restore profile defaults"
 msgstr "Restore profile defaults"
+
+#: src/pages/Settings/tabs/MachineTab.jsx
+msgid "Use Alba reservoir level to interlock steam refill"
+msgstr "Use Alba reservoir level to interlock steam refill"
+
+#: src/pages/Settings/tabs/MachineTab.jsx
+msgid "The physical reservoir sensor takes priority."
+msgstr "The physical reservoir sensor takes priority."
+
+#: src/pages/Settings/tabs/MachineTab.jsx
+msgid "Block steam boiler refill when Alba reports a low reservoir level or its reading is unavailable. Leave off if no reservoir distance sensor is installed."
+msgstr "Block steam boiler refill when Alba reports a low reservoir level or its reading is unavailable. Leave off if no reservoir distance sensor is installed."
