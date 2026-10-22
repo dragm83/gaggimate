@@ -1,0 +1,16 @@
+{
+  "name": "GaggiMate Dual Boiler Beta - Display",
+  "version": "v1.9.0-156-ga9ea72f4",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "display-complete.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
