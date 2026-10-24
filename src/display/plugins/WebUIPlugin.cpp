@@ -642,6 +642,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     AsyncResponseStream *response = request->beginResponseStream("application/json");
     JsonDocument doc(&psramAllocator);
     Settings const &settings = controller->getSettings();
+    doc["controllerError"] = controller->getError();
     doc["startupMode"] = settings.getStartupMode() == MODE_BREW ? "brew" : "standby";
     doc["startupProfile"] = settings.getStartupProfile();
     doc["targetSteamTemp"] = settings.getTargetSteamTemp();

@@ -267,3 +267,11 @@ export async function confirmProfileApply(formData, confirmChanges) {
     `Replace these machine settings?\n${changed.map(([key, value]) => `${fields[key].label}: ${String(value)}`).join('\n')}`,
   );
 }
+
+// Existing controller error 4 covers temperature faults (sensor failure or overtemperature).
+export function machineTemperatureFault(data) {
+  if (data?.controllerError !== 4) return '';
+  return data.machineHardwareConfiguration || data.machineProfileCapabilities?.dualBoiler
+    ? t`Settings saved. Temperature fault detected. Check that both brew and steam NTC sensors are connected and correctly configured. Restart the controller and retry Apply Preset.`
+    : t`Settings saved. Temperature fault detected. Check the temperature sensor and its connection. Restart the controller and retry Apply Preset.`;
+}

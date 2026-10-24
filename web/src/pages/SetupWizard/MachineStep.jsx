@@ -3,6 +3,7 @@ import { faCheck } from '@fortawesome/free-solid-svg-icons/faCheck';
 import { faMinus } from '@fortawesome/free-solid-svg-icons/faMinus';
 import { MachineProfileControl } from '../../components/MachineProfileControl.jsx';
 import {
+  machineTemperatureFault,
   currentProfileValues,
   machineBoardName,
   parseProfileSelection,
@@ -100,10 +101,12 @@ export function MachineStep({ onSaved, onDirty, onConfigure }) {
         formData.machineProfileCapabilities || {},
         !!formData.machineHardwareConfiguration,
       );
-      await postSettings({
+      const saved = await postSettings({
         ...values,
         machineProfileSelection: appliedData.machineProfileSelection || '',
       });
+      const temperatureFault = machineTemperatureFault(saved);
+      if (temperatureFault) throw new Error(temperatureFault);
       setFormData(appliedData);
       setApplied(true);
       onSaved?.(profile);
