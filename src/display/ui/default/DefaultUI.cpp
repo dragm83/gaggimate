@@ -800,12 +800,8 @@ void DefaultUI::updateSystemStatus() {
     } else {
         brewStatus = "Heating Up";
     }
-    const bool cleaningDue = controller->getWarnings().isActive(WARNING_BACKFLUSH) ||
-                             controller->getWarnings().isActive(WARNING_DESCALING);
-    char brewStatusText[48];
-    snprintf(brewStatusText, sizeof(brewStatusText), "%s%s", brewStatus, cleaningDue ? " (F)" : "");
-    if (stringChanged(eez::flow::getGlobalVariable(FLOW_GLOBAL_VARIABLE_BREW_STATUS).getString(), brewStatusText))
-        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_BREW_STATUS, StringValue(brewStatusText));
+    if (stringChanged(eez::flow::getGlobalVariable(FLOW_GLOBAL_VARIABLE_BREW_STATUS).getString(), brewStatus))
+        eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_BREW_STATUS, StringValue(brewStatus));
     systemStatus.bluetooth_scales(controller->isScaleSourceHealthy(controller->getEffectiveScaleSource()));
     systemStatus.controller_version(controller->getSystemInfo().version.c_str());
     systemStatus.display_version(BUILD_GIT_VERSION);
