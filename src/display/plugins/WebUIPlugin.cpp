@@ -713,6 +713,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     AsyncResponseStream *response = request->beginResponseStream("application/json");
     JsonDocument doc(&psramAllocator);
     Settings const &settings = controller->getSettings();
+    doc["controllerError"] = controller->getError();
     doc["machineHardwareConfiguration"] = controller->getSystemInfo().capabilities.dualBoiler;
     doc["machineHardwareReady"] = controller->isMachineHardwareReady();
     if (request->method() == HTTP_POST)

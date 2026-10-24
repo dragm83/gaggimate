@@ -6450,3 +6450,11 @@ msgstr ""
 #: src/pages/SetupWizard/index.jsx
 msgid "Thank you for installing GaggiMate!"
 msgstr ""
+
+#: src/utils/machineProfiles.js
+msgid "Settings saved. Temperature fault detected. Check that both brew and steam NTC sensors are connected and correctly configured. Restart the controller and retry Apply Preset."
+msgstr ""
+
+#: src/utils/machineProfiles.js
+msgid "Settings saved. Temperature fault detected. Check the temperature sensor and its connection. Restart the controller and retry Apply Preset."
+msgstr ""
