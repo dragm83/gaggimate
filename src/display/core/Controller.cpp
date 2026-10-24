@@ -876,6 +876,8 @@ float Controller::getTargetTemp() const {
 }
 
 float Controller::getTargetSteamTemp() const {
+    if (brewHeaterTestActive)
+        return 0.0f;
     if (mode != MODE_STANDBY && (!systemInfo.capabilities.dualBoiler || isSteamHeaterActive())) {
         return settings.getTargetSteamTemp();
     }

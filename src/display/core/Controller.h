@@ -111,6 +111,7 @@ class Controller {
     void raiseTemp();
     void lowerTemp();
     void toggleSteamHeater();
+    void setBrewHeaterTestActive(bool active) { brewHeaterTestActive = active; }
     void toggleWaterValve();
     bool isWaterValveActive() const { return waterValveActive; }
     bool isSteamControlsAvailable() const { return systemInfo.capabilities.dualBoiler && settings.isIndependentSteamControl(); }
@@ -325,6 +326,7 @@ class Controller {
     std::atomic<uint32_t> appliedHardwareHash{0};
     std::atomic<bool> hardwareSessionReady{false};
     std::atomic<bool> hardwareConfigurationError{false};
+    std::atomic<bool> brewHeaterTestActive{false};
     bool steamHeaterActive = false;
     bool steamReady = false;
     bool steamSwitchOn = false;
