@@ -15,6 +15,7 @@ Heater::Heater(TemperatureSensor *sensor, uint8_t heaterPin, const heater_error_
 
 void Heater::setup() {
     pinMode(heaterPin, OUTPUT);
+    writeOutput(false);
     setupPid();
     xTaskCreate(loopTask, "Heater::loop", configMINIMAL_STACK_SIZE * 4, this, 1, &taskHandle);
 }
@@ -39,6 +40,8 @@ void Heater::setupAutotune(int testTimeSec, int windowSize, int heaterWattage) {
 }
 
 void Heater::loop() {
+    if (!checkHeating())
+        return;
     if (!sensor->isErrorState() && autotuning) {
         loopAutotune();
         return;
@@ -140,6 +143,8 @@ void Heater::loopAutotune() {
     long loopInterval = (static_cast<long>(TUNER_OUTPUT_SPAN) - 1L) * 1000L;
     while (autotuning && !autotuner->isFinished()) {
         microseconds = micros();
+        if (!checkHeating())
+            return;
         // Re-check sensor every iteration. Heater::loop entry gate sampled
         // once — mid-test fault would leave relay stuck at full power for
         // rest of window. Max31855Thermocouple::read() returns 0 on fault;
@@ -241,7 +246,47 @@ void Heater::requestOutput(bool on) {
         writeOutput(on);
 }
 
-void Heater::writeOutput(bool on) { digitalWrite(heaterPin, on ? HIGH : LOW); }
+void Heater::writeOutput(bool on) {
+    portENTER_CRITICAL(&outputMux);
+    const uint32_t now = millis();
+    if (outputOn)
+        totalOnMs += now - outputAccountedAt;
+    outputAccountedAt = now;
+    outputOn = on && !heatingFault.load();
+    digitalWrite(heaterPin, outputOn ? HIGH : LOW);
+    portEXIT_CRITICAL(&outputMux);
+}
+
+bool Heater::checkHeating() {
+    if (heatingFault.load()) {
+        requestOutput(false);
+        return false;
+    }
+    if (sensor->isErrorState())
+        return true; // Existing sensor fault path switches the output off.
+
+    uint32_t onMs;
+    bool on;
+    uint32_t now;
+    portENTER_CRITICAL(&outputMux);
+    now = millis();
+    on = outputOn;
+    onMs = totalOnMs + (on ? now - outputAccountedAt : 0);
+    portEXIT_CRITICAL(&outputMux);
+    const auto fault = heatingCheck.update(now, sensor->read(), autotuning ? MAX_AUTOTUNE_TEMP : setpoint, onMs, on);
+    if (fault == HeatingCheck::Fault::None)
+        return true;
+
+    heatingFault = true; // Latched until controller restart; later commands cannot restore the output.
+    stop();
+    ESP_LOGE(LOG_TAG, "Heating safety fault on GPIO %u: %s (temperature=%.2f)", heaterPin,
+             fault == HeatingCheck::Fault::NoRise ? "no temperature rise during sustained heating"
+                                                 : "temperature rose more than 10C with output off",
+             sensor->read());
+    if (error_callback)
+        error_callback();
+    return false;
+}
 
 void Heater::plot(float optimumOutput, float outputScale, uint8_t everyNth) {
     if (plotCount >= everyNth) {
