@@ -432,7 +432,7 @@ void GaggiMateController::loop() {
     if (tankLevel != nullptr && now - lastTankLevelSend >= TANK_LEVEL_SEND_INTERVAL_MS) {
         sendTankLevel();
     }
-    if (errorState != ERROR_CODE_NONE) {
+    if (errorState != ERROR_CODE_NONE && errorState != ERROR_CODE_TIMEOUT) {
         ESP_LOGW("GaggiMateController", "Error state: %d", errorState);
     }
     delay(_config.dualBoilerWaterHandling ? 50 : 250);
