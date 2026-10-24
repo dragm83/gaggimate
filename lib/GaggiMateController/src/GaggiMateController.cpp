@@ -56,18 +56,12 @@ void GaggiMateController::setup() {
         if (_config.capabilites.dualBoiler) {
             this->brewTemperature = new NtcThermistor(
                 this->adc, 2,
-                [this]() {
-                    if (hardwareSessionReady)
-                        thermalRunawayShutdown();
-                },
+                [this]() { thermalRunawayShutdown(); },
                 machineHardware.ntc_brew_nominal_resistance, machineHardware.ntc_brew_series_resistance,
                 machineHardware.ntc_brew_supply_voltage, machineHardware.ntc_brew_beta, _config.ntcTiming[2]);
             this->steamTemperature = new NtcThermistor(
                 this->adc, 3,
-                [this]() {
-                    if (hardwareSessionReady)
-                        thermalRunawayShutdown();
-                },
+                [this]() { thermalRunawayShutdown(); },
                 machineHardware.ntc_steam_nominal_resistance, machineHardware.ntc_steam_series_resistance,
                 machineHardware.ntc_steam_supply_voltage, machineHardware.ntc_steam_beta, _config.ntcTiming[3]);
         }
@@ -366,8 +360,10 @@ void GaggiMateController::setup() {
     // A new link gets a full ping window; a stale lastPingTime would trip the watchdog while the display is still
     // discovering services. errorState is left alone so a timed-out session only recovers on a real ping.
     _comms.onConnectionChange([this](bool connected) {
-        if (connected)
+        if (connected) {
             lastPingTime = millis();
+            controllerErrorPending = true;
+        }
     });
     _comms.onAutotune([this](uint32_t testTimeSec, uint32_t windowSize, uint32_t heaterWattage) {
         if (_config.capabilites.dualBoiler && !hardwareSessionReady)
@@ -410,6 +406,10 @@ void GaggiMateController::loop() {
     }
     if (hardwareStatusPending)
         _comms.sendMachineHardwareStatus(machineHardwareHash(machineHardware), hardwareSessionReady, hardwareConfigurationError);
+    // Report a pre-existing fault after the encrypted comms session is established.
+    // NONE also clears the display's old fault after a successful controller restart.
+    if (_comms.isConnected() && controllerErrorPending.exchange(false))
+        _comms.sendError(errorState);
     unsigned long now = millis();
 
     // Keep zero tracking and idle display quantization out of the measurement
@@ -557,6 +557,9 @@ void GaggiMateController::handlePingTimeout() {
     } else {
         this->alt->set(false);
     }
+    // A communication timeout must not turn a latched thermal fault into a recoverable error.
+    if (errorState != ERROR_CODE_NONE && errorState != ERROR_CODE_TIMEOUT)
+        return;
     // On the healthy->timeout transition, drop the BLE link. An in-band error
     // notify can be silently swallowed on a wedged GATT (the failure mode this
     // is here to recover from), but LL_TERMINATE_IND propagates reliably at
@@ -573,6 +576,8 @@ void GaggiMateController::handlePingTimeout() {
 }
 
 void GaggiMateController::thermalRunawayShutdown() {
+    if (errorState == ERROR_CODE_RUNAWAY)
+        return;
     clearRetainedOutputDemands();
     ESP_LOGE(LOG_TAG, "Thermal runaway detected! Turning off heater and pump!\n");
     // Turn off the heater and pump immediately
@@ -703,9 +708,8 @@ void GaggiMateController::storeMachineHardware(const gm::MachineHardwareSettings
     }
     machineHardware = settings;
     hardwareConfigurationAccepted = true;
-    // Do not latch a thermal shutdown against unconfigured/warming-up readings.
-    // The display retries configuration during link setup; correct NTC parameters
-    // can still be applied and restarted from the wizard while outputs stay off.
+    // Configuration remains writable while faulted; applying corrected NTC parameters
+    // restarts the controller. Sensor readiness does not suppress fault reporting.
     hardwareSessionReady = hardwareSessionReady || (!brewTemperature->isErrorState() && !steamTemperature->isErrorState());
 }
 

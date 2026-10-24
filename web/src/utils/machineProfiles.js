@@ -270,6 +270,7 @@ export async function confirmProfileApply(formData, confirmChanges) {
 
 export async function waitForMachineHardware() {
   const deadline = Date.now() + 45000;
+  let temperatureFault = '';
   while (Date.now() < deadline) {
     let data;
     try {
@@ -280,11 +281,14 @@ export async function waitForMachineHardware() {
     }
     if (data?.machineHardwareError)
       throw new Error('Controller could not save the hardware configuration.');
-    if (data && data.machineHardwareReady !== false) return data;
+    if (data) temperatureFault = machineTemperatureFault(data);
+    // A configuration-triggered controller restart may clear the fault, so keep polling.
+    if (data && data.machineHardwareReady !== false && !temperatureFault) return data;
     await new Promise(resolve =>
       setTimeout(resolve, Math.max(0, Math.min(750, deadline - Date.now()))),
     );
   }
+  if (temperatureFault) throw new Error(temperatureFault);
   throw new Error(
     'Settings were saved, but the controller has not confirmed the configuration. Keep the machine in standby and reload to check its status.',
   );
