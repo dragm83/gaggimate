@@ -166,7 +166,6 @@ export function SetupWizard() {
   };
 
   const skip = async (target = '/') => {
-    if (!confirm(t`Skip the setup wizard? You can run it later from Settings → System.`)) return;
     try {
       await postSettings({ setupDone: true });
     } catch {
