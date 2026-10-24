@@ -26,7 +26,7 @@ class Heater {
     Heater(TemperatureSensor *sensor, uint8_t heaterPin, const heater_error_callback_t &error_callback,
            const pid_result_callback_t &pid_callback, const heater_autotune_fail_callback_t &autotune_fail_callback = nullptr);
     void setup();
-    // Configure before setup(): cumulative SSR-on time required to gain at least 1 degree.
+    // Configure before setup(): cumulative SSR-on time required to gain at least 2 degrees.
     void setHeatingCheckTime(uint32_t ms) { heatingCheck.setHeatingTime(ms); }
     void loop();
 

@@ -9,8 +9,8 @@
 class HeatingCheck {
   public:
     enum class Fault { None, NoRise, UnexpectedRise };
-    static constexpr float MIN_RISE_C = 1.0f;
-    static constexpr float TARGET_MARGIN_C = 5.0f;
+    static constexpr float MIN_RISE_C = 2.0f;
+    static constexpr float TARGET_MARGIN_C = 10.0f;
     static constexpr float MAX_OFF_RISE_C = 10.0f;
     static constexpr uint32_t OFF_ALLOWANCE_MS = 15000;
     static constexpr uint32_t SENSOR_SETTLE_MS = 10000;
@@ -57,13 +57,13 @@ class HeatingCheck {
             return Fault::None;
         }
         heatingMs += poweredMs;
-        // After a cold-water disturbance, recovery from the new low also counts as progress.
-        riseBaseline = std::min(riseBaseline, temperature);
-        if (temperature >= riseBaseline + MIN_RISE_C) {
+        // Compare the end of a complete heating window with its fixed starting temperature.
+        // Small oscillations must not move the baseline or repeatedly restart the timer.
+        if (heatingMs >= heatingTimeMs) {
+            if (temperature < riseBaseline + MIN_RISE_C)
+                return Fault::NoRise;
             riseBaseline = temperature;
             heatingMs = 0;
-        } else if (heatingMs >= heatingTimeMs) {
-            return Fault::NoRise;
         }
         return Fault::None;
     }
