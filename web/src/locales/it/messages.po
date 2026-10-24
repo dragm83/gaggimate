@@ -6418,4 +6418,3 @@ msgstr ""
 #: src/utils/machineProfiles.js
 msgid "Settings saved. Temperature fault detected. Check the temperature sensor and its connection. Restart the controller and retry Apply Preset."
 msgstr ""
-

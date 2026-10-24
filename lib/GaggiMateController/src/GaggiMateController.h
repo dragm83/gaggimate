@@ -80,6 +80,7 @@ class GaggiMateController {
     LedController *ledController = nullptr;
     DistanceSensor *distanceSensor = nullptr;
     QueueHandle_t hardwareRequests = nullptr;
+    std::atomic<bool> controllerErrorPending{false};
     std::atomic<bool> hardwareSessionReady{false};
     bool hardwareConfigurationError = false;
     bool hardwareConfigurationStored = false;
