@@ -167,11 +167,12 @@ export function profileProblems(profile, settings, machine) {
     ];
   const currentBoard = machineBoardName(board, caps);
   const requirements = profile.requires || {};
-  if (Object.keys(profile.settings).some(key => !fields[key]))
+  const settingKeys = profile.settings ? Object.keys(profile.settings) : profile.settingKeys || [];
+  if (settingKeys.some(key => !fields[key]))
     return [
       t`This profile includes settings outside machine configuration. Remove them from the profile before importing it.`,
     ];
-  const profileFields = Object.keys(profile.settings).map(key => fields[key]);
+  const profileFields = settingKeys.map(key => fields[key]);
   const needsDualBoiler =
     requirements.dualBoiler ??
     (profileFields.some(field => field.capability === 'dualBoiler')
@@ -200,9 +201,7 @@ export function profileProblems(profile, settings, machine) {
   if (
     (requirements.boards && !requirements.boards.includes(board)) ||
     ('pressure' in requirements && requirements.pressure !== !!caps.pressure) ||
-    Object.keys(profile.settings).some(
-      key => !profileSupported(key, caps, !!settings.machineHardwareConfiguration),
-    )
+    settingKeys.some(key => !profileSupported(key, caps, !!settings.machineHardwareConfiguration))
   )
     return [t`The ${profileName} profile is not supported by your current board or firmware.`];
   return [];

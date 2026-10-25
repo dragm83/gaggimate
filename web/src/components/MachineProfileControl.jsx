@@ -115,6 +115,15 @@ export function MachineProfileControl({
   const profiles = [...MACHINE_PROFILES, ...imported];
   if (selection && !profiles.some(p => p.id === selection.id))
     profiles.push(selected || { id: selection.id, name: selection.id });
+  const controllerKnown = !!(formData.machineProfileBoard || machine.value.hardware);
+  const compatibleProfiles = [];
+  const incompatibleProfiles = [];
+  profiles.sort((a, b) => a.name.localeCompare(b.name));
+  for (const profile of profiles) {
+    const incompatible =
+      controllerKnown && profileProblems(profile, formData, machine.value).length > 0;
+    (incompatible ? incompatibleProfiles : compatibleProfiles).push(profile);
+  }
   const updated = !!(
     selection?.hash &&
     definitionHashes[selection.id] &&
@@ -278,11 +287,20 @@ export function MachineProfileControl({
             ) : (
               <option value=''>{t`Custom`}</option>
             )}
-            {profiles.map(profile => (
+            {compatibleProfiles.map(profile => (
               <option key={profile.id} value={profile.id}>
                 {profile.name}
               </option>
             ))}
+            {incompatibleProfiles.length > 0 && (
+              <optgroup label={t`-- Incompatible --`} className='text-base-content/50'>
+                {incompatibleProfiles.map(profile => (
+                  <option key={profile.id} value={profile.id} className='text-base-content/50'>
+                    {profile.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </select>
           <button
             type='button'

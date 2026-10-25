@@ -99,6 +99,9 @@ bool MachineProfileStore::listUnlocked(JsonArray result, String &error) {
         auto metadata = result.add<JsonObject>();
         for (const char *key : {"id", "name", "revision", "requires"})
             metadata[key] = profile[key];
+        auto settingKeys = metadata["settingKeys"].to<JsonArray>();
+        for (auto entry : profile["settings"].as<JsonObjectConst>())
+            settingKeys.add(entry.key().c_str());
         metadata["hash"] = machineProfileHash(profile.as<JsonVariantConst>());
     }
     return true;

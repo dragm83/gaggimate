@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "profitec-move-220v",
+  "name": "Profitec Move - 220V",
+  "revision": 1,
+  "requires": {
+    "dualBoiler": true,
+    "pressure": true
+  },
+  "settings": {
+    "ntcBrewNominalResistance": 50000,
+    "ntcBrewSeriesResistance": 10000,
+    "ntcBrewSupplyVoltage": 4.096,
+    "ntcBrewBeta": 3988,
+    "ntcSteamNominalResistance": 50000,
+    "ntcSteamSeriesResistance": 10000,
+    "ntcSteamSupplyVoltage": 4.096,
+    "ntcSteamBeta": 3988,
+    "tankLevelEnabled": false,
+    "steamLevelEnabled": true,
+    "systemLedEnabled": true,
+    "steamRefillMode": 1,
+    "steamRefillPostClearSeconds": 0,
+    "steamLevelDebounceChecks": 25,
+    "rememberSteamState": false,
+    "heaterCoordinationEnabled": false,
+    "targetSteamTemp": 133,
+    "independentSteamControl": false,
+    "momentaryButtons": false,
+    "temperatureOffset": 5,
+    "steamPid": "58.397,1.027,249.055"
+  },
+  "locks": {
+    "targetSteamTemp": true
+  }
+}

@@ -6462,3 +6462,15 @@ msgstr ""
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Steam PID Values"
 msgstr ""
+
+#: src/components/MachineProfileControl.jsx
+msgid "-- Incompatible --"
+msgstr ""
+
+#: src/pages/Settings/tabs/HeaterCoordinationSection.jsx
+msgid "Power the heaters one at a time instead of in parallel, brew boiler first."
+msgstr ""
+
+#: src/pages/Settings/tabs/HeaterCoordinationSection.jsx
+msgid "For 120 V machines, heater coordination should generally remain enabled. Running the brew and steam heaters simultaneously can overload the circuit, blow a fuse or trip a breaker, and create a fire hazard. Only disable it if the machine and supply circuit are rated to power both heaters together."
+msgstr ""

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "id": "max-default",
-  "name": "Profitec Move",
-  "revision": 2,
+  "name": "Profitec Move - 120V",
+  "revision": 3,
   "requires": {
     "dualBoiler": true,
     "pressure": true
