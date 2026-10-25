@@ -116,7 +116,7 @@ export function normalizeProfile(input) {
             !p.trim() ||
             !Number.isFinite(Number(p)) ||
             Math.abs(Number(p)) > 1e6 ||
-            (key === 'pid' && Number(p) < 0),
+            ((key === 'pid' || key === 'steamPid') && Number(p) < 0),
         )
       )
         throw new Error(`Invalid coefficients: ${key}`);

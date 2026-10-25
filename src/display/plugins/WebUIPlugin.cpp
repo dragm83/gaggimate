@@ -517,6 +517,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setHeaterCoordinationEnabled(parseBoolArg(request->arg("heaterCoordinationEnabled")));
             if (request->hasArg("heaterHandoverMs"))
                 settings->setHeaterHandoverMs(request->arg("heaterHandoverMs").toInt());
+            if (request->hasArg("steamPid"))
+                settings->setSteamPid(request->arg("steamPid"));
             if (request->hasArg("pid"))
                 settings->setPid(request->arg("pid"));
             if (request->hasArg("pumpModelCoeffs"))
@@ -748,6 +750,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["heaterCoordinationEnabled"] = settings.isHeaterCoordinationEnabled();
     doc["heaterHandoverMs"] = settings.getHeaterHandoverMs();
     doc["pid"] = settings.getPid();
+    doc["steamPid"] = settings.getSteamPid();
     doc["pumpModelCoeffs"] = settings.getPumpModelCoeffs();
     doc["pumpSlipCoeffs"] = settings.getPumpSlipCoeffs();
     doc["wifiSsid"] = settings.getWifiSsid();

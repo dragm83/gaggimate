@@ -102,6 +102,14 @@ Settings::Settings() {
     for (auto *property : registry) {
         property->load(preferences);
     }
+    // Copy the saved brew gains once when upgrading to separate steam tuning.
+    if (steamPid.get().isEmpty()) {
+        const String brewPid = pid.get();
+        const int firstSeparator = brewPid.indexOf(',');
+        const int secondSeparator = brewPid.indexOf(',', firstSeparator + 1);
+        const int feedforwardSeparator = brewPid.indexOf(',', secondSeparator + 1);
+        steamPid.set(feedforwardSeparator >= 0 ? brewPid.substring(0, feedforwardSeparator) : brewPid);
+    }
     // Migrate an older full snapshot without reapplying any machine values.
     setMachineProfileSelection(machineProfileSelection.get());
 
@@ -189,6 +197,8 @@ void Settings::setStartupMode(const int startup_mode) { startupMode.set(startup_
 void Settings::setStandbyTimeout(int standby_timeout) { standbyTimeout.set(standby_timeout); }
 
 void Settings::setPid(const String &pid) { this->pid.set(pid); }
+
+void Settings::setSteamPid(const String &pid) { steamPid.set(pid); }
 
 void Settings::setHeaterCoordinationEnabled(bool enabled) { heaterCoordinationEnabled.set(enabled); }
 

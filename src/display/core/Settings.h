@@ -179,6 +179,7 @@ class Settings {
     String getMachineProfileSelection() const { return machineProfileSelection.get(); }
     void setMachineProfileSelection(const String &v);
     String getPid() const { return pid.get(); }
+    String getSteamPid() const { return steamPid.get(); }
     String getPumpModelCoeffs() const { return pumpModelCoeffs.get(); }
     String getPumpSlipCoeffs() const { return pumpSlipCoeffs.get(); }
     String getWifiSsid() const { return wifiSsid.get(); }
@@ -302,6 +303,7 @@ class Settings {
     void setGrindDelay(double grindDelay);
     void setDelayAdjust(bool delay_adjust);
     void setPid(const String &pid);
+    void setSteamPid(const String &pid);
     void setHeaterCoordinationEnabled(bool enabled);
     void setHeaterHandoverMs(int handoverMs);
     void setPumpModelCoeffs(const String &pumpModelCoeffs);
@@ -435,6 +437,7 @@ class Settings {
     Property<std::vector<AutoWakeupSchedule>> autowakeupSchedules{registry, "ab_schedules", {AutoWakeupSchedule("07:00")}};
     Property<int> standbyTimeout{registry, "sbt", DEFAULT_STANDBY_TIMEOUT_MS};
     Property<String> pid{registry, "pid", DEFAULT_PID};
+    Property<String> steamPid{registry, "steamPid", ""};
     Property<String> wifiSsid{registry, "ws", ""};
     Property<String> wifiPassword{registry, "wp", ""};
     Property<String> wifiApPassword{registry, "wap", ""}; // empty until generated on first start

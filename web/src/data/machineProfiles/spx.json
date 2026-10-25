@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "spx",
   "name": "Rancilio Silvia Pro X",
-  "revision": 1,
+  "revision": 2,
   "requires": {
     "dualBoiler": true,
     "pressure": true
@@ -28,7 +28,8 @@
     "independentSteamControl": true,
     "momentaryButtons": true,
     "pressureScaling": 16,
-    "temperatureOffset": 7
+    "temperatureOffset": 7,
+    "steamPid": "58.397,1.027,249.055"
   },
   "locks": {
     "targetSteamTemp": true

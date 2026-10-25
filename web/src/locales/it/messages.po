@@ -6458,3 +6458,11 @@ msgstr ""
 #: src/utils/machineProfiles.js
 msgid "Settings saved. Temperature fault detected. Check the temperature sensor and its connection. Restart the controller and retry Apply Preset."
 msgstr ""
+
+#: src/pages/Settings/tabs/MachineTab.jsx
+msgid "Brew PID Values"
+msgstr ""
+
+#: src/pages/Settings/tabs/MachineTab.jsx
+msgid "Steam PID Values"
+msgstr ""
