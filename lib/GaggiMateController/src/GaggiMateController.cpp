@@ -328,7 +328,7 @@ void GaggiMateController::setup() {
         heater->setFeedforwardScale(settings.kf);
         heater->setTunings(settings.kp, settings.ki, settings.kd);
         if (heater2 != nullptr) {
-            heater2->setTunings(settings.kp, settings.ki, settings.kd);
+            heater2->setTunings(settings.steam_kp, settings.steam_ki, settings.steam_kd);
         }
     });
     _comms.onPumpSettings([this](gm::PumpSettings settings) {

@@ -35,7 +35,8 @@ bool validateFieldValue(JsonVariantConst v, JsonObjectConst field, const char *k
         while (*p) {
             char *end = nullptr;
             const double n = strtod(p, &end);
-            if (end == p || !std::isfinite(n) || std::fabs(n) > 1000000 || (!strcmp(key, "pid") && n < 0))
+            if (end == p || !std::isfinite(n) || std::fabs(n) > 1000000 ||
+                ((!strcmp(key, "pid") || !strcmp(key, "steamPid")) && n < 0))
                 return false;
             while (*end == ' ')
                 ++end;

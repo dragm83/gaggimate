@@ -1,4 +1,10 @@
 {
+  "steamPid": {
+    "label": "Steam PID gains",
+    "type": "csv",
+    "lengths": [3],
+    "capability": "dualBoiler"
+  },
   "pid": {
     "label": "PID and feedforward gains",
     "type": "csv",

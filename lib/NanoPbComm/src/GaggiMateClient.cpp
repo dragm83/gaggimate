@@ -76,7 +76,7 @@ gm::Payload GaggiMateClient::buildRelayControl(uint8_t index, bool open) {
 }
 
 gm::Payload GaggiMateClient::buildHeaterSettings(float kp, float ki, float kd, float kf, bool heaterCoordinationEnabled,
-                                                 uint32_t handoverMs) {
+                                                 uint32_t handoverMs, float steamKp, float steamKi, float steamKd) {
     gm::Payload p = gaggimate_Payload_init_zero;
     p.which_content = gaggimate_Payload_heater_tag;
     p.content.heater.kp = kp;
@@ -85,6 +85,9 @@ gm::Payload GaggiMateClient::buildHeaterSettings(float kp, float ki, float kd, f
     p.content.heater.kf = kf;
     p.content.heater.heater_coordination_enabled = heaterCoordinationEnabled;
     p.content.heater.handover_ms = handoverMs;
+    p.content.heater.steam_kp = steamKp;
+    p.content.heater.steam_ki = steamKi;
+    p.content.heater.steam_kd = steamKd;
     return p;
 }
 
@@ -166,8 +169,8 @@ void GaggiMateClient::sendPumpControl(uint8_t index, PumpControlMode mode, float
 void GaggiMateClient::sendRelayControl(uint8_t index, bool open) { _endpoint.send(buildRelayControl(index, open)); }
 
 void GaggiMateClient::sendHeaterSettings(float kp, float ki, float kd, float kf, bool heaterCoordinationEnabled,
-                                         uint32_t handoverMs) {
-    _endpoint.send(buildHeaterSettings(kp, ki, kd, kf, heaterCoordinationEnabled, handoverMs));
+                                         uint32_t handoverMs, float steamKp, float steamKi, float steamKd) {
+    _endpoint.send(buildHeaterSettings(kp, ki, kd, kf, heaterCoordinationEnabled, handoverMs, steamKp, steamKi, steamKd));
 }
 
 void GaggiMateClient::sendPumpSettings(float a, float b, float c, float d, float commutationGain, float convergenceGain,

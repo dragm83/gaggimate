@@ -187,7 +187,7 @@ export function MachineTab({ formData, onChange, setField, profiles = [] }) {
             <fieldset disabled={!!formData.machineProfileSelection} className='mt-4 space-y-4'>
               <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                 <InputGroupField
-                  label={t`PID Values`}
+                  label={machine.value.capabilities.dualBoiler ? t`Brew PID Values` : t`PID Values`}
                   htmlFor='pid'
                   unit={
                     <>
@@ -206,6 +206,27 @@ export function MachineTab({ formData, onChange, setField, profiles = [] }) {
                     onChange={onChange('pid')}
                   />
                 </InputGroupField>
+                {machine.value.capabilities.dualBoiler && (
+                  <InputGroupField
+                    label={t`Steam PID Values`}
+                    htmlFor='steamPid'
+                    unit={
+                      <>
+                        K<sub>p</sub>, K<sub>i</sub>, K<sub>d</sub>
+                      </>
+                    }
+                    noMargin
+                  >
+                    <input
+                      id='steamPid'
+                      name='steamPid'
+                      type='text'
+                      className='grow'
+                      value={formData.steamPid ?? ''}
+                      onChange={onChange('steamPid')}
+                    />
+                  </InputGroupField>
+                )}
                 <InputGroupField
                   label={t`Thermal Feedforward Gain`}
                   htmlFor='kf'

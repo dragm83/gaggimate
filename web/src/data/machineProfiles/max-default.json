@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "max-default",
   "name": "Profitec Move",
-  "revision": 1,
+  "revision": 2,
   "requires": {
     "dualBoiler": true,
     "pressure": true
@@ -27,7 +27,8 @@
     "targetSteamTemp": 133,
     "independentSteamControl": false,
     "momentaryButtons": false,
-    "temperatureOffset": 5
+    "temperatureOffset": 5,
+    "steamPid": "58.397,1.027,249.055"
   },
   "locks": {
     "targetSteamTemp": true
