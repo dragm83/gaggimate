@@ -1125,7 +1125,7 @@ void Controller::updateControl() {
     // stateful and every message is acknowledged, so re-sending unchanged values
     // each cycle is unnecessary; a periodic ping (see loop()) keeps the watchdog
     // fed when nothing changes. controlStateSent is cleared to force a full resend.
-    gm::Payload batch[8];
+    auto &batch = controlBatch;
     size_t count = 0;
     const bool full = !controlStateSent.exchange(true); // claim the flag first so a concurrent reset is never lost
     if (full || boiler != lastBoiler)

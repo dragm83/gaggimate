@@ -280,6 +280,9 @@ class Controller {
     BoilerCommand lastBoiler{};
     BoilerCommand lastBoiler2{};
     PumpCommand lastPump{};
+    // Reused under processMutex; sendBatch copies the payloads into its queue.
+    // Keep this large protobuf batch off the UI task's limited stack.
+    gm::Payload controlBatch[8];
     RelayCommand lastRelay{};
     RelayCommand lastRefill{};
     RelayCommand lastWater{};
