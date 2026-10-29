@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "max-default",
   "name": "Profitec Move - 120V",
-  "revision": 3,
+  "revision": 4,
   "requires": {
     "dualBoiler": true,
     "pressure": true
@@ -20,11 +20,11 @@
     "steamLevelEnabled": true,
     "systemLedEnabled": true,
     "steamRefillMode": 1,
-    "steamRefillPostClearSeconds": 0,
+    "steamRefillPostClearSeconds": 3,
     "steamLevelDebounceChecks": 25,
     "rememberSteamState": false,
     "heaterCoordinationEnabled": true,
-    "targetSteamTemp": 133,
+    "targetSteamTemp": 130,
     "independentSteamControl": false,
     "momentaryButtons": false,
     "temperatureOffset": 5,
