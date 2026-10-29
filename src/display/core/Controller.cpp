@@ -1148,12 +1148,12 @@ void Controller::updateControl() {
         const int steamRefillMode = settings.getSteamRefillMode();
         const bool steamLevelEnabled = settings.getSteamLevelEnabled();
         const uint32_t steamRefillPostClearMs = settings.getSteamRefillPostClearSeconds() * 1000u;
+        if (steamRefillPostClear && millis() - steamRefillClearedAt >= steamRefillPostClearMs)
+            steamRefillPostClear = false;
         if (steamRefillMode == 2) {
-            if (steamRefillPostClear && millis() - steamRefillClearedAt >= steamRefillPostClearMs)
-                steamRefillPostClear = false;
             refill.open = steamLevelEnabled && isSteamRefillTankLevelOK() && (steamBoilerLow || steamRefillPostClear);
-        } else if (steamRefillMode == 1 && steamLevelEnabled && !active && mode != MODE_STANDBY && steamBoilerLow &&
-                   isSteamRefillTankLevelOK()) {
+        } else if (steamRefillMode == 1 && steamLevelEnabled && !active && mode != MODE_STANDBY &&
+                   (steamBoilerLow || steamRefillPostClear) && isSteamRefillTankLevelOK()) {
             targetPressure = 0.0f;
             targetFlow = 0.0f;
             relay.open = false;

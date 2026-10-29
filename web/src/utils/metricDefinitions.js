@@ -67,18 +67,20 @@ export const METRIC_DEFINITIONS = [
     onClick: ds => ds.toggleSteam,
     active: ds => ds.mode !== 0 && !!ds.steamActive,
     hint: ds =>
-      ds.steamControlsAvailable === false
-        ? 'Steam disabled'
-        : ds.mode === 0
-          ? 'Off in standby'
-          : ds.steamActive
-            ? 'Steam on'
+      ds.mode === 0
+        ? 'Off in standby'
+        : ds.steamActive
+          ? 'Steam on'
+          : ds.steamControlsAvailable === false
+            ? 'Steam off'
             : 'Tap to turn on',
     ariaLabel: ds =>
-      ds.steamControlsAvailable === false
-        ? 'Steam controls disabled'
-        : ds.mode === 0
-          ? 'Steam off in standby'
+      ds.mode === 0
+        ? 'Steam off in standby'
+        : ds.steamControlsAvailable === false
+          ? ds.steamActive
+            ? 'Steam on'
+            : 'Steam off'
           : ds.steamActive
             ? 'Turn steam off'
             : 'Turn steam on',
