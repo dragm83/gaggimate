@@ -7251,21 +7251,31 @@
                     "childStyles": []
                   },
                   "timeline": [],
-                  "eventHandlers": [],
+                  "eventHandlers": [
+                    {
+                      "objID": "aee6a4d7-da18-4c6c-f27f-7b9ae90a4241",
+                      "eventName": "CLICKED",
+                      "handlerType": "action",
+                      "action": "onSimpleProcessToggle",
+                      "userData": 0
+                    }
+                  ],
                   "leftUnit": "px",
                   "topUnit": "px",
                   "widthUnit": "content",
                   "heightUnit": "content",
                   "children": [],
                   "widgetFlags": "ADV_HITTEST|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-                  "hiddenFlag": "!ui_flags.active",
+                  "hiddenFlag": "!system.dual_boiler_available && !ui_flags.active",
                   "hiddenFlagType": "expression",
-                  "clickableFlagType": "literal",
+                  "clickableFlag": "system.dual_boiler_available",
+                  "clickableFlagType": "expression",
                   "flagScrollbarMode": "",
                   "flagScrollDirection": "",
                   "scrollSnapX": "",
                   "scrollSnapY": "",
-                  "checkedStateType": "literal",
+                  "checkedState": "steam_enabled",
+                  "checkedStateType": "expression",
                   "disabledStateType": "literal",
                   "states": "",
                   "localStyles": {
@@ -7276,6 +7286,10 @@
                           "img_recolor": "NiceWhite",
                           "img_recolor_opa": 255,
                           "align": "CENTER"
+                        },
+                        "CHECKED": {
+                          "img_recolor": "red",
+                          "img_recolor_opa": 255
                         }
                       }
                     }

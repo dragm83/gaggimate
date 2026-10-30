@@ -788,7 +788,8 @@ void DefaultUI::updateSystemStatus() {
     systemStatus.volumetric_available(controller->isVolumetricAvailable());
     systemStatus.dual_boiler_available(controller->getSystemInfo().capabilities.dualBoiler);
     eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_STEAM_TEMPERATURE, FloatValue(controller->getCurrentSteamTemp()));
-    eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_STEAM_ENABLED, BooleanValue(controller->isSteamHeaterActive()));
+    eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_STEAM_ENABLED,
+                                 BooleanValue(dualBoiler && controller->isSteamHeaterActive()));
     const char *brewStatus;
     if (!controller->getClientController()->isConnected() || controller->getSystemInfo().protocolMismatch ||
         (controller->isErrorState() && controller->getError() == ERROR_CODE_TIMEOUT)) {
@@ -896,7 +897,7 @@ void DefaultUI::updateBoiler() {
     const ::Settings &settings = controller->getSettings();
     bool showSteamTemp = dualBoiler && currentScreen == SCREEN_ID_STEAM_SCREEN;
     boiler.current_temperature(showSteamTemp ? controller->getCurrentSteamTemp() : controller->getCurrentTemp());
-    boiler.target_temperature(showSteamTemp ? controller->getTargetSteamTemp() : controller->getTargetTemp());
+    boiler.target_temperature(showSteamTemp ? settings.getTargetSteamTemp() : controller->getTargetTemp());
     boiler.current_pressure(pressure);
     boiler.target_pressure(controller->getTargetPressure());
     boiler.max_temperature(160.0f);

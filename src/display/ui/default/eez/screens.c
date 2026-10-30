@@ -424,6 +424,24 @@ static void event_handler_cb_steam_screen_steam_up_temp_button(lv_event_t *e) {
     }
 }
 
+static void event_handler_cb_steam_screen_obj16(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    void *flowState = lv_event_get_user_data(e);
+    (void)flowState;
+
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target(e);
+        if (tick_value_change_obj != ta) {
+            bool value = lv_obj_has_state(ta, LV_STATE_CHECKED);
+            assignBooleanProperty(flowState, 9, 5, value, "Failed to assign Checked state");
+        }
+    }
+    if (event == LV_EVENT_CLICKED) {
+        e->user_data = (void *)0;
+        action_on_simple_process_toggle(e);
+    }
+}
+
 static void event_handler_cb_water_screen_water_screen(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
@@ -3437,9 +3455,12 @@ void create_screen_steam_screen() {
                     lv_obj_set_pos(obj, 0, 130);
                     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
                     lv_img_set_src(obj, &img_wind_40x40);
+                    lv_obj_add_event_cb(obj, event_handler_cb_steam_screen_obj16, LV_EVENT_ALL, flowState);
                     lv_obj_set_style_img_recolor(obj, lv_color_hex(theme_colors[eez_flow_get_selected_theme_index()][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_img_recolor_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_img_recolor(obj, lv_color_hex(0xff0000), LV_PART_MAIN | LV_STATE_CHECKED);
+                    lv_obj_set_style_img_recolor_opa(obj, 255, LV_PART_MAIN | LV_STATE_CHECKED);
                 }
             }
         }
@@ -3497,6 +3518,32 @@ void tick_screen_steam_screen() {
                 lv_obj_add_flag(objects.obj16, LV_OBJ_FLAG_HIDDEN);
             } else {
                 lv_obj_clear_flag(objects.obj16, LV_OBJ_FLAG_HIDDEN);
+            }
+            tick_value_change_obj = NULL;
+        }
+    }
+    {
+        bool new_val = evalBooleanProperty(flowState, 9, 4, "Failed to evaluate Clickable flag");
+        bool cur_val = lv_obj_has_flag(objects.obj16, LV_OBJ_FLAG_CLICKABLE);
+        if (new_val != cur_val) {
+            tick_value_change_obj = objects.obj16;
+            if (new_val) {
+                lv_obj_add_flag(objects.obj16, LV_OBJ_FLAG_CLICKABLE);
+            } else {
+                lv_obj_clear_flag(objects.obj16, LV_OBJ_FLAG_CLICKABLE);
+            }
+            tick_value_change_obj = NULL;
+        }
+    }
+    {
+        bool new_val = evalBooleanProperty(flowState, 9, 5, "Failed to evaluate Checked state");
+        bool cur_val = lv_obj_has_state(objects.obj16, LV_STATE_CHECKED);
+        if (new_val != cur_val) {
+            tick_value_change_obj = objects.obj16;
+            if (new_val) {
+                lv_obj_add_state(objects.obj16, LV_STATE_CHECKED);
+            } else {
+                lv_obj_clear_state(objects.obj16, LV_STATE_CHECKED);
             }
             tick_value_change_obj = NULL;
         }
