@@ -1,6 +1,6 @@
 {
   "name": "GaggiMate Dual Boiler Beta - Display",
-  "version": "v1.9.0-182-ga1704c39",
+  "version": "v1.9.0-183-gfd4ac45f",
   "new_install_prompt_erase": true,
   "builds": [
     {
