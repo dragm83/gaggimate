@@ -666,6 +666,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setAltRelayFunction(request->arg("altRelayFunction").toInt());
             if (request->hasArg("buttonBehavior"))
                 settings->setButtonBehaviorList(explode(request->arg("buttonBehavior"), ','));
+            if (request->hasArg("longPressBehavior"))
+                settings->setLongPressBehaviorList(explode(request->arg("longPressBehavior"), ','));
             if (request->hasArg("commutationGain"))
                 settings->setCommutationGain(request->arg("commutationGain").toFloat());
             if (request->hasArg("convergenceGain"))
@@ -865,6 +867,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     // Add auto-wakeup settings to response
     doc["autowakeupEnabled"] = settings.isAutoWakeupEnabled();
     doc["buttonBehavior"] = implode(settings.getButtonBehaviorList(), ",");
+    doc["longPressBehavior"] = implode(settings.getLongPressBehaviorList(), ",");
     doc["commutationGain"] = settings.getCommutationGain();
     doc["convergenceGain"] = settings.getConvergenceGain();
     doc["integralGain"] = settings.getIntegralGain();

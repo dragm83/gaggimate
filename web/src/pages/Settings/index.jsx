@@ -91,6 +91,9 @@ const FORM_ONLY_KEYS = [
   'button0',
   'button1',
   'button2',
+  'longButton0',
+  'longButton1',
+  'longButton2',
   'standbyDisplayEnabled',
   'dashboardLayout',
 ];
@@ -103,10 +106,12 @@ const DEFAULT_SCALE_FACTOR_2 = 2500.0;
 const DEFAULT_HARDWARE_SCALE_SAMPLE_RATE_SPS = 10;
 const DEFAULT_HARDWARE_SCALE_FILTER_ALPHA = 0.8;
 
-function splitButtons(buttonBehavior) {
+function splitButtons(buttonBehavior, longPress = false) {
   if (!buttonBehavior) return {};
   const [button0, button1, button2] = buttonBehavior.split(',');
-  return { button0, button1, button2 };
+  return longPress
+    ? { longButton0: button0, longButton1: button1, longButton2: button2 }
+    : { button0, button1, button2 };
 }
 
 function transformFetchedSettings(fetchedSettings) {
@@ -117,6 +122,7 @@ function transformFetchedSettings(fetchedSettings) {
   const settingsWithToggle = {
     ...fetchedSettings,
     ...buttonFields,
+    ...splitButtons(fetchedSettings.longPressBehavior, true),
     standbyDisplayEnabled:
       fetchedSettings.standbyDisplayEnabled !== undefined
         ? fetchedSettings.standbyDisplayEnabled
@@ -179,6 +185,9 @@ function normalizeImportedSettings(data, knownKeys) {
   if (fields.buttonBehavior && fields.button0 === undefined) {
     Object.assign(fields, splitButtons(String(fields.buttonBehavior)));
   }
+  if (fields.longPressBehavior) {
+    Object.assign(fields, splitButtons(String(fields.longPressBehavior), true));
+  }
   if (fields.standbyBrightness !== undefined && fields.standbyDisplayEnabled === undefined) {
     fields.standbyDisplayEnabled = Number(fields.standbyBrightness) > 0;
   }
@@ -212,6 +221,11 @@ function buildSubmitFormData(formData, autowakeupSchedules, restart, importedKey
   formDataToSubmit.set(
     'buttonBehavior',
     `${formData.button0},${formData.button1},${formData.button2}`,
+  );
+
+  formDataToSubmit.set(
+    'longPressBehavior',
+    `${formData.longButton0 ?? 'flush'},${formData.longButton1 ?? 'none'},${formData.longButton2 ?? 'none'}`,
   );
 
   if (formData.pid && formData.kf !== undefined) {
@@ -414,6 +428,7 @@ export function Settings() {
           ...data,
           ...(splitPid !== null ? { pid: splitPid.pid, kf: splitPid.kf } : {}),
           ...buttonFields,
+          ...splitButtons(data.longPressBehavior, true),
           standbyDisplayEnabled:
             data.standbyBrightness > 0 ? formData.standbyDisplayEnabled : false,
         };

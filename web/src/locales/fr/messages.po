@@ -185,8 +185,8 @@ msgid "Actions for {label} profile"
 msgstr "Actions pour le profil {label}"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Activate this if your coffee machine is equipped with momentary buttons. A momentary button set to Brew or a profile starts a flush instead when held."
-msgstr "Activez cette option si votre machine à café est équipée de boutons poussoirs. Un bouton poussoir réglé sur Extraction ou sur un profil lance plutôt un rinçage lorsqu'il est maintenu."
+msgid "Activate this if your coffee machine is equipped with momentary buttons."
+msgstr ""
 
 #: src/pages/Statistics/components/toolbar/subcomponents.jsx
 msgctxt "selected menu item"
@@ -655,8 +655,8 @@ msgid "Brew button"
 msgstr "Bouton d'extraction"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Brew Button Behavior"
-msgstr "Comportement du bouton d'extraction"
+msgid "Brew Button"
+msgstr ""
 
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Brew Color"
@@ -2235,6 +2235,10 @@ msgstr "Moyennes globales des métriques"
 msgid "Go Home"
 msgstr "Accueil"
 
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Go to standby"
+msgstr ""
+
 #: src/pages/SetupWizard/WifiStep.jsx
 msgid "Good"
 msgstr "Bon"
@@ -2395,6 +2399,10 @@ msgstr "Volume le plus élevé"
 msgctxt "flush duration"
 msgid "Hold"
 msgstr "Maintien"
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Hold for 400 ms to trigger the assigned action instead of the primary action. Release to stop a hold-to-flush."
+msgstr ""
 
 #: src/pages/Settings/tabs/GeneralTab.jsx
 msgid "Hold runs the flush for as long as the button is held. The valve stays open for one more second after the pump stops."
@@ -2717,6 +2725,10 @@ msgstr "Stockage local du navigateur (WEB)"
 #: src/pages/Statistics/components/StatisticsSearchHelp.jsx
 msgid "Local browser time is used."
 msgstr "L'heure locale du navigateur est utilisée."
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Long Press Function"
+msgstr ""
 
 #: src/pages/ShotHistory/index.jsx
 msgid "Longest Duration"
@@ -3825,6 +3837,10 @@ msgstr "Shot précédent"
 #: src/pages/ProfileEdit/ExtendedPhase.jsx
 msgid "Previous target"
 msgstr "Cible précédente"
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Primary Function"
+msgstr ""
 
 #: src/pages/ProfileList/index.jsx
 msgctxt "profile type"
@@ -5009,6 +5025,7 @@ msgstr "Afficher les panneaux de la colonne de contrôle sous forme de cartes s�
 #: src/pages/Settings/PatchNotes.jsx
 msgid "showing the newest {0}"
 msgstr "affichage des {0} plus récents"
+
 #: src/pages/Statistics/components/StatisticsShotCompareSection.jsx
 msgid "Showing up to 100 latest shots. Refine with filters."
 msgstr "Affichage des 100 shots les plus récents au maximum. Affinez avec les filtres."
@@ -5282,8 +5299,8 @@ msgid "Steam button"
 msgstr "Bouton vapeur"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Steam Button Behavior"
-msgstr "Comportement du bouton vapeur"
+msgid "Steam Button"
+msgstr ""
 
 #: src/app/notifications.js
 msgid "Steam has been on for 5 minutes."
@@ -5478,6 +5495,10 @@ msgstr "Touchez un profil pour le sélectionner."
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Tare"
 msgstr "Tarer"
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Tare Scales"
+msgstr ""
 
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Tare the scale, then place a known weight and calibrate each load cell."
@@ -6415,8 +6436,8 @@ msgid "Water button"
 msgstr "Bouton d'eau"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Water Button Behavior"
-msgstr "Comportement du bouton d'eau"
+msgid "Water Button"
+msgstr ""
 
 #: src/pages/ProfileEdit/ExtendedPhaseTarget.jsx
 msgid "Water drawn"
