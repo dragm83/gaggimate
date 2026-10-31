@@ -1697,9 +1697,11 @@ void Controller::onButtonEvent(uint8_t index, ButtonHandler::Event event) {
     case Event::LONG_PRESS_END:
         handleFlushButton(false);
         break;
-    case Event::CLICK_END: // momentary release only matters for a hold-to-flush
+    case Event::CLICK_END:
         if (behavior == "flush")
             onFlushRelease();
+        else if (behavior == "water" && systemInfo.capabilities.dualBoiler)
+            handleWaterButton(false);
         break;
     }
 }
