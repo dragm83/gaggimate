@@ -16,7 +16,8 @@ constexpr size_t UPDATE_CHECK_INTERVAL = 30 * 60 * 1000;
 constexpr size_t DNS_PERIOD = 50;
 
 const String LOCAL_URL = "http://4.4.4.1/";
-const String RELEASE_URL = "https://github.com/jniebuhr/gaggimate/releases/";
+const String RELEASE_URL = "https://github.com/jniebuhr/gaggimate/releases/tag/nightly";
+const String BETA_RELEASE_URL = "https://github.com/dragm83/gaggimate/releases/tag/dual-boiler-beta-latest";
 // Headless builds must pull their own release assets; the screen firmware would not boot on them.
 #ifdef GAGGIMATE_HEADLESS
 #define OTA_DISPLAY_FIRMWARE "display-headless-firmware.bin"
@@ -41,6 +42,7 @@ class WebUIPlugin : public Plugin {
     void stop();
 
     // OTA requests arrive over the WebSocket but are executed here, where GitHubOTA lives
+    void configureOTAChannel();
     void handleOTASettings(JsonDocument &request);
     void handleOTAStart(JsonDocument &request);
 

@@ -46,7 +46,7 @@ void WebUIPlugin::setup(Controller *_controller, PluginManager *_pluginManager) 
     this->pluginManager = _pluginManager;
     this->ota = new GitHubOTA(
         BUILD_GIT_VERSION, controller->getSystemInfo().version,
-        RELEASE_URL + (controller->getSettings().getOTAChannel() == "latest" ? "latest" : "tag/nightly"),
+        BETA_RELEASE_URL,
         [this](uint8_t phase) {
             pluginManager->trigger("ota:update:phase", "phase", phase);
             updateOTAProgress(phase, 0);
@@ -56,6 +56,7 @@ void WebUIPlugin::setup(Controller *_controller, PluginManager *_pluginManager) 
             updateOTAProgress(phase, progress);
         },
         OTA_DISPLAY_FIRMWARE, OTA_DISPLAY_FILESYSTEM, "board-firmware.bin");
+    configureOTAChannel();
     pluginManager->on("controller:wifi:connect", [this](Event const &event) {
         apMode = event.getInt("AP");
         start();
@@ -297,11 +298,20 @@ void WebUIPlugin::stop() {
     ESP_LOGI("WebUIPlugin", "WebUIPlugin stopped (wifi disconnected)");
 }
 
+void WebUIPlugin::configureOTAChannel() {
+    const bool official = controller->getSettings().getOTAChannel() == "nightly";
+    ota->setReleaseUrl(official ? RELEASE_URL : BETA_RELEASE_URL, official,
+                       official ? "board-firmware.bin" : "controller-firmware.bin");
+}
+
 void WebUIPlugin::handleOTASettings(JsonDocument &request) {
-    if (request["update"].as<bool>()) {
-        if (!request["channel"].isNull()) {
-            controller->getSettings().setOTAChannel(request["channel"].as<String>() == "latest" ? "latest" : "nightly");
-            ota->setReleaseUrl(RELEASE_URL + (controller->getSettings().getOTAChannel() == "latest" ? "latest" : "tag/nightly"));
+    if (updating)
+        return;
+    if (request["update"].as<bool>() && !request["channel"].isNull()) {
+        const String channel = request["channel"].as<String>();
+        if (channel == "nightly" || channel == "dual-boiler-beta") {
+            controller->getSettings().setOTAChannel(channel);
+            configureOTAChannel();
             lastUpdateCheck = 0;
         }
     }
@@ -309,12 +319,22 @@ void WebUIPlugin::handleOTASettings(JsonDocument &request) {
 }
 
 void WebUIPlugin::handleOTAStart(JsonDocument &request) {
-    updating = true;
-    if (request["cp"].is<String>()) {
-        updateComponent = request["cp"].as<String>();
+    if (updating || controller->isActive() || (!ota->isUpdateAvailable() && !ota->isUpdateAvailable(true)))
+        return;
+    const bool official = controller->getSettings().getOTAChannel() == "nightly";
+    if (official && !request["confirmOfficial"].as<bool>())
+        return;
+    if (official) {
+        // Keep the legacy channel key compatible with the official firmware installed next.
+        if (!controller->getSettings().save(true)) {
+            ESP_LOGE("WebUIPlugin", "Could not persist the Official Nightly channel; install cancelled");
+            return;
+        }
+        updateComponent = "both";
     } else {
-        updateComponent = "";
+        updateComponent = request["cp"].is<String>() ? request["cp"].as<String>() : String("both");
     }
+    updating = true;
 }
 
 // Booleans are only touched when present, so a partial POST keeps the rest (GM-214).

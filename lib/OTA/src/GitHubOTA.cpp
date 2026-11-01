@@ -39,38 +39,57 @@ void GitHubOTA::init() {
 void GitHubOTA::checkForUpdates() {
     const char *TAG = "checkForUpdates";
 
-    _latest_url = get_updated_base_url_via_redirect(_wifi_client, _release_url);
-    if (_latest_url != "") {
-        ESP_LOGI(TAG, "base_url %s\n", _latest_url.c_str());
+    // A failed check or channel change must never leave another release eligible for installation.
+    _latest_url = "";
+    _latest_version_string = "";
+    refreshUpdateAvailability();
 
-        auto last_slash = _latest_url.lastIndexOf('/', _latest_url.length() - 2);
-        auto semver_str = _latest_url.substring(last_slash + 1);
-        semver_str.replace("/", "");
-        if (semver_str.substring(0, 1) != "v") {
-            ESP_LOGW(TAG, "not a valid version URL");
-            return;
-        }
-        semver_str = semver_str.substring(1);
-        ESP_LOGI(TAG, "semver_str %s\n", semver_str.c_str());
-        _latest_version_string = semver_str;
-        semver_free(&_latest_version);
-        _latest_version = from_string(semver_str.c_str());
-        _screen_update_required = update_required(_latest_version, _version);
-        _controller_update_required = update_required(_latest_version, _controller_version);
+    String baseUrl = get_updated_base_url_via_redirect(_wifi_client, _release_url);
+    String version;
+    if (!baseUrl.isEmpty()) {
+        auto lastSlash = baseUrl.lastIndexOf('/', baseUrl.length() - 2);
+        String tag = baseUrl.substring(lastSlash + 1);
+        tag.replace("/", "");
+        if (tag.startsWith("v"))
+            version = tag.substring(1);
     } else {
-        _latest_url = _release_url + "/";
-        _latest_url.replace("tag", "download");
-        String version = get_updated_version_via_txt_file(_wifi_client, _latest_url);
+        baseUrl = _release_url + "/";
+        baseUrl.replace("/tag/", "/download/");
+    }
+    if (!baseUrl.startsWith("https://")) {
+        ESP_LOGW(TAG, "Refusing non-HTTPS release URL");
+        return;
+    }
+    // Rolling beta tags are fixed names; their actual firmware version lives in version.txt.
+    if (version.isEmpty()) {
+        version = get_updated_version_via_txt_file(_wifi_client, baseUrl);
+        version.trim();
+        if (version.startsWith("v"))
+            version = version.substring(1);
+    }
+    unsigned major, minor, patch;
+    if (sscanf(version.c_str(), "%u.%u.%u", &major, &minor, &patch) != 3) {
+        ESP_LOGW(TAG, "No valid HTTPS firmware release found");
+        return;
+    }
+    _latest_url = baseUrl;
+    _latest_version_string = version;
+    semver_free(&_latest_version);
+    _latest_version = from_string(version.c_str());
+    refreshUpdateAvailability();
+}
 
-        if (version.length() == 0) {
-            ESP_LOGW(TAG, "version.txt did not return a valid version string");
-            return;
-        }
-
-        version = version.substring(1);
-        _latest_version_string = version;
-        semver_free(&_latest_version);
-        _latest_version = from_string(version.c_str());
+void GitHubOTA::refreshUpdateAvailability() {
+    _screen_update_required = false;
+    _controller_update_required = false;
+    if (_latest_version_string.isEmpty())
+        return;
+    if (_allowDowngrade) {
+        // Returning to official firmware always installs a matched display/controller pair.
+        const bool differs = semver_compare(_latest_version, _version) != 0 ||
+                             semver_compare(_latest_version, _controller_version) != 0;
+        _screen_update_required = _controller_update_required = differs;
+    } else {
         _screen_update_required = update_required(_latest_version, _version);
         _controller_update_required = update_required(_latest_version, _controller_version);
     }
@@ -103,7 +122,10 @@ void GitHubOTA::update(bool controller, bool display, NimBLEClient *client) {
         return;
     }
 
-    if (controller && update_required(_latest_version, _controller_version)) {
+    if (_allowDowngrade)
+        controller = display = true;
+
+    if (controller && _controller_update_required) {
         ESP_LOGI(TAG, "Controller update is required, running firmware update.");
         setPhase(PHASE_CONTROLLER_FW);
         if (!_controller_ota.update(client, _latest_url + _controller_firmware_name)) {
@@ -115,7 +137,7 @@ void GitHubOTA::update(bool controller, bool display, NimBLEClient *client) {
         updateExecuted = true;
     }
 
-    if (display && update_required(_latest_version, _version)) {
+    if (display && _screen_update_required) {
         ESP_LOGI(TAG, "Update is required, running firmware update.");
         setPhase(PHASE_DISPLAY_FW);
         if (!flashDisplayFirmware(_latest_url + _firmware_name)) {
@@ -137,7 +159,14 @@ void GitHubOTA::update(bool controller, bool display, NimBLEClient *client) {
     ESP_LOGI(TAG, "No updates found\n");
 }
 
-void GitHubOTA::setReleaseUrl(const String &release_url) { this->_release_url = release_url; }
+void GitHubOTA::setReleaseUrl(const String &release_url, bool allowDowngrade, const String &controller_firmware_name) {
+    _release_url = release_url;
+    _allowDowngrade = allowDowngrade;
+    _controller_firmware_name = controller_firmware_name;
+    _latest_url = "";
+    _latest_version_string = "";
+    refreshUpdateAvailability();
+}
 
 bool GitHubOTA::flashDisplayFirmware(const String &url) {
     const char *TAG = "flashDisplayFirmware";
@@ -212,5 +241,5 @@ bool GitHubOTA::flashDisplayFirmware(const String &url) {
 void GitHubOTA::setControllerVersion(const String &controller_version) {
     semver_free(&_controller_version);
     _controller_version = from_string(controller_version.substring(1).c_str());
-    _controller_update_required = update_required(_latest_version, _controller_version);
+    refreshUpdateAvailability();
 }

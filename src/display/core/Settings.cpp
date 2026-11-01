@@ -222,7 +222,10 @@ void Settings::setHomekit(const bool homekit) { this->homekit.set(homekit); }
 
 void Settings::setVolumetricTarget(bool volumetric_target) { volumetricTarget.set(volumetric_target); }
 
-void Settings::setOTAChannel(const String &otaChannel) { this->otaChannel.set(otaChannel); }
+void Settings::setOTAChannel(const String &otaChannel) {
+    this->otaChannel.set(otaChannel);
+    otaChannelConfigured.set(true); // Existing latest/nightly selections default to the beta until explicitly changed.
+}
 
 void Settings::setSavedScale(const String &savedScale) { this->savedScale.set(savedScale); }
 

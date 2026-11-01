@@ -180,14 +180,14 @@ python -m esptool --chip esp32s3 --port PORT write-flash 0x0 display-complete.bi
       <section>
         <h2>Returning to official firmware</h2>
         <p>
-          The System &amp; Updates page in this fork checks official GaggiMate
-          releases. Installing one replaces the fork on the selected component;
-          update both components when returning to stock. OTA only offers
-          versions newer than the installed version, so use the
-          <a href="https://github.com/jniebuhr/gaggimate/releases"
-            >official release files</a
-          >
-          for equal-version or downgrade recovery.
+          The System &amp; Updates page defaults to Dual Boiler Beta and offers
+          newer builds from this beta release. To return to official firmware,
+          select Official Nightly, save the channel, and choose Install Official
+          Nightly. This installs the official release on both the display and
+          controller, even if it is older than the installed beta. Beta-only
+          features may no longer be available. Selecting a channel alone does
+          not install firmware. USB recovery remains available using the
+          <a href="https://github.com/jniebuhr/gaggimate/releases">official release files</a>.
         </p>
       </section>
 

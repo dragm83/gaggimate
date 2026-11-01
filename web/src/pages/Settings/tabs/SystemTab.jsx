@@ -217,7 +217,7 @@ function MaintenanceSection({
           )}
           {rebuilt && (
             <span className='text-success ml-2'>
-              <FontAwesomeIcon icon={faCheck}></FontAwesomeIcon>
+              <FontAwesomeIcon icon={faCheck} />
             </span>
           )}
         </button>
@@ -257,6 +257,7 @@ export function SystemTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({});
+  const officialChannel = formData.channel === 'nightly';
   const [phase, setPhase] = useState(0);
   const [progress, setProgress] = useState(0);
   const status = machine.value.status;
@@ -348,9 +349,20 @@ export function SystemTab() {
 
   const onUpdate = useCallback(
     component => {
-      apiService.send({ tp: 'req:ota-start', cp: component });
+      if (
+        officialChannel &&
+        !window.confirm(
+          t`Install Official Nightly on both the display and controller? This replaces Dual Boiler Beta and may install an older version. Beta-only features may no longer be available.`,
+        )
+      )
+        return;
+      apiService.send({
+        tp: 'req:ota-start',
+        cp: officialChannel ? 'both' : component,
+        confirmOfficial: officialChannel,
+      });
     },
-    [apiService],
+    [apiService, officialChannel, t],
   );
 
   const [rebuilding, setRebuilding] = useState(false);
@@ -383,11 +395,11 @@ export function SystemTab() {
             </label>
             <div className='mb-2 flex w-full items-center gap-2'>
               <select id='channel' name='channel' className='select select-bordered grow'>
-                <option value='latest' selected={formData.channel === 'latest'}>
-                  {t({ message: 'Stable', context: 'update channel' })}
+                <option value='dual-boiler-beta' selected={!officialChannel}>
+                  <Trans>Dual Boiler Beta</Trans>
                 </option>
-                <option value='nightly' selected={formData.channel === 'nightly'}>
-                  {t({ message: 'Nightly', context: 'update channel' })}
+                <option value='nightly' selected={officialChannel}>
+                  <Trans>Official Nightly</Trans>
                 </option>
               </select>
               <button type='submit' className='btn btn-secondary' disabled={submitting}>
@@ -396,6 +408,14 @@ export function SystemTab() {
             </div>
           </div>
         </form>
+        {officialChannel && (
+          <div className='alert alert-warning mt-4'>
+            <Trans>
+              Official Nightly replaces Dual Boiler Beta on both components, including when the
+              official version is older. Beta-only features may no longer be available.
+            </Trans>
+          </div>
+        )}
 
         <div className='border-base-content/5 mt-6 grid grid-cols-1 gap-6 border-t pt-6 md:grid-cols-2'>
           <div className='flex flex-col space-y-1'>
@@ -453,14 +473,16 @@ export function SystemTab() {
                 </>
               )}
             </div>
-            <button
-              type='button'
-              className='btn btn-secondary btn-sm'
-              disabled={!formData.controllerUpdateAvailable || submitting}
-              onClick={() => onUpdate('controller')}
-            >
-              <Trans>Update Controller</Trans>
-            </button>
+            {!officialChannel && (
+              <button
+                type='button'
+                className='btn btn-secondary btn-sm'
+                disabled={!formData.controllerUpdateAvailable || submitting}
+                onClick={() => onUpdate('controller')}
+              >
+                <Trans>Update Controller</Trans>
+              </button>
+            )}
           </div>
 
           <div className='flex flex-col space-y-2'>
@@ -478,14 +500,16 @@ export function SystemTab() {
                 </>
               )}
             </div>
-            <button
-              type='button'
-              className='btn btn-secondary btn-sm'
-              disabled={!formData.displayUpdateAvailable || submitting}
-              onClick={() => onUpdate('display')}
-            >
-              <Trans>Update Display</Trans>
-            </button>
+            {!officialChannel && (
+              <button
+                type='button'
+                className='btn btn-secondary btn-sm'
+                disabled={!formData.displayUpdateAvailable || submitting}
+                onClick={() => onUpdate('display')}
+              >
+                <Trans>Update Display</Trans>
+              </button>
+            )}
           </div>
           <div className='flex flex-col space-y-2 md:col-span-2'>
             <button
@@ -497,7 +521,11 @@ export function SystemTab() {
               }
               onClick={() => onUpdate('both')}
             >
-              <Trans>Update both</Trans>
+              {officialChannel ? (
+                <Trans>Install Official Nightly</Trans>
+              ) : (
+                <Trans>Update both</Trans>
+              )}
             </button>
           </div>
         </div>

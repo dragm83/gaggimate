@@ -30,12 +30,14 @@ class GitHubOTA {
     bool isUpdateAvailable(bool controller = false) const;
     String getCurrentVersion() const;
     void update(bool controller = true, bool display = true, NimBLEClient *client = nullptr);
-    void setReleaseUrl(const String &release_url);
+    void setReleaseUrl(const String &release_url, bool allowDowngrade = false,
+                       const String &controller_firmware_name = "board-firmware.bin");
     void setControllerVersion(const String &controller_version);
 
   private:
     bool flashDisplayFirmware(const String &url);
     void setPhase(uint8_t newPhase);
+    void refreshUpdateAvailability();
 
     uint8_t phase = PHASE_IDLE;
     semver_t _version;
@@ -51,6 +53,7 @@ class GitHubOTA {
     ControllerOTA _controller_ota;
     phase_callback_t _phase_callback = nullptr;
     progress_callback_t _progress_callback = nullptr;
+    bool _allowDowngrade = false;
     bool _controller_update_required = false;
     bool _screen_update_required = false;
 };

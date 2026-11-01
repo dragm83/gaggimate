@@ -188,7 +188,9 @@ class Settings {
     String getMdnsName() const { return mdnsName.get(); }
     bool isHomekit() const { return homekit.get(); }
     bool isVolumetricTarget() const { return volumetricTarget.get(); }
-    String getOTAChannel() const { return otaChannel.get(); }
+    String getOTAChannel() const {
+        return otaChannelConfigured.get() ? otaChannel.get() : String(DEFAULT_OTA_CHANNEL);
+    }
     String getSavedScale() const { return savedScale.get(); }
     String getSavedScaleName() const { return savedScaleName.get(); }
     bool isIndependentSteamControl() const { return independentSteamControl.get(); }
@@ -467,6 +469,7 @@ class Settings {
     Property<String> timezone{registry, "tz", DEFAULT_TIMEZONE};
     Property<bool> clock24hFormat{registry, "clk_24h", true};
     Property<String> otaChannel{registry, "oc", DEFAULT_OTA_CHANNEL};
+    Property<bool> otaChannelConfigured{registry, "ocdb", false};
     Property<std::vector<String>> favoritedProfiles{registry, "fp", {}};
     Property<std::vector<String>> profileOrder{registry, "po", {}}; // persisted profile ordering
     Property<bool> independentSteamControl{registry, "steam_ind", false};

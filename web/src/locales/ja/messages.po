@@ -6505,3 +6505,23 @@ msgstr ""
 #: src/utils/metricDefinitions.js
 msgid "Water Tank Level"
 msgstr ""
+
+#: src/pages/Settings/tabs/SystemTab.jsx
+msgid "Dual Boiler Beta"
+msgstr ""
+
+#: src/pages/Settings/tabs/SystemTab.jsx
+msgid "Install Official Nightly"
+msgstr ""
+
+#: src/pages/Settings/tabs/SystemTab.jsx
+msgid "Install Official Nightly on both the display and controller? This replaces Dual Boiler Beta and may install an older version. Beta-only features may no longer be available."
+msgstr ""
+
+#: src/pages/Settings/tabs/SystemTab.jsx
+msgid "Official Nightly"
+msgstr ""
+
+#: src/pages/Settings/tabs/SystemTab.jsx
+msgid "Official Nightly replaces Dual Boiler Beta on both components, including when the official version is older. Beta-only features may no longer be available."
+msgstr ""
