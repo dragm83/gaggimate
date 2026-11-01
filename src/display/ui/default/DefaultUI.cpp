@@ -787,6 +787,7 @@ void DefaultUI::updateSystemStatus() {
         systemStatus.error_label(errorLabel.c_str());
     systemStatus.volumetric_available(controller->isVolumetricAvailable());
     systemStatus.dual_boiler_available(controller->getSystemInfo().capabilities.dualBoiler);
+    eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_BREW_TEMPERATURE, FloatValue(controller->getCurrentTemp()));
     eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_STEAM_TEMPERATURE, FloatValue(controller->getCurrentSteamTemp()));
     eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_STEAM_ENABLED,
                                  BooleanValue(dualBoiler && controller->isSteamHeaterActive()));

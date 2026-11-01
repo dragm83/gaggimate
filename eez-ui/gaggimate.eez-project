@@ -211,6 +211,13 @@
         "size": null,
         "defaultValue": "\"\"",
         "persistent": false
+      },
+      {
+        "objID": "a324acc1-2bf5-4b4e-ad06-307e2b116f54",
+        "name": "brew_temperature",
+        "type": "float",
+        "defaultValue": "0",
+        "persistent": false
       }
     ],
     "structures": [
@@ -15378,7 +15385,7 @@
           },
           "group": "",
           "groupIndex": 0,
-          "text": "String.format(\"%.f\", boiler.current_temperature) + \" °C\"",
+          "text": "String.format(\"%.f\", system.dual_boiler_available ? brew_temperature : boiler.current_temperature) + \" °C\"",
           "textType": "expression",
           "longMode": "WRAP",
           "recolor": false,
@@ -15434,7 +15441,7 @@
           },
           "group": "",
           "groupIndex": 0,
-          "text": "String.format(\"%.f\", boiler.current_temperature) + \" °C\"",
+          "text": "String.format(\"%.f\", system.dual_boiler_available ? brew_temperature : boiler.current_temperature) + \" °C\"",
           "textType": "expression",
           "longMode": "WRAP",
           "recolor": false,
