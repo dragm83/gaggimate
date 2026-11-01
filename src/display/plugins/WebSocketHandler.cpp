@@ -408,8 +408,8 @@ void WebSocketHandler::publishState(unsigned long now) {
     doc["p"] = profile.label;
     doc["puid"] = profile.id;
     const auto &caps = controller->getSystemInfo().capabilities;
-    doc["steamActive"] = controller->isSteamHeaterActive();
-    doc["steamControlsAvailable"] = controller->isSteamControlsAvailable();
+    doc["sa"] = controller->isSteamHeaterActive();
+    doc["sca"] = controller->isSteamControlsAvailable();
     doc["cp"] = caps.pressure;
     doc["cd"] = caps.dimming;
     doc["gp"] = caps.hasAddon(7);
@@ -417,13 +417,16 @@ void WebSocketHandler::publishState(unsigned long now) {
     doc["scaleSource"] = controller->getActiveScaleSourceName();
     doc["led"] = caps.ledControl;
     doc["tofc"] = caps.tof;
+    // Legacy TOF capability also covers binary tank switches; only Alba provides a percentage.
+    doc["awl"] = caps.ledControl && caps.tof &&
+                                     !(caps.dualBoiler && controller->getSettings().getTankLevelEnabled());
     doc["sd"] = controller->isSDCard();
-    doc["hasTankLevel"] = controller->hasTankLevel();
-    doc["tankLevelOK"] = controller->isTankLevelOK();
-    doc["tankLevelKnown"] = controller->hasTankLevelReading();
-    doc["hasSteamLevel"] = controller->hasSteamLevel();
-    doc["steamLevelKnown"] = controller->hasSteamLevelReading();
-    doc["steamBoilerLow"] = controller->isSteamBoilerLow();
+    doc["htl"] = controller->hasTankLevel();
+    doc["tlo"] = controller->isTankLevelOK();
+    doc["tlk"] = controller->hasTankLevelReading();
+    doc["hsl"] = controller->hasSteamLevel();
+    doc["slk"] = controller->hasSteamLevelReading();
+    doc["sbl"] = controller->isSteamBoilerLow();
     doc["tw"] = profile.getTotalVolume(); // total target weight for the process
     doc["bta"] = controller->isVolumetricAvailable() ? 1 : 0;
     doc["bt"] = controller->isVolumetricAvailable() && profile.isVolumetric() ? 1 : 0;

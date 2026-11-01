@@ -62,9 +62,10 @@ export function useDashboardState() {
   const tof = caps?.tof || false;
   const emptyTankDistance = settings?.emptyTankDistance || 0;
   const fullTankDistance = settings?.fullTankDistance || 0;
-  const albaCalibrated = emptyTankDistance > 0 && fullTankDistance > 0;
+  const albaCalibrated = emptyTankDistance > fullTankDistance && fullTankDistance > 0;
+  const albaWaterLevelAvailable = !!s.albaWaterLevelAvailable;
   const waterLevelPercent =
-    tof && albaCalibrated
+    albaWaterLevelAvailable && albaCalibrated && Number.isFinite(s.tofDistance) && s.tofDistance > 0
       ? Math.max(
           0,
           Math.min(
@@ -135,6 +136,7 @@ export function useDashboardState() {
 
   return {
     // raw status
+    albaWaterLevelAvailable,
     hasTankLevel: !!s.hasTankLevel,
     tankLevelKnown: !!s.tankLevelKnown,
     tankLevelOK: !!s.tankLevelOK,

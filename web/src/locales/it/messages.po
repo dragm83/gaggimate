@@ -6478,3 +6478,34 @@ msgstr ""
 #: src/pages/Settings/tabs/HeaterCoordinationSection.jsx
 msgid "For 120 V machines, heater coordination should generally remain enabled. Running the brew and steam heaters simultaneously can overload the circuit, blow a fuse or trip a breaker, and create a fire hazard. Only disable it if the machine and supply circuit are rated to power both heaters together."
 msgstr ""
+
+#: src/pages/Home/cards/MachineLevelsCard.jsx
+#: src/utils/metricDefinitions.js
+msgid "Low"
+msgstr ""
+
+#: src/pages/Home/cards/MachineLevelsCard.jsx
+#: src/utils/metricDefinitions.js
+msgid "OK"
+msgstr ""
+
+#: src/utils/panelDefinitions.js
+msgid "Smart Dosing"
+msgstr ""
+
+#: src/pages/Home/cards/MachineLevelsCard.jsx
+msgid "Steam Boiler"
+msgstr ""
+
+#: src/utils/metricDefinitions.js
+msgid "Steam Boiler Level"
+msgstr ""
+
+#: src/pages/Home/cards/MachineLevelsCard.jsx
+#: src/utils/panelDefinitions.js
+msgid "Water Levels"
+msgstr ""
+
+#: src/utils/metricDefinitions.js
+msgid "Water Tank Level"
+msgstr ""

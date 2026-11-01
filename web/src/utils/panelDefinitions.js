@@ -93,7 +93,7 @@ export const PANEL_DEFINITIONS = [
   },
   {
     id: 'machinelevels',
-    label: 'Water Levels',
+    labelMsg: msg`Water Levels`,
     required: false,
     available: ds => !!ds.hasTankLevel || !!ds.hasSteamLevel,
     component: MachineLevelsCard,
@@ -110,8 +110,8 @@ export const PANEL_DEFINITIONS = [
     id: 'watertank',
     labelMsg: msg`Water Tank`,
     required: false,
-    available: ds => ds.waterLevelPercent !== null,
-    availableInSettings: status => !!status.tofDistance,
+    available: ds => ds.albaWaterLevelAvailable && ds.waterLevelPercent !== null,
+    availableInSettings: status => !!status.albaWaterLevelAvailable,
     component: WaterLevelCard,
     props: ds => ({
       waterLevelPercent: ds.waterLevelPercent,

@@ -1,4 +1,4 @@
-import { msg } from '@lingui/core/macro';
+import { msg, t } from '@lingui/core/macro';
 import { withTranslatedLabel } from './translatedLabel.js';
 
 /**
@@ -140,11 +140,29 @@ export const METRIC_DEFINITIONS = [
     adjustable: () => false,
   },
   {
+    id: 'steamboilerlevel',
+    labelMsg: msg`Steam Boiler Level`,
+    required: false,
+    available: ds => !!ds.hasSteamLevel,
+    getValue: ds => (!ds.steamLevelKnown ? t`Unknown` : ds.steamBoilerLow ? t`Low` : t`OK`),
+    active: ds => !!ds.steamLevelKnown && !!ds.steamBoilerLow,
+    adjustable: () => false,
+  },
+  {
+    id: 'watertanklevel',
+    labelMsg: msg`Water Tank Level`,
+    required: false,
+    available: ds => !!ds.hasTankLevel,
+    getValue: ds => (!ds.tankLevelKnown ? t`Unknown` : ds.tankLevelOK ? t`OK` : t`Low`),
+    active: ds => !!ds.tankLevelKnown && !ds.tankLevelOK,
+    adjustable: () => false,
+  },
+  {
     id: 'waterlevel',
     labelMsg: msg`Water Level`,
     required: false,
-    available: ds => !!ds.tofDistance,
-    getValue: ds => (ds.waterLevelPercent !== null ? `${Math.round(ds.waterLevelPercent)}%` : '—'),
+    available: ds => !!ds.albaWaterLevelAvailable,
+    getValue: ds => (ds.waterLevelPercent != null ? `${Math.round(ds.waterLevelPercent)}%` : '—'),
     getTarget: () => null,
     unit: '%',
     adjustable: () => false,

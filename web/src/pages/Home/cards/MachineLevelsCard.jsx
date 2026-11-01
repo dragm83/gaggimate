@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { Trans, useLingui } from '@lingui/react/macro';
 
 export function MachineLevelsCard({
   hasTankLevel,
@@ -9,9 +10,10 @@ export function MachineLevelsCard({
   steamBoilerLow,
   inCard = false,
 }) {
+  const { t } = useLingui();
   const levels = [
-    { label: 'Water tank', present: hasTankLevel, known: tankLevelKnown, low: !tankLevelOK },
-    { label: 'Steam boiler', present: hasSteamLevel, known: steamLevelKnown, low: steamBoilerLow },
+    { label: t`Water Tank`, present: hasTankLevel, known: tankLevelKnown, low: !tankLevelOK },
+    { label: t`Steam Boiler`, present: hasSteamLevel, known: steamLevelKnown, low: steamBoilerLow },
   ].filter(level => level.present);
   if (!levels.length) return null;
 
@@ -22,21 +24,23 @@ export function MachineLevelsCard({
       }
     >
       <div className='text-base-content/50 text-[0.6rem] font-semibold tracking-wider uppercase'>
-        Water Levels
+        <Trans>Water Levels</Trans>
       </div>
-      <dl className='space-y-2 text-sm' aria-live='polite'>
+      <dl className='grid grid-cols-1 gap-2 text-sm sm:grid-cols-2' aria-live='polite'>
         {levels.map(({ label, known, low }) => (
-          <div key={label} className='flex items-center justify-between gap-3'>
+          <div
+            key={label}
+            className='bg-base-200/60 flex items-center justify-between gap-3 rounded-lg p-3'
+          >
             <dt>{label}</dt>
             <dd
               className={`text-xs font-semibold ${!known ? 'text-base-content/50' : low ? 'text-error' : 'text-success'}`}
             >
-              {!known ? 'Unknown' : low ? 'Low' : 'OK'}
+              {!known ? t`Unknown` : low ? t`Low` : t`OK`}
             </dd>
           </div>
         ))}
       </dl>
-      <p className='text-base-content/40 text-[0.65rem]'>Level states received by the display.</p>
     </div>
   );
 }
