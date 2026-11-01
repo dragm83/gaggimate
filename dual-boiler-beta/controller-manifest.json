@@ -1,6 +1,6 @@
 {
   "name": "GaggiMate Dual Boiler Beta - Controller",
-  "version": "v1.9.0-185-gad85362d",
+  "version": "v1.9.0-187-g8d4758a4",
   "new_install_prompt_erase": true,
   "builds": [
     {
