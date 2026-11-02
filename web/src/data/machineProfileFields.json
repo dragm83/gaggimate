@@ -171,12 +171,33 @@
     "hardware": true,
     "restart": true
   },
-  "systemLedEnabled": {
+  "systemLedFunction": {
     "label": "System LED",
-    "type": "boolean",
+    "type": "integer",
     "capability": "dualBoiler",
     "hardware": true,
-    "restart": true
+    "restart": true,
+    "values": [0, 1, 2, 3],
+    "options": {
+      "0": "Off",
+      "1": "Steam heating / ready",
+      "2": "Brew heating / ready",
+      "3": "On outside standby"
+    }
+  },
+  "baristaLedFunction": {
+    "label": "Barista Light",
+    "type": "integer",
+    "capability": "dualBoiler",
+    "hardware": true,
+    "restart": true,
+    "values": [0, 1, 2, 3],
+    "options": {
+      "0": "Off",
+      "1": "Steam heating / ready",
+      "2": "Brew heating / ready",
+      "3": "On outside standby"
+    }
   },
   "steamRefillMode": {
     "label": "Steam refill arrangement",

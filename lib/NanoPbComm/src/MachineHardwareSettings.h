@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstring>
 inline bool validMachineHardware(const gm::MachineHardwareSettings &v) {
-    return v.version == 4 &&
+    return v.version == 6 &&
            !(!std::isfinite(v.ntc_brew_nominal_resistance) || v.ntc_brew_nominal_resistance < 100 ||
              v.ntc_brew_nominal_resistance > 1000000 || !std::isfinite(v.ntc_brew_series_resistance) ||
              v.ntc_brew_series_resistance < 100 || v.ntc_brew_series_resistance > 1000000 ||
@@ -15,18 +15,20 @@ inline bool validMachineHardware(const gm::MachineHardwareSettings &v) {
              v.ntc_steam_series_resistance < 100 || v.ntc_steam_series_resistance > 1000000 ||
              !std::isfinite(v.ntc_steam_supply_voltage) || v.ntc_steam_supply_voltage < 0.5 || v.ntc_steam_supply_voltage > 5.5 ||
              !std::isfinite(v.ntc_steam_beta) || v.ntc_steam_beta < 1000 || v.ntc_steam_beta > 10000 ||
-             v.steam_level_debounce_checks < 1 || v.steam_level_debounce_checks > 100);
+             v.steam_level_debounce_checks < 1 || v.steam_level_debounce_checks > 100 ||
+             v.system_led_function > 3 || v.barista_led_function > 3);
 }
 
 inline gm::MachineHardwareSettings defaultMachineHardware() {
     gm::MachineHardwareSettings v = gaggimate_MachineHardwareSettings_init_zero;
-    v.version = 4;
+    v.version = 6;
     v.ntc_brew_nominal_resistance = v.ntc_steam_nominal_resistance = 50000;
     v.ntc_brew_series_resistance = v.ntc_steam_series_resistance = 10000;
     v.ntc_brew_supply_voltage = v.ntc_steam_supply_voltage = 4.096f;
     v.ntc_brew_beta = v.ntc_steam_beta = 3988;
     v.steam_level_enabled = true;
-    v.system_led_enabled = true;
+    v.system_led_function = 1; // Steam heating/ready.
+    v.barista_led_function = 3; // On outside standby.
     v.steam_level_debounce_checks = 25;
     return v;
 }
@@ -55,7 +57,8 @@ inline uint32_t machineHardwareHash(const gm::MachineHardwareSettings &v) {
     add(v.version);
     add(v.tank_level_enabled);
     add(v.steam_level_enabled);
-    add(v.system_led_enabled);
+    add(v.system_led_function);
+    add(v.barista_led_function);
     add(v.steam_level_debounce_checks);
     return hash;
 }

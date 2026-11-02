@@ -129,13 +129,16 @@ message MachineHardwareSettings {
     float ntc_steam_beta = 8;
     bool tank_level_enabled = 9;
     bool steam_level_enabled = 10;
-    bool system_led_enabled = 11;
+    reserved 11;
     reserved 12;
     reserved 13, 14;
     uint32 steam_level_debounce_checks = 15;
     uint32 version = 16;
     reserved 17, 18;
     bool restart_if_required = 19;
+    uint32 system_led_function = 20; // 0 = off, 1 = steam heating/ready, 2 = brew heating/ready, 3 = awake
+    reserved 21;
+    uint32 barista_led_function = 22;
 }
 
 message MachineHardwareStatus {

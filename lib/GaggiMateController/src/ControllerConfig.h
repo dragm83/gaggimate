@@ -38,6 +38,7 @@ struct ControllerConfig {
     uint8_t waterSensePin = 0;
     uint8_t tankLevelPin = 0;
     uint8_t ledPin = 0;
+    uint8_t baristaLedPin = 0; // Unassigned until the board provides a dedicated output.
 
     uint8_t pressureScl = 0;
     uint8_t pressureSda = 0;

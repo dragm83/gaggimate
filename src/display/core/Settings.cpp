@@ -478,7 +478,8 @@ gm::MachineHardwareSettings Settings::getMachineHardware() const {
         value.ntc_steam_beta = ntcSteamBeta.get();
     value.tank_level_enabled = tankLevelEnabled.get();
     value.steam_level_enabled = steamLevelEnabled.get();
-    value.system_led_enabled = systemLedEnabled.get();
+    value.system_led_function = systemLedFunction.get();
+    value.barista_led_function = baristaLedFunction.get();
     value.steam_level_debounce_checks = steamLevelDebounceChecks.get();
     return value;
 }

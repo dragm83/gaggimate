@@ -96,8 +96,10 @@ void GaggiMateController::setup() {
                     tankLevelOK = full;
                 });
         }
-        if (machineHardware.system_led_enabled && _config.ledPin != 0)
+        if (machineHardware.system_led_function != StatusLight::Off && _config.ledPin != 0)
             lights = new SimpleRelay(_config.ledPin, HIGH);
+        if (machineHardware.barista_led_function != StatusLight::Off && _config.baristaLedPin != 0)
+            baristaLight = new SimpleRelay(_config.baristaLedPin, HIGH);
     } else {
         alt = new SimpleRelay(_config.altPin, _config.altOn);
     }
@@ -214,6 +216,8 @@ void GaggiMateController::setup() {
             waterSense->setup();
         if (lights)
             lights->setup();
+        if (baristaLight)
+            baristaLight->setup();
     } else {
         alt->setup();
     }
@@ -494,24 +498,20 @@ void GaggiMateController::updateDualBoilerOutputs(unsigned long now) {
                              : 0.0f;
     if (heater2->getSetpoint() != target)
         heater2->setSetpoint(target);
-    const bool heating = target > 0.0f && steamTemperature->read() < target - 1.0f;
-    if (!lights)
-        return;
-    const uint8_t requested = !safe || (machineHardware.tank_level_enabled && !tankLevelOK) ? 1
-                              : target <= 0.0f                                              ? 0
-                              : heating                                                     ? 2
-                                                                                            : 3;
-    if (requested != statusLedMode) {
-        statusLedMode = requested;
-        ledModeStartedAt = now;
-    }
-    const unsigned long elapsed = now - ledModeStartedAt;
-    const unsigned long phase = elapsed % 1350;
-    const bool on = requested == 1   ? phase < 600 && (phase / 100) % 2 == 0
-                    : requested == 2 ? (elapsed / 500) % 2 == 0
-                                     : requested == 3;
-    if (lights->getState() != on)
-        lights->set(on);
+    const bool fault = !safe || (machineHardware.tank_level_enabled && !tankLevelOK);
+    const bool awake = safe && heater->getSetpoint() > 0.0f;
+    auto updateLight = [&](SimpleRelay *output, StatusLight &state, uint32_t function, bool showFaults) {
+        if (!output)
+            return;
+        const bool brew = function == StatusLight::Brew;
+        const float temperature = brew ? brewTemperature->read() : steamTemperature->read();
+        const float setpoint = safe ? (brew ? heater->getSetpoint() : target) : 0.0f;
+        const bool on = state.update(now, function, temperature, setpoint, awake, showFaults && fault);
+        if (output->getState() != on)
+            output->set(on);
+    };
+    updateLight(lights, systemLightState, machineHardware.system_led_function, true);
+    updateLight(baristaLight, baristaLightState, machineHardware.barista_led_function, false);
 }
 
 void GaggiMateController::detectAddon() {
@@ -557,6 +557,8 @@ void GaggiMateController::handlePingTimeout() {
         this->heater2->stop();
         this->refill->set(false);
         this->aux->set(false);
+        if (baristaLight)
+            baristaLight->set(false);
     } else {
         this->alt->set(false);
     }
@@ -591,6 +593,8 @@ void GaggiMateController::thermalRunawayShutdown() {
         this->heater2->stop();
         this->refill->set(false);
         this->aux->set(false);
+        if (baristaLight)
+            baristaLight->set(false);
     } else {
         this->alt->set(false);
     }

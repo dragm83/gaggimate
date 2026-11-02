@@ -15,6 +15,7 @@
 #include <peripherals/PressureSensor.h>
 #include <peripherals/Pump.h>
 #include <peripherals/SimpleRelay.h>
+#include <peripherals/StatusLight.h>
 #include <peripherals/addons/GearpumpAddon.h>
 #include <vector>
 
@@ -64,6 +65,7 @@ class GaggiMateController {
     SimpleRelay *refill = nullptr;
     SimpleRelay *aux = nullptr;
     SimpleRelay *lights = nullptr;
+    SimpleRelay *baristaLight = nullptr;
     DigitalInput *brewBtn = nullptr;
     DigitalInput *steamBtn = nullptr;
     DigitalInput *waterBtn = nullptr;
@@ -74,8 +76,8 @@ class GaggiMateController {
     std::atomic<bool> tankLevelOK{false};
     std::atomic<float> steamRequestedSetpoint{0.0f};
     unsigned long lastSensorSend = 0;
-    unsigned long ledModeStartedAt = 0;
-    uint8_t statusLedMode = 0;
+    StatusLight systemLightState;
+    StatusLight baristaLightState;
     PressureSensor *pressureSensor = nullptr;
     LedController *ledController = nullptr;
     DistanceSensor *distanceSensor = nullptr;

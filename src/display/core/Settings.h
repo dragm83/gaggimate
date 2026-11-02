@@ -103,7 +103,8 @@ class Settings {
     float getNtcSteamBeta() const { return ntcSteamBeta.get(); }
     bool getTankLevelEnabled() const { return tankLevelEnabled.get(); }
     bool getSteamLevelEnabled() const { return steamLevelEnabled.get(); }
-    bool getSystemLedEnabled() const { return systemLedEnabled.get(); }
+    int getSystemLedFunction() const { return systemLedFunction.get(); }
+    int getBaristaLedFunction() const { return baristaLedFunction.get(); }
     int getSteamRefillMode() const { return steamRefillMode.get(); }
     int getSteamRefillPostClearSeconds() const { return steamRefillPostClearSeconds.get(); }
     int getSteamLevelDebounceChecks() const { return steamLevelDebounceChecks.get(); }
@@ -141,7 +142,14 @@ class Settings {
     }
     void setTankLevelEnabled(bool value) { tankLevelEnabled.set(value); }
     void setSteamLevelEnabled(bool value) { steamLevelEnabled.set(value); }
-    void setSystemLedEnabled(bool value) { systemLedEnabled.set(value); }
+    void setSystemLedFunction(int value) {
+        if (value >= 0 && value <= 3)
+            systemLedFunction.set(value);
+    }
+    void setBaristaLedFunction(int value) {
+        if (value >= 0 && value <= 3)
+            baristaLedFunction.set(value);
+    }
     void setSteamRefillMode(int value) {
         if (value >= 0 && value <= 2)
             steamRefillMode.set(value);
@@ -411,7 +419,8 @@ class Settings {
     Property<float> ntcSteamBeta{registry, "nsbt", 3988.0f};
     Property<bool> tankLevelEnabled{registry, "tl_en", false};
     Property<bool> steamLevelEnabled{registry, "sl_en", true};
-    Property<bool> systemLedEnabled{registry, "led_sys", true};
+    Property<int> systemLedFunction{registry, "led_sys_mode", 1};
+    Property<int> baristaLedFunction{registry, "led_bar_mode", 3};
     Property<int> steamRefillMode{registry, "rf_mode", 1};
     Property<int> steamRefillPostClearSeconds{registry, "rf_post", 0};
     Property<int> steamLevelDebounceChecks{registry, "sl_db", 25};

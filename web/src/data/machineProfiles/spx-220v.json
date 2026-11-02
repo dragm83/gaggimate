@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "spx-220v",
   "name": "Rancilio Silvia Pro X - 220V",
-  "revision": 2,
+  "revision": 3,
   "requires": {
     "dualBoiler": true,
     "pressure": true
@@ -18,7 +18,8 @@
     "ntcSteamBeta": 3950,
     "tankLevelEnabled": true,
     "steamLevelEnabled": true,
-    "systemLedEnabled": true,
+    "systemLedFunction": 1,
+    "baristaLedFunction": 3,
     "steamRefillMode": 2,
     "steamRefillPostClearSeconds": 10,
     "steamLevelDebounceChecks": 25,

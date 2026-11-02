@@ -349,7 +349,8 @@ static void writeMachineHardware(JsonObject object, const gm::MachineHardwareSet
     object["ntcSteamBeta"] = value.ntc_steam_beta;
     object["tankLevelEnabled"] = value.tank_level_enabled;
     object["steamLevelEnabled"] = value.steam_level_enabled;
-    object["systemLedEnabled"] = value.system_led_enabled;
+    object["systemLedFunction"] = value.system_led_function;
+    object["baristaLedFunction"] = value.barista_led_function;
     object["steamLevelDebounceChecks"] = value.steam_level_debounce_checks;
 }
 
@@ -481,8 +482,10 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setTankLevelEnabled(request->arg("tankLevelEnabled") == "1");
             if (request->hasArg("steamLevelEnabled"))
                 settings->setSteamLevelEnabled(request->arg("steamLevelEnabled") == "1");
-            if (request->hasArg("systemLedEnabled"))
-                settings->setSystemLedEnabled(request->arg("systemLedEnabled") == "1");
+            if (request->hasArg("systemLedFunction"))
+                settings->setSystemLedFunction(request->arg("systemLedFunction").toInt());
+            if (request->hasArg("baristaLedFunction"))
+                settings->setBaristaLedFunction(request->arg("baristaLedFunction").toInt());
             if (request->hasArg("steamRefillMode"))
                 settings->setSteamRefillMode(request->arg("steamRefillMode").toInt());
             if (request->hasArg("steamRefillPostClearSeconds"))

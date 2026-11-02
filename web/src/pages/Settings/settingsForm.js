@@ -4,7 +4,6 @@ export const CHECKBOX_KEYS = [
   'rememberSteamState',
   'tankLevelEnabled',
   'steamLevelEnabled',
-  'systemLedEnabled',
   'albaRefillInterlock',
   'homekit',
   'boilerFillActive',

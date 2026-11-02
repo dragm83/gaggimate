@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "max-default",
   "name": "Profitec Move - 120V",
-  "revision": 4,
+  "revision": 5,
   "requires": {
     "dualBoiler": true,
     "pressure": true
@@ -18,7 +18,8 @@
     "ntcSteamBeta": 3988,
     "tankLevelEnabled": false,
     "steamLevelEnabled": true,
-    "systemLedEnabled": true,
+    "systemLedFunction": 1,
+    "baristaLedFunction": 3,
     "steamRefillMode": 1,
     "steamRefillPostClearSeconds": 3,
     "steamLevelDebounceChecks": 25,
