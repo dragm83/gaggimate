@@ -422,11 +422,15 @@ void WebSocketHandler::publishState(unsigned long now) {
                                      !(caps.dualBoiler && controller->getSettings().getTankLevelEnabled());
     doc["sd"] = controller->isSDCard();
     doc["htl"] = controller->hasTankLevel();
-    doc["tlo"] = controller->isTankLevelOK();
-    doc["tlk"] = controller->hasTankLevelReading();
+    if (controller->hasTankLevelReading())
+        doc["tlo"] = controller->isTankLevelOK();
+    else
+        doc["tlo"] = nullptr;
     doc["hsl"] = controller->hasSteamLevel();
-    doc["slk"] = controller->hasSteamLevelReading();
-    doc["sbl"] = controller->isSteamBoilerLow();
+    if (controller->hasSteamLevelReading())
+        doc["sbl"] = controller->isSteamBoilerLow();
+    else
+        doc["sbl"] = nullptr;
     doc["tw"] = profile.getTotalVolume(); // total target weight for the process
     doc["bta"] = controller->isVolumetricAvailable() ? 1 : 0;
     doc["bt"] = controller->isVolumetricAvailable() && profile.isVolumetric() ? 1 : 0;

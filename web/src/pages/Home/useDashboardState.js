@@ -138,11 +138,9 @@ export function useDashboardState() {
     // raw status
     albaWaterLevelAvailable,
     hasTankLevel: !!s.hasTankLevel,
-    tankLevelKnown: !!s.tankLevelKnown,
-    tankLevelOK: !!s.tankLevelOK,
+    tankLevelOK: s.tankLevelOK ?? null,
     hasSteamLevel: !!s.hasSteamLevel,
-    steamLevelKnown: !!s.steamLevelKnown,
-    steamBoilerLow: !!s.steamBoilerLow,
+    steamBoilerLow: s.steamBoilerLow ?? null,
     mode,
     systemReady,
     systemMessage,

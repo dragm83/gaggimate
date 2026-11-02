@@ -214,11 +214,9 @@ export default class ApiService {
     map('fl', 'currentFlow');
     map('awl', 'albaWaterLevelAvailable');
     map('htl', 'hasTankLevel');
-    map('tlo', 'tankLevelOK');
-    map('tlk', 'tankLevelKnown');
+    map('tlo', 'tankLevelOK', v => v ?? null);
     map('hsl', 'hasSteamLevel');
-    map('slk', 'steamLevelKnown');
-    map('sbl', 'steamBoilerLow');
+    map('sbl', 'steamBoilerLow', v => v ?? null);
     map('tf', 'targetFlow', v => v || 0);
     map('m', 'mode');
     map('p', 'selectedProfile');

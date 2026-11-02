@@ -144,8 +144,8 @@ export const METRIC_DEFINITIONS = [
     labelMsg: msg`Steam Boiler Level`,
     required: false,
     available: ds => !!ds.hasSteamLevel,
-    getValue: ds => (!ds.steamLevelKnown ? t`Unknown` : ds.steamBoilerLow ? t`Low` : t`OK`),
-    active: ds => !!ds.steamLevelKnown && !!ds.steamBoilerLow,
+    getValue: ds => (ds.steamBoilerLow == null ? t`Unknown` : ds.steamBoilerLow ? t`Low` : t`OK`),
+    active: ds => ds.steamBoilerLow === true,
     adjustable: () => false,
   },
   {
@@ -153,8 +153,8 @@ export const METRIC_DEFINITIONS = [
     labelMsg: msg`Water Tank Level`,
     required: false,
     available: ds => !!ds.hasTankLevel,
-    getValue: ds => (!ds.tankLevelKnown ? t`Unknown` : ds.tankLevelOK ? t`OK` : t`Low`),
-    active: ds => !!ds.tankLevelKnown && !ds.tankLevelOK,
+    getValue: ds => (ds.tankLevelOK == null ? t`Unknown` : ds.tankLevelOK ? t`OK` : t`Low`),
+    active: ds => ds.tankLevelOK === false,
     adjustable: () => false,
   },
   {

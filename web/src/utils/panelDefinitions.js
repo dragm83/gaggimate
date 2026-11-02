@@ -99,10 +99,8 @@ export const PANEL_DEFINITIONS = [
     component: MachineLevelsCard,
     props: ds => ({
       hasTankLevel: ds.hasTankLevel,
-      tankLevelKnown: ds.tankLevelKnown,
       tankLevelOK: ds.tankLevelOK,
       hasSteamLevel: ds.hasSteamLevel,
-      steamLevelKnown: ds.steamLevelKnown,
       steamBoilerLow: ds.steamBoilerLow,
     }),
   },

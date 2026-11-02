@@ -3,17 +3,25 @@ import { Trans, useLingui } from '@lingui/react/macro';
 
 export function MachineLevelsCard({
   hasTankLevel,
-  tankLevelKnown,
   tankLevelOK,
   hasSteamLevel,
-  steamLevelKnown,
   steamBoilerLow,
   inCard = false,
 }) {
   const { t } = useLingui();
   const levels = [
-    { label: t`Water Tank`, present: hasTankLevel, known: tankLevelKnown, low: !tankLevelOK },
-    { label: t`Steam Boiler`, present: hasSteamLevel, known: steamLevelKnown, low: steamBoilerLow },
+    {
+      label: t`Water Tank`,
+      present: hasTankLevel,
+      known: tankLevelOK != null,
+      low: tankLevelOK === false,
+    },
+    {
+      label: t`Steam Boiler`,
+      present: hasSteamLevel,
+      known: steamBoilerLow != null,
+      low: steamBoilerLow === true,
+    },
   ].filter(level => level.present);
   if (!levels.length) return null;
 
@@ -47,10 +55,8 @@ export function MachineLevelsCard({
 
 MachineLevelsCard.propTypes = {
   hasTankLevel: PropTypes.bool,
-  tankLevelKnown: PropTypes.bool,
   tankLevelOK: PropTypes.bool,
   hasSteamLevel: PropTypes.bool,
-  steamLevelKnown: PropTypes.bool,
   steamBoilerLow: PropTypes.bool,
   inCard: PropTypes.bool,
 };
