@@ -19,7 +19,7 @@ class HeatingCheck {
     explicit HeatingCheck(uint32_t heatingTimeMs = 30000) : heatingTimeMs(heatingTimeMs) {}
     void setHeatingTime(uint32_t ms) { heatingTimeMs = ms; }
 
-    Fault update(uint32_t now, float temperature, float target, uint32_t totalOnMs, bool on) {
+    Fault update(uint32_t now, float temperature, float target, uint32_t totalOnMs, bool on, bool pumping = false) {
         if (!std::isfinite(temperature))
             return Fault::None; // Sensor validation remains the sensor driver's responsibility.
         if (!initialized) {
@@ -42,8 +42,10 @@ class HeatingCheck {
                 return Fault::UnexpectedRise;
         }
 
+        // Pumping can remove heat faster than the boiler gains it. Start a fresh
+        // observation after pumping; unexpected heating above remains monitored.
         // Maintenance duty and coordinator pauses must not accumulate into a heating test.
-        if (target <= 0 || temperature >= target - TARGET_MARGIN_C) {
+        if (pumping || target <= 0 || temperature >= target - TARGET_MARGIN_C) {
             watchingRise = false;
             dutyOnMs = 0;
             return Fault::None;

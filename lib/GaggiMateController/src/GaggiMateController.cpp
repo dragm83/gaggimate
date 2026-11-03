@@ -199,6 +199,7 @@ void GaggiMateController::setup() {
         _comms.onPressureScale([this](float scale) { this->pressureSensor->setScale(scale); });
     }
     brewTemperature->setup();
+    heater->setHeatingCheckPump(pump->getPumpPowerPtr());
     heater->setup();
     valve->setup();
     pump->setup();

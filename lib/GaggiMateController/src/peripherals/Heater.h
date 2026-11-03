@@ -26,8 +26,10 @@ class Heater {
     Heater(TemperatureSensor *sensor, uint8_t heaterPin, const heater_error_callback_t &error_callback,
            const pid_result_callback_t &pid_callback, const heater_autotune_fail_callback_t &autotune_fail_callback = nullptr);
     void setup();
-    // Configure before setup(): cumulative SSR-on time required to gain at least 2 degrees.
+    // Configure before setup(): high-duty observation time to gain at least 2 degrees.
     void setHeatingCheckTime(uint32_t ms) { heatingCheck.setHeatingTime(ms); }
+    // Attach only to the brew heater: water flow invalidates a no-rise observation.
+    void setHeatingCheckPump(float *power) { heatingCheckPumpPower = power; }
     void loop();
 
     void setSetpoint(float setpoint);
@@ -69,6 +71,7 @@ class Heater {
     HeaterCoordinator *coordinator = nullptr;
 
     HeatingCheck heatingCheck;
+    float *heatingCheckPumpPower = nullptr;
     std::atomic<bool> heatingFault{false};
     portMUX_TYPE outputMux = portMUX_INITIALIZER_UNLOCKED;
     uint32_t outputAccountedAt = 0;

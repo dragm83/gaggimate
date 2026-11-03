@@ -273,7 +273,9 @@ bool Heater::checkHeating() {
     on = outputOn;
     onMs = totalOnMs + (on ? now - outputAccountedAt : 0);
     portEXIT_CRITICAL(&outputMux);
-    const auto fault = heatingCheck.update(now, sensor->read(), autotuning ? MAX_AUTOTUNE_TEMP : setpoint, onMs, on);
+    const bool pumping = heatingCheckPumpPower && *heatingCheckPumpPower > 0.0f;
+    const auto fault =
+        heatingCheck.update(now, sensor->read(), autotuning ? MAX_AUTOTUNE_TEMP : setpoint, onMs, on, pumping);
     if (fault == HeatingCheck::Fault::None)
         return true;
 
