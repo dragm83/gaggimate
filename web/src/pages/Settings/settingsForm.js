@@ -1,7 +1,5 @@
 // Shared between the settings page and the setup wizard.
 export const CHECKBOX_KEYS = [
-  'independentSteamControl',
-  'rememberSteamState',
   'tankLevelEnabled',
   'steamLevelEnabled',
   'albaRefillInterlock',

@@ -230,19 +230,19 @@
     "hardware": true,
     "restart": true
   },
-  "rememberSteamState": {
-    "label": "Remember steam enabled state",
-    "type": "boolean",
+  "defaultSteamMode": {
+    "label": "Default Steam Mode Behaviour",
+    "type": "integer",
+    "min": 0,
+    "max": 2,
     "capability": "dualBoiler",
     "hardware": true,
-    "restart": false
-  },
-  "independentSteamControl": {
-    "label": "Independent steam heater toggle",
-    "type": "boolean",
-    "capability": "dualBoiler",
-    "hardware": true,
-    "restart": false
+    "restart": false,
+    "options": {
+      "0": "Off",
+      "1": "On",
+      "2": "Last"
+    }
   },
   "momentaryButtons": {
     "label": "Momentary buttons",

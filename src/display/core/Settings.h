@@ -201,11 +201,12 @@ class Settings {
     }
     String getSavedScale() const { return savedScale.get(); }
     String getSavedScaleName() const { return savedScaleName.get(); }
-    bool isIndependentSteamControl() const { return independentSteamControl.get(); }
-    void setIndependentSteamControl(bool value) { independentSteamControl.set(value); }
-    bool isSteamStateRemembered() const { return rememberSteamState.get(); }
+    int getDefaultSteamMode() const { return defaultSteamMode.get(); }
+    void setDefaultSteamMode(int value) {
+        if (value >= 0 && value <= 2)
+            defaultSteamMode.set(value);
+    }
     bool getPersistentSteamState() const { return persistentSteamState.get(); }
-    void setSteamStateRemembered(bool enabled);
     void setPersistentSteamState(bool enabled);
 
     bool isBoilerFillActive() const { return boilerFillActive.get(); }
@@ -481,8 +482,7 @@ class Settings {
     Property<bool> otaChannelConfigured{registry, "ocdb", false};
     Property<std::vector<String>> favoritedProfiles{registry, "fp", {}};
     Property<std::vector<String>> profileOrder{registry, "po", {}}; // persisted profile ordering
-    Property<bool> independentSteamControl{registry, "steam_ind", false};
-    Property<bool> rememberSteamState{registry, "rss", false};
+    Property<int> defaultSteamMode{registry, "steam_mode", 1}; // 0 = Off, 1 = On, 2 = Last
     Property<bool> persistentSteamState{registry, "sst", false};
     Property<float> steamPumpPercentage{registry, "spp", DEFAULT_STEAM_PUMP_PERCENTAGE};
     Property<float> steamPumpCutoff{registry, "spc", DEFAULT_STEAM_PUMP_CUTOFF};

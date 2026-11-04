@@ -21,11 +21,7 @@ export function parseProfileSelection(value) {
 }
 export function isProfileFieldLocked(formData, key) {
   const profile = parseProfileSelection(formData.machineProfileSelection);
-  if (
-    !profile ||
-    ['targetWaterTemp', 'rememberSteamState', 'independentSteamControl'].includes(key)
-  )
-    return false;
+  if (!profile || ['targetWaterTemp', 'defaultSteamMode'].includes(key)) return false;
   if (key === 'targetSteamTemp') {
     return (
       profile.locks?.targetSteamTemp ??

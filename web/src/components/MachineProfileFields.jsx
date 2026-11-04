@@ -82,9 +82,11 @@ export function MachineProfileFields({ formData, setFields, hardwareOnly = false
   const hardware = fields.filter(([key, field]) => inHardwareSection(key, field));
   const ordinary = fields.filter(([key, field]) => !inHardwareSection(key, field));
   const toggles = hardware.filter(([, field]) => field.type === 'boolean');
+  const defaults = hardware.filter(([key]) => key === 'defaultSteamMode');
   const lights = hardware.filter(([key]) => LIGHT_FIELDS.includes(key));
   const advanced = hardware.filter(
-    ([key, field]) => field.type !== 'boolean' && !LIGHT_FIELDS.includes(key),
+    ([key, field]) =>
+      field.type !== 'boolean' && !LIGHT_FIELDS.includes(key) && key !== 'defaultSteamMode',
   );
 
   const renderField = ([key, field]) => {
@@ -180,6 +182,9 @@ export function MachineProfileFields({ formData, setFields, hardwareOnly = false
           )}
           <div className='flex flex-col gap-2'>{toggles.map(renderField)}</div>
           <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>{lights.map(renderField)}</div>
+          {defaults.length > 0 && (
+            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>{defaults.map(renderField)}</div>
+          )}
           <details className='border-base-content/10 border-t pt-3'>
             <summary className='cursor-pointer font-medium'>
               <Trans>Advanced hardware settings</Trans>

@@ -114,8 +114,8 @@ class Controller {
     void setBrewHeaterTestActive(bool active) { brewHeaterTestActive = active; }
     void toggleWaterValve();
     bool isWaterValveActive() const { return waterValveActive; }
-    bool isSteamControlsAvailable() const { return systemInfo.capabilities.dualBoiler && settings.isIndependentSteamControl(); }
-    bool isSteamHeaterActive() const { return isSteamControlsAvailable() ? steamHeaterActive : mode != MODE_STANDBY; }
+    bool isSteamControlsAvailable() const { return systemInfo.capabilities.dualBoiler; }
+    bool isSteamHeaterActive() const { return systemInfo.capabilities.dualBoiler ? steamHeaterActive : mode != MODE_STANDBY; }
     void raiseSteamTemp();
     void lowerSteamTemp();
     void raiseBrewTarget();

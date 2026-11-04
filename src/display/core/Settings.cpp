@@ -119,6 +119,12 @@ Settings::Settings() {
         if (!preferences.isKey("sst"))
             persistentSteamState.set(preferences.getBool("pss", false));
     }
+    if (!preferences.isKey("steam_mode")) {
+        const bool independent = preferences.getBool("steam_ind", false);
+        const bool remember = preferences.getBool("rss", false);
+        defaultSteamMode.set(independent ? (remember ? 2 : 0) : 1);
+        defaultSteamMode.persist();
+    }
     // Legacy migrations: derive defaults for keys that were never persisted
     if (!preferences.isKey("sg_m")) {
         smartGrindMode.initDefault(smartGrindToggle.get() ? 1 : 0);
@@ -448,11 +454,6 @@ bool Settings::doSave() {
     }
 }
 
-void Settings::setSteamStateRemembered(bool enabled) {
-    rememberSteamState.set(enabled);
-    if (!enabled)
-        persistentSteamState.set(false);
-}
 void Settings::setPersistentSteamState(bool enabled) {
     persistentSteamState.set(enabled);
     save(true);

@@ -492,10 +492,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setSteamRefillPostClearSeconds(request->arg("steamRefillPostClearSeconds").toInt());
             if (request->hasArg("steamLevelDebounceChecks"))
                 settings->setSteamLevelDebounceChecks(request->arg("steamLevelDebounceChecks").toInt());
-            if (request->hasArg("rememberSteamState"))
-                settings->setSteamStateRemembered(request->arg("rememberSteamState") == "1");
-            if (request->hasArg("independentSteamControl"))
-                settings->setIndependentSteamControl(request->arg("independentSteamControl") == "1");
+            if (request->hasArg("defaultSteamMode"))
+                settings->setDefaultSteamMode(request->arg("defaultSteamMode").toInt());
             if (request->hasArg("startupMode"))
                 settings->setStartupMode(request->arg("startupMode") == "brew" ? MODE_BREW : MODE_STANDBY);
             if (request->hasArg("startupProfile"))
@@ -748,7 +746,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
             previousHardwareHash != machineHardwareHash(settings.getMachineHardware()) && !controller->isMachineHardwareReady();
     doc["machineHardwareError"] = controller->isMachineHardwareError();
     if (controller->getSystemInfo().capabilities.dualBoiler)
-        doc["independentSteamControl"] = settings.isIndependentSteamControl();
+        doc["defaultSteamMode"] = settings.getDefaultSteamMode();
     doc["steamControlsAvailable"] = controller->isSteamControlsAvailable();
     doc["steamRefillMode"] = settings.getSteamRefillMode();
     doc["steamRefillPostClearSeconds"] = settings.getSteamRefillPostClearSeconds();
@@ -827,8 +825,6 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["standbyBrightness"] = settings.getStandbyBrightness();
     doc["standbyBrightnessTimeout"] = settings.getStandbyBrightnessTimeout() / 1000;
     doc["steamPumpPercentage"] = settings.getSteamPumpPercentage();
-    if (controller->getSystemInfo().capabilities.dualBoiler)
-        doc["rememberSteamState"] = settings.isSteamStateRemembered();
     doc["steamPumpCutoff"] = settings.getSteamPumpCutoff();
     doc["themeMode"] = settings.getThemeMode();
     doc["statusDisplayMode"] = settings.getStatusDisplayMode();

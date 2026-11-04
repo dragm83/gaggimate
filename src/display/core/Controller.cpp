@@ -1390,11 +1390,12 @@ void Controller::setMode(int newMode) {
     mode = modeEvent.getInt("value");
     if (systemInfo.capabilities.dualBoiler) {
         if (mode == MODE_STANDBY) {
-            if (previousMode != MODE_STANDBY && settings.isSteamStateRemembered())
+            if (previousMode != MODE_STANDBY && settings.getDefaultSteamMode() == 2)
                 settings.setPersistentSteamState(steamHeaterActive);
             steamHeaterActive = false;
         } else if (previousMode == MODE_STANDBY && mode == MODE_BREW) {
-            steamHeaterActive = settings.isSteamStateRemembered() && settings.getPersistentSteamState();
+            const int steamMode = settings.getDefaultSteamMode();
+            steamHeaterActive = steamMode == 1 || (steamMode == 2 && settings.getPersistentSteamState());
         }
     }
     if (mode == MODE_BREW && previousMode != MODE_BREW)
@@ -1888,7 +1889,7 @@ void Controller::toggleSteamHeater() {
     if (!isSteamControlsAvailable() || !systemInfo.capabilities.dualBoiler || mode == MODE_STANDBY)
         return;
     steamHeaterActive = !steamHeaterActive;
-    if (settings.isSteamStateRemembered())
+    if (settings.getDefaultSteamMode() == 2)
         settings.setPersistentSteamState(steamHeaterActive);
     pluginManager->trigger(steamHeaterActive ? "boiler:steamHeater:activate" : "boiler:steamHeater:deactivate");
 }
