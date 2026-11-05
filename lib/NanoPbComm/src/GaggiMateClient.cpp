@@ -158,6 +158,7 @@ gm::Payload GaggiMateClient::buildLedControl(const LedChannelCommand *channels, 
     for (size_t i = 0; i < count; i++) {
         p.content.led.channels[i].channel = channels[i].channel;
         p.content.led.channels[i].brightness = channels[i].brightness;
+        p.content.led.channels[i].effect = static_cast<uint32_t>(channels[i].effect);
     }
     return p;
 }

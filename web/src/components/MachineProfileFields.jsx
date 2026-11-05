@@ -6,7 +6,12 @@ import {
   isProfileFieldLocked,
 } from '../utils/machineProfiles.js';
 
-const LIGHT_FIELDS = ['systemLedFunction', 'baristaLedFunction'];
+const LIGHT_FIELDS = [
+  'systemLedFunction',
+  'baristaLedFunction',
+  'systemLedBrightness',
+  'baristaLedBrightness',
+];
 
 const RESISTANCE_FIELDS = [
   'ntcBrewNominalResistance',
@@ -83,7 +88,9 @@ export function MachineProfileFields({ formData, setFields, hardwareOnly = false
   const ordinary = fields.filter(([key, field]) => !inHardwareSection(key, field));
   const toggles = hardware.filter(([, field]) => field.type === 'boolean');
   const defaults = hardware.filter(([key]) => key === 'defaultSteamMode');
-  const lights = hardware.filter(([key]) => LIGHT_FIELDS.includes(key));
+  const lights = hardware.filter(
+    ([key]) => key === 'systemLedFunction' || key === 'baristaLedFunction',
+  );
   const advanced = hardware.filter(
     ([key, field]) =>
       field.type !== 'boolean' && !LIGHT_FIELDS.includes(key) && key !== 'defaultSteamMode',
@@ -128,7 +135,10 @@ export function MachineProfileFields({ formData, setFields, hardwareOnly = false
             disabled={disabled}
             onChange={event => setFields({ [key]: Number(event.currentTarget.value) })}
           >
-            {Object.entries(field.options).map(([value, label]) => (
+            {(field.values
+              ? field.values.map(value => [value, field.options[value]])
+              : Object.entries(field.options)
+            ).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
@@ -181,7 +191,36 @@ export function MachineProfileFields({ formData, setFields, hardwareOnly = false
             </p>
           )}
           <div className='flex flex-col gap-2'>{toggles.map(renderField)}</div>
-          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>{lights.map(renderField)}</div>
+          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+            {lights.map(([key, field]) => {
+              const brightnessKey = key.replace('Function', 'Brightness');
+              const brightness = formData[brightnessKey] ?? 255;
+              return (
+                <div key={key} className='space-y-2'>
+                  {renderField([key, field])}
+                  <label className='form-control block pt-2'>
+                    <span className='label'>
+                      <Trans>Brightness</Trans> ({Math.round((brightness * 100) / 255)}%)
+                    </span>
+                    <input
+                      type='range'
+                      className='range range-primary w-full'
+                      min={0}
+                      max={255}
+                      step={1}
+                      value={brightness}
+                      disabled={
+                        Number(formData[key]) === 0 || isProfileFieldLocked(formData, brightnessKey)
+                      }
+                      onInput={event =>
+                        setFields({ [brightnessKey]: Number(event.currentTarget.value) })
+                      }
+                    />
+                  </label>
+                </div>
+              );
+            })}
+          </div>
           {defaults.length > 0 && (
             <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>{defaults.map(renderField)}</div>
           )}

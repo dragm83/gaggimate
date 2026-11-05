@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "profitec-move-220v",
   "name": "Profitec Move - 220V",
-  "revision": 4,
+  "revision": 5,
   "requires": {
     "dualBoiler": true,
     "pressure": true
@@ -28,7 +28,9 @@
     "targetSteamTemp": 130,
     "momentaryButtons": false,
     "temperatureOffset": 5,
-    "steamPid": "58.397,1.027,249.055"
+    "steamPid": "58.397,1.027,249.055",
+    "systemLedBrightness": 255,
+    "baristaLedBrightness": 255
   },
   "locks": {
     "targetSteamTemp": true

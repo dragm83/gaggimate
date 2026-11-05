@@ -96,10 +96,10 @@ void GaggiMateController::setup() {
                     tankLevelOK = full;
                 });
         }
-        if (machineHardware.system_led_function != StatusLight::Off && _config.ledPin != 0)
-            lights = new SimpleRelay(_config.ledPin, HIGH);
-        if (machineHardware.barista_led_function != StatusLight::Off && _config.baristaLedPin != 0)
-            baristaLight = new SimpleRelay(_config.baristaLedPin, HIGH);
+        if (_config.ledPin != 0)
+            lights = new PwmLight(_config.ledPin, 0);
+        if (_config.baristaLedPin != 0)
+            baristaLight = new PwmLight(_config.baristaLedPin, 1);
     } else {
         alt = new SimpleRelay(_config.altPin, _config.altOn);
     }
@@ -141,7 +141,6 @@ void GaggiMateController::setup() {
                 distanceSensor = new DistanceSensor(albaBus, [this](int distance) { _comms.sendTofMeasurement(distance); });
                 _config.capabilites.tof = true;
             }
-            _comms.onLedControl([this](uint8_t channel, uint8_t brightness) { ledController->setChannel(channel, brightness); });
         }
     }
     if (!_config.dualBoilerWaterHandling && !_config.capabilites.tof && _config.tankLevelPin > 0) {
@@ -198,6 +197,14 @@ void GaggiMateController::setup() {
         this->adc->setup();
         _comms.onPressureScale([this](float scale) { this->pressureSensor->setScale(scale); });
     }
+    _comms.onLedControl([this](uint8_t channel, uint8_t brightness, LedEffect effect) {
+        if (channel == SYSTEM_LED_CHANNEL && lights)
+            lights->set(effect, brightness);
+        else if (channel == BARISTA_LED_CHANNEL && baristaLight)
+            baristaLight->set(effect, brightness);
+        else if (channel < SYSTEM_LED_CHANNEL && ledController)
+            ledController->setChannel(channel, brightness);
+    });
     brewTemperature->setup();
     heater->setHeatingCheckPump(pump->getPumpPowerPtr());
     heater->setup();
@@ -243,10 +250,6 @@ void GaggiMateController::setup() {
     _comms.onBoilerControl([this](uint8_t index, BoilerControlMode mode, float setpoint) {
         if (!_config.capabilites.dualBoiler && index > 0) {
             return;
-        }
-        if (_config.capabilites.dualBoiler && !_config.dualBoilerWaterHandling && index == 0) {
-            if (lights)
-                lights->set(index == 0 && setpoint > 0.0f);
         }
         if (_config.capabilites.dualBoiler && !hardwareSessionReady)
             return;
@@ -500,19 +503,10 @@ void GaggiMateController::updateDualBoilerOutputs(unsigned long now) {
     if (heater2->getSetpoint() != target)
         heater2->setSetpoint(target);
     const bool fault = !safe || (machineHardware.tank_level_enabled && !tankLevelOK);
-    const bool awake = safe && heater->getSetpoint() > 0.0f;
-    auto updateLight = [&](SimpleRelay *output, StatusLight &state, uint32_t function, bool showFaults) {
-        if (!output)
-            return;
-        const bool brew = function == StatusLight::Brew;
-        const float temperature = brew ? brewTemperature->read() : steamTemperature->read();
-        const float setpoint = safe ? (brew ? heater->getSetpoint() : target) : 0.0f;
-        const bool on = state.update(now, function, temperature, setpoint, awake, showFaults && fault);
-        if (output->getState() != on)
-            output->set(on);
-    };
-    updateLight(lights, systemLightState, machineHardware.system_led_function, true);
-    updateLight(baristaLight, baristaLightState, machineHardware.barista_led_function, false);
+    if (lights)
+        lights->update(now, fault, safe);
+    if (baristaLight)
+        baristaLight->update(now, false, safe);
 }
 
 void GaggiMateController::detectAddon() {
@@ -559,7 +553,7 @@ void GaggiMateController::handlePingTimeout() {
         this->refill->set(false);
         this->aux->set(false);
         if (baristaLight)
-            baristaLight->set(false);
+            baristaLight->stop();
     } else {
         this->alt->set(false);
     }
@@ -595,7 +589,7 @@ void GaggiMateController::thermalRunawayShutdown() {
         this->refill->set(false);
         this->aux->set(false);
         if (baristaLight)
-            baristaLight->set(false);
+            baristaLight->stop();
     } else {
         this->alt->set(false);
     }
@@ -655,13 +649,13 @@ void GaggiMateController::loadMachineHardware() {
     machineHardware = defaultMachineHardware();
     Preferences prefs;
     if (prefs.begin("machine-hw", true)) {
-        uint8_t bytes[sizeof(gm::MachineHardwareSettings)]{};
+        uint8_t bytes[sizeof(gm::MachineHardwareSettings) + 2 * sizeof(uint32_t)]{};
         const size_t size = prefs.getBytesLength("config");
         gm::MachineHardwareSettings stored = gaggimate_MachineHardwareSettings_init_zero;
         if (size <= sizeof(bytes) && prefs.getBytes("config", bytes, size) == size &&
             decodeStoredMachineHardware(bytes, size, stored)) {
             machineHardware = stored;
-            hardwareConfigurationStored = true;
+            hardwareConfigurationStored = size == sizeof(stored);
         }
         prefs.end();
     }

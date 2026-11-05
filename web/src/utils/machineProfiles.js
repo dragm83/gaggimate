@@ -21,7 +21,13 @@ export function parseProfileSelection(value) {
 }
 export function isProfileFieldLocked(formData, key) {
   const profile = parseProfileSelection(formData.machineProfileSelection);
-  if (!profile || ['targetWaterTemp', 'defaultSteamMode'].includes(key)) return false;
+  if (
+    !profile ||
+    ['targetWaterTemp', 'defaultSteamMode', 'systemLedBrightness', 'baristaLedBrightness'].includes(
+      key,
+    )
+  )
+    return false;
   if (key === 'targetSteamTemp') {
     return (
       profile.locks?.targetSteamTemp ??

@@ -136,9 +136,9 @@ message MachineHardwareSettings {
     uint32 version = 16;
     reserved 17, 18;
     bool restart_if_required = 19;
-    uint32 system_led_function = 20; // 0 = off, 1 = steam heating/ready, 2 = brew heating/ready, 3 = awake
+    reserved 20;
     reserved 21;
-    uint32 barista_led_function = 22;
+    reserved 22;
 }
 
 message MachineHardwareStatus {
@@ -194,8 +194,9 @@ message ScaleFactors {
 
 // One LED output's target brightness.
 message LedChannel {
-    uint32 channel = 1;    // PCA9634 output index (0..7)
+    uint32 channel = 1;    // 0..7 Alba outputs, 8 system LED, 9 barista light
     uint32 brightness = 2; // 0..255
+    uint32 effect = 3; // Onboard channels: 0 off, 1 flashing, 2 breathing, 3 on; Alba ignores this.
 }
 
 // Drive one or more LED channels in a single atomic update. Carrying every

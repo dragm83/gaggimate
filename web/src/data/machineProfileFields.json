@@ -176,28 +176,52 @@
     "type": "integer",
     "capability": "dualBoiler",
     "hardware": true,
-    "restart": true,
-    "values": [0, 1, 2, 3],
+    "restart": false,
+    "values": [0, 1, 5, 2, 6, 3, 4],
     "options": {
       "0": "Off",
-      "1": "Steam heating / ready",
-      "2": "Brew heating / ready",
-      "3": "On outside standby"
+      "1": "Steam heating (breathe) / ready",
+      "2": "Brew heating (breathe) / ready",
+      "3": "Out of standby",
+      "4": "While brewing",
+      "5": "Steam heating (flash) / ready",
+      "6": "Brew heating (flash) / ready"
     }
+  },
+  "systemLedBrightness": {
+    "label": "Brightness",
+    "type": "integer",
+    "min": 0,
+    "max": 255,
+    "capability": "dualBoiler",
+    "hardware": true,
+    "restart": false
   },
   "baristaLedFunction": {
     "label": "Barista Light",
     "type": "integer",
     "capability": "dualBoiler",
     "hardware": true,
-    "restart": true,
-    "values": [0, 1, 2, 3],
+    "restart": false,
+    "values": [0, 1, 5, 2, 6, 3, 4],
     "options": {
       "0": "Off",
-      "1": "Steam heating / ready",
-      "2": "Brew heating / ready",
-      "3": "On outside standby"
+      "1": "Steam heating (breathe) / ready",
+      "2": "Brew heating (breathe) / ready",
+      "3": "Out of standby",
+      "4": "While brewing",
+      "5": "Steam heating (flash) / ready",
+      "6": "Brew heating (flash) / ready"
     }
+  },
+  "baristaLedBrightness": {
+    "label": "Brightness",
+    "type": "integer",
+    "min": 0,
+    "max": 255,
+    "capability": "dualBoiler",
+    "hardware": true,
+    "restart": false
   },
   "steamRefillMode": {
     "label": "Steam refill arrangement",

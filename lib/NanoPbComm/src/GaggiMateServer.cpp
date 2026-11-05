@@ -214,9 +214,13 @@ void GaggiMateServer::registerHandlers() {
         if (!_ledCb)
             return;
         // One message carries every changed channel; apply them in order.
-        for (pb_size_t i = 0; i < p.content.led.channels_count; i++)
-            _ledCb(static_cast<uint8_t>(p.content.led.channels[i].channel),
-                   static_cast<uint8_t>(p.content.led.channels[i].brightness));
+        for (pb_size_t i = 0; i < p.content.led.channels_count; i++) {
+            const auto &led = p.content.led.channels[i];
+            if (led.channel > BARISTA_LED_CHANNEL || led.effect > 3)
+                continue;
+            _ledCb(static_cast<uint8_t>(led.channel), static_cast<uint8_t>(led.brightness),
+                   static_cast<LedEffect>(led.effect));
+        }
     });
 }
 

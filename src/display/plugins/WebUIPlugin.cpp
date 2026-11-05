@@ -349,8 +349,6 @@ static void writeMachineHardware(JsonObject object, const gm::MachineHardwareSet
     object["ntcSteamBeta"] = value.ntc_steam_beta;
     object["tankLevelEnabled"] = value.tank_level_enabled;
     object["steamLevelEnabled"] = value.steam_level_enabled;
-    object["systemLedFunction"] = value.system_led_function;
-    object["baristaLedFunction"] = value.barista_led_function;
     object["steamLevelDebounceChecks"] = value.steam_level_debounce_checks;
 }
 
@@ -486,6 +484,10 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setSystemLedFunction(request->arg("systemLedFunction").toInt());
             if (request->hasArg("baristaLedFunction"))
                 settings->setBaristaLedFunction(request->arg("baristaLedFunction").toInt());
+            if (request->hasArg("systemLedBrightness"))
+                settings->setSystemLedBrightness(request->arg("systemLedBrightness").toInt());
+            if (request->hasArg("baristaLedBrightness"))
+                settings->setBaristaLedBrightness(request->arg("baristaLedBrightness").toInt());
             if (request->hasArg("steamRefillMode"))
                 settings->setSteamRefillMode(request->arg("steamRefillMode").toInt());
             if (request->hasArg("steamRefillPostClearSeconds"))
@@ -747,6 +749,10 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["machineHardwareError"] = controller->isMachineHardwareError();
     if (controller->getSystemInfo().capabilities.dualBoiler)
         doc["defaultSteamMode"] = settings.getDefaultSteamMode();
+    doc["systemLedFunction"] = settings.getSystemLedFunction();
+    doc["baristaLedFunction"] = settings.getBaristaLedFunction();
+    doc["systemLedBrightness"] = settings.getSystemLedBrightness();
+    doc["baristaLedBrightness"] = settings.getBaristaLedBrightness();
     doc["steamControlsAvailable"] = controller->isSteamControlsAvailable();
     doc["steamRefillMode"] = settings.getSteamRefillMode();
     doc["steamRefillPostClearSeconds"] = settings.getSteamRefillPostClearSeconds();

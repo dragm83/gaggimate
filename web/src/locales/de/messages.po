@@ -610,6 +610,10 @@ msgstr "Boiler-Nachfüll-Plugin"
 #~ msgid "Boiler refill recommended"
 #~ msgstr ""
 
+#: src/components/MachineProfileFields.jsx
+msgid "Brightness"
+msgstr ""
+
 #: src/app/machineStatus.js
 #: src/pages/Home/utils.js
 #: src/pages/Settings/tabs/GeneralTab.jsx

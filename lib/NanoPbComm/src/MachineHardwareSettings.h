@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstring>
 inline bool validMachineHardware(const gm::MachineHardwareSettings &v) {
-    return v.version == 6 &&
+    return v.version == 7 &&
            !(!std::isfinite(v.ntc_brew_nominal_resistance) || v.ntc_brew_nominal_resistance < 100 ||
              v.ntc_brew_nominal_resistance > 1000000 || !std::isfinite(v.ntc_brew_series_resistance) ||
              v.ntc_brew_series_resistance < 100 || v.ntc_brew_series_resistance > 1000000 ||
@@ -15,20 +15,17 @@ inline bool validMachineHardware(const gm::MachineHardwareSettings &v) {
              v.ntc_steam_series_resistance < 100 || v.ntc_steam_series_resistance > 1000000 ||
              !std::isfinite(v.ntc_steam_supply_voltage) || v.ntc_steam_supply_voltage < 0.5 || v.ntc_steam_supply_voltage > 5.5 ||
              !std::isfinite(v.ntc_steam_beta) || v.ntc_steam_beta < 1000 || v.ntc_steam_beta > 10000 ||
-             v.steam_level_debounce_checks < 1 || v.steam_level_debounce_checks > 100 ||
-             v.system_led_function > 3 || v.barista_led_function > 3);
+             v.steam_level_debounce_checks < 1 || v.steam_level_debounce_checks > 100);
 }
 
 inline gm::MachineHardwareSettings defaultMachineHardware() {
     gm::MachineHardwareSettings v = gaggimate_MachineHardwareSettings_init_zero;
-    v.version = 6;
+    v.version = 7;
     v.ntc_brew_nominal_resistance = v.ntc_steam_nominal_resistance = 50000;
     v.ntc_brew_series_resistance = v.ntc_steam_series_resistance = 10000;
     v.ntc_brew_supply_voltage = v.ntc_steam_supply_voltage = 4.096f;
     v.ntc_brew_beta = v.ntc_steam_beta = 3988;
     v.steam_level_enabled = true;
-    v.system_led_function = 1; // Steam heating/ready.
-    v.barista_led_function = 3; // On outside standby.
     v.steam_level_debounce_checks = 25;
     return v;
 }
@@ -57,14 +54,20 @@ inline uint32_t machineHardwareHash(const gm::MachineHardwareSettings &v) {
     add(v.version);
     add(v.tank_level_enabled);
     add(v.steam_level_enabled);
-    add(v.system_led_function);
-    add(v.barista_led_function);
     add(v.steam_level_debounce_checks);
     return hash;
 }
 inline bool decodeStoredMachineHardware(const void *bytes, size_t size, gm::MachineHardwareSettings &value) {
-    if (size != sizeof(value))
+    const bool legacy = size == sizeof(value) + 2 * sizeof(uint32_t);
+    if (size != sizeof(value) && !legacy)
         return false;
-    std::memcpy(&value, bytes, size);
+    // Version 6 appended the two LED functions. Keep the sensor configuration
+    // when upgrading; lighting is now sent as runtime LED instructions.
+    std::memcpy(&value, bytes, sizeof(value));
+    if (legacy) {
+        if (value.version != 6)
+            return false;
+        value.version = 7;
+    }
     return validMachineHardware(value);
 }

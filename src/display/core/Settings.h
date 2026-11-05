@@ -105,6 +105,16 @@ class Settings {
     bool getSteamLevelEnabled() const { return steamLevelEnabled.get(); }
     int getSystemLedFunction() const { return systemLedFunction.get(); }
     int getBaristaLedFunction() const { return baristaLedFunction.get(); }
+    int getSystemLedBrightness() const { return systemLedBrightness.get(); }
+    int getBaristaLedBrightness() const { return baristaLedBrightness.get(); }
+    void setSystemLedBrightness(int value) {
+        if (value >= 0 && value <= 255)
+            systemLedBrightness.set(value);
+    }
+    void setBaristaLedBrightness(int value) {
+        if (value >= 0 && value <= 255)
+            baristaLedBrightness.set(value);
+    }
     int getSteamRefillMode() const { return steamRefillMode.get(); }
     int getSteamRefillPostClearSeconds() const { return steamRefillPostClearSeconds.get(); }
     int getSteamLevelDebounceChecks() const { return steamLevelDebounceChecks.get(); }
@@ -143,11 +153,11 @@ class Settings {
     void setTankLevelEnabled(bool value) { tankLevelEnabled.set(value); }
     void setSteamLevelEnabled(bool value) { steamLevelEnabled.set(value); }
     void setSystemLedFunction(int value) {
-        if (value >= 0 && value <= 3)
+        if (value >= 0 && value <= 6)
             systemLedFunction.set(value);
     }
     void setBaristaLedFunction(int value) {
-        if (value >= 0 && value <= 3)
+        if (value >= 0 && value <= 6)
             baristaLedFunction.set(value);
     }
     void setSteamRefillMode(int value) {
@@ -422,6 +432,8 @@ class Settings {
     Property<bool> steamLevelEnabled{registry, "sl_en", true};
     Property<int> systemLedFunction{registry, "led_sys_mode", 1};
     Property<int> baristaLedFunction{registry, "led_bar_mode", 3};
+    Property<int> systemLedBrightness{registry, "led_sys_bri", 255};
+    Property<int> baristaLedBrightness{registry, "led_bar_bri", 255};
     Property<int> steamRefillMode{registry, "rf_mode", 1};
     Property<int> steamRefillPostClearSeconds{registry, "rf_post", 0};
     Property<int> steamLevelDebounceChecks{registry, "sl_db", 25};
