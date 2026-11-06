@@ -20,8 +20,9 @@ static constexpr const char *LEGACY_ERROR_CHAR_UUID = "d6676ec7-820c-41de-820d-9
 
 // Protocol 13 adds independent system/barista lighting configuration.
 // Protocol 14 adds LED effect snapshots and makes light functions display-side.
+// Protocol 15 adds animation minimum brightness and cycle time.
 // Update controller and display together.
-static constexpr uint32_t PROTOCOL_VERSION = 14;
+static constexpr uint32_t PROTOCOL_VERSION = 15;
 
 // Outbound priorities (higher wins in the queue).
 enum Priority : uint8_t {

@@ -25,7 +25,7 @@ class GaggiMateServer {
     using TareCallback = std::function<void()>;
     using ScaleFactorsCallback = std::function<void(float scaleFactor1, float scaleFactor2, uint16_t sampleRateSps,
                                                     float idleFilterAlpha, float activeFilterAlpha)>;
-    using LedCallback = std::function<void(uint8_t channel, uint8_t brightness, LedEffect effect)>;
+    using LedCallback = std::function<void(uint8_t channel, uint8_t brightness, LedEffect effect, uint8_t minBrightness, uint16_t cycleTimeMs)>;
 
     GaggiMateServer();
 

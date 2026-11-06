@@ -218,8 +218,11 @@ void GaggiMateServer::registerHandlers() {
             const auto &led = p.content.led.channels[i];
             if (led.channel > BARISTA_LED_CHANNEL || led.effect > 3)
                 continue;
-            _ledCb(static_cast<uint8_t>(led.channel), static_cast<uint8_t>(led.brightness),
-                   static_cast<LedEffect>(led.effect));
+            if (led.channel >= SYSTEM_LED_CHANNEL &&
+                (led.min_brightness > led.brightness || led.cycle_time_ms < MIN_LED_CYCLE_MS ||
+                 led.cycle_time_ms > MAX_LED_CYCLE_MS))
+                continue;
+            _ledCb(led.channel, led.brightness, static_cast<LedEffect>(led.effect), led.min_brightness, led.cycle_time_ms);
         }
     });
 }

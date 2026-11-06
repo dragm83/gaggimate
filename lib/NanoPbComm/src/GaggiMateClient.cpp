@@ -159,6 +159,8 @@ gm::Payload GaggiMateClient::buildLedControl(const LedChannelCommand *channels, 
         p.content.led.channels[i].channel = channels[i].channel;
         p.content.led.channels[i].brightness = channels[i].brightness;
         p.content.led.channels[i].effect = static_cast<uint32_t>(channels[i].effect);
+        p.content.led.channels[i].min_brightness = channels[i].minBrightness;
+        p.content.led.channels[i].cycle_time_ms = channels[i].cycleTimeMs;
     }
     return p;
 }

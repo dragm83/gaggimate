@@ -11,6 +11,10 @@ const LIGHT_FIELDS = [
   'baristaLedFunction',
   'systemLedBrightness',
   'baristaLedBrightness',
+  'systemLedMinBrightness',
+  'baristaLedMinBrightness',
+  'systemLedCycleTimeMs',
+  'baristaLedCycleTimeMs',
 ];
 
 const RESISTANCE_FIELDS = [
@@ -195,12 +199,16 @@ export function MachineProfileFields({ formData, setFields, hardwareOnly = false
             {lights.map(([key, field]) => {
               const brightnessKey = key.replace('Function', 'Brightness');
               const brightness = formData[brightnessKey] ?? 255;
+              const minimumKey = key.replace('Function', 'MinBrightness');
+              const cycleKey = key.replace('Function', 'CycleTimeMs');
+              const minimum = Math.min(formData[minimumKey] ?? 0, brightness);
+              const animated = [1, 2, 5, 6].includes(Number(formData[key]));
               return (
                 <div key={key} className='space-y-2'>
                   {renderField([key, field])}
                   <label className='form-control block pt-2'>
                     <span className='label'>
-                      <Trans>Brightness</Trans> ({Math.round((brightness * 100) / 255)}%)
+                      <Trans>Max brightness</Trans> ({Math.round((brightness * 100) / 255)}%)
                     </span>
                     <input
                       type='range'
@@ -212,11 +220,57 @@ export function MachineProfileFields({ formData, setFields, hardwareOnly = false
                       disabled={
                         Number(formData[key]) === 0 || isProfileFieldLocked(formData, brightnessKey)
                       }
-                      onInput={event =>
-                        setFields({ [brightnessKey]: Number(event.currentTarget.value) })
-                      }
+                      onInput={event => {
+                        const value = Number(event.currentTarget.value);
+                        setFields({
+                          [brightnessKey]: value,
+                          [minimumKey]: Math.min(minimum, value),
+                        });
+                      }}
                     />
                   </label>
+                  {animated && (
+                    <>
+                      <label className='form-control block pt-2'>
+                        <span className='label'>
+                          <Trans>Min brightness</Trans> ({Math.round((minimum * 100) / 255)}%)
+                        </span>
+                        <input
+                          type='range'
+                          className='range range-primary w-full'
+                          min={0}
+                          max={255}
+                          step={1}
+                          value={minimum}
+                          disabled={isProfileFieldLocked(formData, minimumKey)}
+                          onInput={event =>
+                            setFields({
+                              [minimumKey]: Math.min(Number(event.currentTarget.value), brightness),
+                            })
+                          }
+                        />
+                      </label>
+                      <label className='form-control block pt-2'>
+                        <span className='label'>
+                          <Trans>Cycle time (seconds)</Trans>
+                        </span>
+                        <input
+                          type='number'
+                          className='input input-bordered w-full'
+                          min={0.5}
+                          max={10}
+                          step={0.1}
+                          value={(formData[cycleKey] ?? 3000) / 1000}
+                          disabled={isProfileFieldLocked(formData, cycleKey)}
+                          onChange={event =>
+                            setFields({
+                              [cycleKey]: Math.round(Number(event.currentTarget.value) * 1000),
+                            })
+                          }
+                        />
+                      </label>
+                    </>
+                  )}
                 </div>
               );
             })}

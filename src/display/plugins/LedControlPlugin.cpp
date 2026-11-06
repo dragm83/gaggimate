@@ -60,16 +60,19 @@ void LedControlPlugin::updateControl() {
     }
     if (caps.dualBoiler) {
         const bool brewProcessActive = awake && controller->isBrewActive();
-        auto addLight = [&](uint8_t channel, LightBehaviour &state, int function, uint8_t brightness) {
+        auto addLight = [&](uint8_t channel, LightBehaviour &state, int function, uint8_t brightness, uint8_t minimum, uint16_t cycleTimeMs) {
             const bool brew = function == 2 || function == 6;
             const float target = brew ? controller->getTargetTemp() : controller->getTargetSteamTemp();
             const float temperature = brew ? controller->getCurrentTemp() : controller->getCurrentSteamTemp();
             const bool stable = brew && controller->getWarnings().isTemperatureStable();
             channels[count++] = {channel, function == 0 ? uint8_t{0} : brightness,
-                                 state.update(function, temperature, target, stable, awake, brewProcessActive)};
+                                 state.update(function, temperature, target, stable, awake, brewProcessActive),
+                                 function == 0 ? uint8_t{0} : minimum, cycleTimeMs};
         };
-        addLight(SYSTEM_LED_CHANNEL, systemLight, settings.getSystemLedFunction(), settings.getSystemLedBrightness());
-        addLight(BARISTA_LED_CHANNEL, baristaLight, settings.getBaristaLedFunction(), settings.getBaristaLedBrightness());
+        addLight(SYSTEM_LED_CHANNEL, systemLight, settings.getSystemLedFunction(), settings.getSystemLedBrightness(),
+                 settings.getSystemLedMinBrightness(), settings.getSystemLedCycleTimeMs());
+        addLight(BARISTA_LED_CHANNEL, baristaLight, settings.getBaristaLedFunction(), settings.getBaristaLedBrightness(),
+                 settings.getBaristaLedMinBrightness(), settings.getBaristaLedCycleTimeMs());
     }
     const bool force = forceSend.exchange(false);
     if (count == 0 || (!force && count == lastCount &&

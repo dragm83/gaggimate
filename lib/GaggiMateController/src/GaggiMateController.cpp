@@ -197,11 +197,11 @@ void GaggiMateController::setup() {
         this->adc->setup();
         _comms.onPressureScale([this](float scale) { this->pressureSensor->setScale(scale); });
     }
-    _comms.onLedControl([this](uint8_t channel, uint8_t brightness, LedEffect effect) {
+    _comms.onLedControl([this](uint8_t channel, uint8_t brightness, LedEffect effect, uint8_t minBrightness, uint16_t cycleTimeMs) {
         if (channel == SYSTEM_LED_CHANNEL && lights)
-            lights->set(effect, brightness);
+            lights->set(effect, brightness, minBrightness, cycleTimeMs);
         else if (channel == BARISTA_LED_CHANNEL && baristaLight)
-            baristaLight->set(effect, brightness);
+            baristaLight->set(effect, brightness, minBrightness, cycleTimeMs);
         else if (channel < SYSTEM_LED_CHANNEL && ledController)
             ledController->setChannel(channel, brightness);
     });

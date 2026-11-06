@@ -23,3 +23,5 @@ gaggimate.Capabilities.addons max_count:4
 gaggimate.LedChannel.channel int_size:IS_8
 gaggimate.LedChannel.brightness int_size:IS_8
 gaggimate.LedChannel.effect int_size:IS_8
+gaggimate.LedChannel.min_brightness int_size:IS_8
+gaggimate.LedChannel.cycle_time_ms int_size:IS_16

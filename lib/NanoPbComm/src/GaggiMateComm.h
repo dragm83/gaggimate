@@ -49,8 +49,11 @@ struct LedChannelCommand {
     uint8_t channel = 0;
     uint8_t brightness = 0;
     LedEffect effect = LedEffect::Off;
+    uint8_t minBrightness = 0;
+    uint16_t cycleTimeMs = 0; // Alba ignores animation fields.
     bool operator==(const LedChannelCommand &o) const {
-        return channel == o.channel && brightness == o.brightness && effect == o.effect;
+        return channel == o.channel && brightness == o.brightness && effect == o.effect &&
+               minBrightness == o.minBrightness && cycleTimeMs == o.cycleTimeMs;
     }
     bool operator!=(const LedChannelCommand &o) const { return !(*this == o); }
 };

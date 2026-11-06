@@ -148,6 +148,12 @@ bool validateMachineProfile(JsonVariantConst value, String &error) {
         if (field.isNull() || !validateFieldValue(entry.value(), field, entry.key().c_str()))
             return fail(error, String("Invalid machine setting: ") + entry.key().c_str());
     }
+    for (const char *prefix : {"system", "barista"}) {
+        const auto minimum = value["settings"][String(prefix) + "LedMinBrightness"];
+        const int maximum = value["settings"][String(prefix) + "LedBrightness"] | 255;
+        if (!minimum.isNull() && minimum.as<int>() > maximum)
+            return fail(error, "LED minimum brightness exceeds maximum");
+    }
     return true;
 }
 

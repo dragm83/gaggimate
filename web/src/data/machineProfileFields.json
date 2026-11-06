@@ -189,10 +189,28 @@
     }
   },
   "systemLedBrightness": {
-    "label": "Brightness",
+    "label": "Max brightness",
     "type": "integer",
     "min": 0,
     "max": 255,
+    "capability": "dualBoiler",
+    "hardware": true,
+    "restart": false
+  },
+  "systemLedMinBrightness": {
+    "label": "Min brightness",
+    "type": "integer",
+    "min": 0,
+    "max": 255,
+    "capability": "dualBoiler",
+    "hardware": true,
+    "restart": false
+  },
+  "systemLedCycleTimeMs": {
+    "label": "Cycle time (ms)",
+    "type": "integer",
+    "min": 500,
+    "max": 10000,
     "capability": "dualBoiler",
     "hardware": true,
     "restart": false
@@ -215,10 +233,28 @@
     }
   },
   "baristaLedBrightness": {
-    "label": "Brightness",
+    "label": "Max brightness",
     "type": "integer",
     "min": 0,
     "max": 255,
+    "capability": "dualBoiler",
+    "hardware": true,
+    "restart": false
+  },
+  "baristaLedMinBrightness": {
+    "label": "Min brightness",
+    "type": "integer",
+    "min": 0,
+    "max": 255,
+    "capability": "dualBoiler",
+    "hardware": true,
+    "restart": false
+  },
+  "baristaLedCycleTimeMs": {
+    "label": "Cycle time (ms)",
+    "type": "integer",
+    "min": 500,
+    "max": 10000,
     "capability": "dualBoiler",
     "hardware": true,
     "restart": false

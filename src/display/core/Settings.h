@@ -6,6 +6,8 @@
 #include <MachineHardwareSettings.h>
 #include <Preferences.h>
 #include <atomic>
+#include <algorithm>
+#include <LedEffect.h>
 #include <cmath>
 #include <esp_err.h>
 #include <display/core/Property.h>
@@ -106,14 +108,40 @@ class Settings {
     int getSystemLedFunction() const { return systemLedFunction.get(); }
     int getBaristaLedFunction() const { return baristaLedFunction.get(); }
     int getSystemLedBrightness() const { return systemLedBrightness.get(); }
-    int getBaristaLedBrightness() const { return baristaLedBrightness.get(); }
-    void setSystemLedBrightness(int value) {
+    int getSystemLedMinBrightness() const { return std::min(systemLedMinBrightness.get(), systemLedBrightness.get()); }
+    int getSystemLedCycleTimeMs() const { return systemLedCycleTimeMs.get(); }
+    void setSystemLedMinBrightness(int value) {
         if (value >= 0 && value <= 255)
+            systemLedMinBrightness.set(std::min(value, systemLedBrightness.get()));
+    }
+    void setSystemLedCycleTimeMs(int value) {
+        if (value >= MIN_LED_CYCLE_MS && value <= MAX_LED_CYCLE_MS)
+            systemLedCycleTimeMs.set(value);
+    }
+    int getBaristaLedBrightness() const { return baristaLedBrightness.get(); }
+    int getBaristaLedMinBrightness() const { return std::min(baristaLedMinBrightness.get(), baristaLedBrightness.get()); }
+    int getBaristaLedCycleTimeMs() const { return baristaLedCycleTimeMs.get(); }
+    void setBaristaLedMinBrightness(int value) {
+        if (value >= 0 && value <= 255)
+            baristaLedMinBrightness.set(std::min(value, baristaLedBrightness.get()));
+    }
+    void setBaristaLedCycleTimeMs(int value) {
+        if (value >= MIN_LED_CYCLE_MS && value <= MAX_LED_CYCLE_MS)
+            baristaLedCycleTimeMs.set(value);
+    }
+    void setSystemLedBrightness(int value) {
+        if (value >= 0 && value <= 255) {
             systemLedBrightness.set(value);
+            if (systemLedMinBrightness.get() > value)
+                systemLedMinBrightness.set(value);
+        }
     }
     void setBaristaLedBrightness(int value) {
-        if (value >= 0 && value <= 255)
+        if (value >= 0 && value <= 255) {
             baristaLedBrightness.set(value);
+            if (baristaLedMinBrightness.get() > value)
+                baristaLedMinBrightness.set(value);
+        }
     }
     int getSteamRefillMode() const { return steamRefillMode.get(); }
     int getSteamRefillPostClearSeconds() const { return steamRefillPostClearSeconds.get(); }
@@ -433,7 +461,11 @@ class Settings {
     Property<int> systemLedFunction{registry, "led_sys_mode", 1};
     Property<int> baristaLedFunction{registry, "led_bar_mode", 3};
     Property<int> systemLedBrightness{registry, "led_sys_bri", 255};
+    Property<int> systemLedMinBrightness{registry, "led_sys_min", 0};
+    Property<int> systemLedCycleTimeMs{registry, "led_sys_ms", DEFAULT_LED_CYCLE_MS};
     Property<int> baristaLedBrightness{registry, "led_bar_bri", 255};
+    Property<int> baristaLedMinBrightness{registry, "led_bar_min", 0};
+    Property<int> baristaLedCycleTimeMs{registry, "led_bar_ms", DEFAULT_LED_CYCLE_MS};
     Property<int> steamRefillMode{registry, "rf_mode", 1};
     Property<int> steamRefillPostClearSeconds{registry, "rf_post", 0};
     Property<int> steamLevelDebounceChecks{registry, "sl_db", 25};

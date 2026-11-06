@@ -486,8 +486,16 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setBaristaLedFunction(request->arg("baristaLedFunction").toInt());
             if (request->hasArg("systemLedBrightness"))
                 settings->setSystemLedBrightness(request->arg("systemLedBrightness").toInt());
+            if (request->hasArg("systemLedMinBrightness"))
+                settings->setSystemLedMinBrightness(request->arg("systemLedMinBrightness").toInt());
+            if (request->hasArg("systemLedCycleTimeMs"))
+                settings->setSystemLedCycleTimeMs(request->arg("systemLedCycleTimeMs").toInt());
             if (request->hasArg("baristaLedBrightness"))
                 settings->setBaristaLedBrightness(request->arg("baristaLedBrightness").toInt());
+            if (request->hasArg("baristaLedMinBrightness"))
+                settings->setBaristaLedMinBrightness(request->arg("baristaLedMinBrightness").toInt());
+            if (request->hasArg("baristaLedCycleTimeMs"))
+                settings->setBaristaLedCycleTimeMs(request->arg("baristaLedCycleTimeMs").toInt());
             if (request->hasArg("steamRefillMode"))
                 settings->setSteamRefillMode(request->arg("steamRefillMode").toInt());
             if (request->hasArg("steamRefillPostClearSeconds"))
@@ -752,7 +760,11 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["systemLedFunction"] = settings.getSystemLedFunction();
     doc["baristaLedFunction"] = settings.getBaristaLedFunction();
     doc["systemLedBrightness"] = settings.getSystemLedBrightness();
+    doc["systemLedMinBrightness"] = settings.getSystemLedMinBrightness();
+    doc["systemLedCycleTimeMs"] = settings.getSystemLedCycleTimeMs();
     doc["baristaLedBrightness"] = settings.getBaristaLedBrightness();
+    doc["baristaLedMinBrightness"] = settings.getBaristaLedMinBrightness();
+    doc["baristaLedCycleTimeMs"] = settings.getBaristaLedCycleTimeMs();
     doc["steamControlsAvailable"] = controller->isSteamControlsAvailable();
     doc["steamRefillMode"] = settings.getSteamRefillMode();
     doc["steamRefillPostClearSeconds"] = settings.getSteamRefillPostClearSeconds();

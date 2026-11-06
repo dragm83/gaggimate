@@ -6532,4 +6532,16 @@ msgstr ""
 
 #: src/pages/Settings/tabs/SystemTab.jsx
 msgid "Official Nightly replaces Dual Boiler Beta on both components, including when the official version is older. Beta-only features may no longer be available."
+
+#: src/components/MachineProfileFields.jsx
+msgid "Max brightness"
+msgstr ""
+
+#: src/components/MachineProfileFields.jsx
+msgid "Min brightness"
+msgstr ""
+
+#: src/components/MachineProfileFields.jsx
+msgid "Cycle time (seconds)"
+
 msgstr ""

@@ -23,9 +23,16 @@ export function isProfileFieldLocked(formData, key) {
   const profile = parseProfileSelection(formData.machineProfileSelection);
   if (
     !profile ||
-    ['targetWaterTemp', 'defaultSteamMode', 'systemLedBrightness', 'baristaLedBrightness'].includes(
-      key,
-    )
+    [
+      'targetWaterTemp',
+      'defaultSteamMode',
+      'systemLedBrightness',
+      'baristaLedBrightness',
+      'systemLedMinBrightness',
+      'baristaLedMinBrightness',
+      'systemLedCycleTimeMs',
+      'baristaLedCycleTimeMs',
+    ].includes(key)
   )
     return false;
   if (key === 'targetSteamTemp') {
@@ -132,6 +139,12 @@ export function normalizeProfile(input) {
     )
       throw new Error(`Invalid value: ${key}`);
     settings[key] = value;
+  }
+  for (const prefix of ['system', 'barista']) {
+    const minimum = settings[`${prefix}LedMinBrightness`];
+    const maximum = settings[`${prefix}LedBrightness`] ?? 255;
+    if (minimum !== undefined && minimum > maximum)
+      throw new Error('LED minimum brightness exceeds maximum.');
   }
   if (
     input.plugins &&
