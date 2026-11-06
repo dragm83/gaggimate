@@ -791,6 +791,7 @@ void DefaultUI::updateSystemStatus() {
     eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_STEAM_TEMPERATURE, FloatValue(controller->getCurrentSteamTemp()));
     eez::flow::setGlobalVariable(FLOW_GLOBAL_VARIABLE_STEAM_ENABLED,
                                  BooleanValue(dualBoiler && controller->isSteamHeaterActive()));
+    const float brewTarget = controller->getTargetTemp();
     const char *brewStatus;
     if (!controller->getClientController()->isConnected() || controller->getSystemInfo().protocolMismatch ||
         (controller->isErrorState() && controller->getError() == ERROR_CODE_TIMEOUT)) {
@@ -799,6 +800,8 @@ void DefaultUI::updateSystemStatus() {
         brewStatus = "!WATER LEVEL LOW!";
     } else if (controller->getWarnings().isTemperatureStable()) {
         brewStatus = "Ready to Brew";
+    } else if (brewTarget > 0 && controller->getCurrentTemp() > brewTarget + std::fmax(2.0f, brewTarget * 0.02f)) {
+        brewStatus = "Cooling Down";
     } else {
         brewStatus = "Heating Up";
     }

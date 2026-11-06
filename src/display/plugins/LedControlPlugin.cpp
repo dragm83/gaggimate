@@ -62,10 +62,11 @@ void LedControlPlugin::updateControl() {
         const bool brewProcessActive = awake && controller->isBrewActive();
         auto addLight = [&](uint8_t channel, LightBehaviour &state, int function, uint8_t brightness) {
             const bool brew = function == 2 || function == 6;
-            const float temperature = brew ? controller->getCurrentTemp() : controller->getCurrentSteamTemp();
             const float target = brew ? controller->getTargetTemp() : controller->getTargetSteamTemp();
+            const float temperature = brew ? controller->getCurrentTemp() : controller->getCurrentSteamTemp();
+            const bool stable = brew && controller->getWarnings().isTemperatureStable();
             channels[count++] = {channel, function == 0 ? uint8_t{0} : brightness,
-                                 state.update(function, temperature, target, awake, brewProcessActive)};
+                                 state.update(function, temperature, target, stable, awake, brewProcessActive)};
         };
         addLight(SYSTEM_LED_CHANNEL, systemLight, settings.getSystemLedFunction(), settings.getSystemLedBrightness());
         addLight(BARISTA_LED_CHANNEL, baristaLight, settings.getBaristaLedFunction(), settings.getBaristaLedBrightness());

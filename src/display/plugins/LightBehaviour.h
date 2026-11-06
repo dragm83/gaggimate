@@ -6,28 +6,34 @@
 // The display owns process state and resolves the user's light function.
 class LightBehaviour {
   public:
-    LedEffect update(uint32_t function, float temperature, float target, bool awake, bool brewing) {
-        if (function != previousFunction) {
-            ready = false;
-            previousFunction = function;
-        }
+    LedEffect update(uint32_t function, float temperature, float target, bool stable, bool awake, bool brewing) {
+        if (function != previousFunction || target != previousTarget || !awake)
+            steamReady = false;
+        previousFunction = function;
+        previousTarget = target;
         if (function == 3)
             return awake ? LedEffect::On : LedEffect::Off;
         if (function == 4)
             return brewing ? LedEffect::On : LedEffect::Off;
-        if ((function != 1 && function != 2 && function != 5 && function != 6) || !awake || target <= 0 || !std::isfinite(temperature)) {
-            ready = false;
+        if ((function != 1 && function != 2 && function != 5 && function != 6) || !awake || target <= 0 || !std::isfinite(target))
             return LedEffect::Off;
+        if (function == 1 || function == 5) {
+            if (!std::isfinite(temperature)) {
+                steamReady = false;
+                return LedEffect::Off;
+            }
+            const float error = std::fabs(temperature - target);
+            if (error <= 2.0f)
+                steamReady = true;
+            else if (error > 5.0f)
+                steamReady = false;
+            stable = steamReady;
         }
-        // Enter ready within 1C; resume heating only when more than 2C below target.
-        if (temperature >= target - 1.0f)
-            ready = true;
-        else if (temperature < target - 2.0f)
-            ready = false;
-        return ready ? LedEffect::On : function >= 5 ? LedEffect::Flashing : LedEffect::Breathing;
+        return stable ? LedEffect::On : function >= 5 ? LedEffect::Flashing : LedEffect::Breathing;
     }
 
   private:
     uint32_t previousFunction = 0;
-    bool ready = false;
+    float previousTarget = 0;
+    bool steamReady = false;
 };
