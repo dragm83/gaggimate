@@ -18,9 +18,10 @@ class HeatingCheck {
 
     explicit HeatingCheck(uint32_t heatingTimeMs = 30000) : heatingTimeMs(heatingTimeMs) {}
     void setHeatingTime(uint32_t ms) { heatingTimeMs = ms; }
+    float getFaultBaseline(Fault fault) const { return fault == Fault::NoRise ? riseBaseline : offMinimum; }
 
     Fault update(uint32_t now, float temperature, float target, uint32_t totalOnMs, bool on, bool pumping = false) {
-        if (!std::isfinite(temperature))
+        if (!std::isfinite(temperature) || temperature <= 0.0f)
             return Fault::None; // Sensor validation remains the sensor driver's responsibility.
         if (!initialized) {
             initialized = true;

@@ -262,8 +262,9 @@ bool Heater::checkHeating() {
         requestOutput(false);
         return false;
     }
-    if (sensor->isErrorState())
-        return true; // Existing sensor fault path switches the output off.
+    const float measuredTemperature = sensor->read();
+    if (sensor->isErrorState() || !std::isfinite(measuredTemperature) || measuredTemperature <= 0.0f)
+        return true; // Sensor faults and stale-read sentinels must not change the safety baseline.
 
     uint32_t onMs;
     bool on;
@@ -274,17 +275,17 @@ bool Heater::checkHeating() {
     onMs = totalOnMs + (on ? now - outputAccountedAt : 0);
     portEXIT_CRITICAL(&outputMux);
     const bool pumping = heatingCheckPumpPower && *heatingCheckPumpPower > 0.0f;
-    const auto fault =
-        heatingCheck.update(now, sensor->read(), autotuning ? MAX_AUTOTUNE_TEMP : setpoint, onMs, on, pumping);
+    const float measuredTarget = autotuning ? MAX_AUTOTUNE_TEMP : setpoint;
+    const auto fault = heatingCheck.update(now, measuredTemperature, measuredTarget, onMs, on, pumping);
     if (fault == HeatingCheck::Fault::None)
         return true;
 
     heatingFault = true; // Latched until controller restart; later commands cannot restore the output.
     stop();
-    ESP_LOGE(LOG_TAG, "Heating safety fault on GPIO %u: %s (temperature=%.2f)", heaterPin,
+    ESP_LOGE(LOG_TAG, "Heating safety fault on GPIO %u: %s (temperature=%.2f target=%.2f baseline=%.2f)", heaterPin,
              fault == HeatingCheck::Fault::NoRise ? "no temperature rise during sustained heating"
-                                                 : "temperature rose more than 10C with output off",
-             sensor->read());
+                                                  : "temperature rose more than 10C with output off",
+             measuredTemperature, measuredTarget, heatingCheck.getFaultBaseline(fault));
     if (error_callback)
         error_callback();
     return false;
