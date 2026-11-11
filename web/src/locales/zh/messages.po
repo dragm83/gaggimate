@@ -1677,6 +1677,10 @@ msgid "Enter a name for this profile"
 msgstr "为此曲线输入名称"
 
 #: src/pages/Settings/tabs/MachineTab.jsx
+msgid "Enter a whole number of millimeters, 0 or more."
+msgstr "请输入毫米整数，0 或更大。"
+
+#: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Enter the bar rating of the pressure sensor being used"
 msgstr "输入所用压力传感器的额定 bar 值"
 
@@ -2050,6 +2054,10 @@ msgstr "GaggiMate 未接受该请求。请检查连接后重试。"
 #: src/pages/SetupWizard/index.jsx
 msgid "GaggiMate is joining {ssid}"
 msgstr ""
+
+#: src/app/shareFiles.js
+msgid "GaggiMate export"
+msgstr "GaggiMate 导出"
 
 #: src/pages/Settings/PluginCard.jsx
 msgid "GaggiMate is not affiliated with, endorsed by or supported by Mahlkönig or its parent company, the Hemro Group. Mahlkönig, E64 WS, Grind-by-Sync and Xenia are trademarks of their respective owners."
@@ -2917,6 +2925,10 @@ msgid "Multiple Cards"
 msgstr "多卡片"
 
 #: src/pages/Settings/tabs/MachineTab.jsx
+msgid "Must be larger than the distance to the fill line."
+msgstr "必须大于到加水线的距离。"
+
+#: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Must match the physical RATE-jumper configuration on the HX711 board. This setting does not switch the RATE pin."
 msgstr "必须与 HX711 板上的 RATE 跳线物理配置一致。此设置不会切换 RATE 引脚。"
 
@@ -3052,6 +3064,7 @@ msgid "No phases"
 msgstr "无阶段"
 
 #: src/pages/ProfileEdit/ExtendedProfileForm.jsx
+#: src/pages/ProfileEdit/StandardProfileForm.jsx
 msgid "No phases yet. Add a phase to configure brewing."
 msgstr "暂无阶段。添加一个阶段以配置冲煮。"
 
@@ -4594,6 +4607,10 @@ msgstr "服务器错误 - API 可能不支持此数据格式或账户类型"
 #: src/pages/ShotAnalyzer/components/shotDetails/ShotMainInfoCard.jsx
 msgid "Set rating to {value} of 5"
 msgstr "评分设为 {value} / 5"
+
+#: src/pages/Home/cards/WaterLevelCard.jsx
+msgid "Set the tank distances in Settings → Machine to see the level."
+msgstr "请在 设置 → 咖啡机 中设置水箱距离，以显示水位。"
 
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Set to 0 to disable feedforward control."

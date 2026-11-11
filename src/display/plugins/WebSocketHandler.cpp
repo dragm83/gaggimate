@@ -290,6 +290,7 @@ void WebSocketHandler::handleWebSocketData(AsyncWebSocket *server, AsyncWebSocke
                 } else if (msgType == "req:steam:toggle") {
                     controller->toggleSteamHeater();
                 } else if (msgType == "req:scale:tare") {
+                    pluginManager->trigger("webui:scale:tare");
                     controller->getClientController()->tareHardwareScale();
                 } else if (msgType == "req:flush:stop") {
                     handleFlushStop(client->id(), doc);
@@ -339,6 +340,7 @@ void WebSocketHandler::handleProfileRequest(uint32_t clientId, JsonDocument &req
             if (request["minimal"].as<bool>()) {
                 p["id"] = profile.id;
                 p["label"] = profile.label;
+                p["utility"] = profile.utility;
             } else {
                 writeProfile(p, profile);
             }
@@ -355,8 +357,9 @@ void WebSocketHandler::handleProfileRequest(uint32_t clientId, JsonDocument &req
     } else if (type == "req:profiles:save") {
         auto obj = request["profile"].as<JsonObject>();
         Profile profile;
-        parseProfile(obj, profile);
-        if (!profileManager->saveProfile(profile)) {
+        if (!parseProfile(obj, profile)) {
+            response["error"] = F("Invalid profile");
+        } else if (!profileManager->saveProfile(profile)) {
             response["error"] = F("Save failed");
         }
         auto respObj = response["profile"].to<JsonObject>();
@@ -368,7 +371,9 @@ void WebSocketHandler::handleProfileRequest(uint32_t clientId, JsonDocument &req
         }
     } else if (type == "req:profiles:select") {
         auto id = request["id"].as<String>();
-        profileManager->selectProfile(id);
+        if (!profileManager->selectProfile(id)) {
+            response["error"] = F("Profile not found");
+        }
     } else if (type == "req:profiles:favorite") {
         auto id = request["id"].as<String>();
         if (!profileManager->addFavoritedProfile(id)) {
@@ -494,6 +499,8 @@ void WebSocketHandler::publishTelemetry() {
     const bool bleConnected = BLEScales.isConnected();
     statusDoc["bw"] = bleConnected ? this->currentBluetoothWeight : 0; // current bluetooth weight
     statusDoc["cw"] = this->currentActiveWeight;
+    for (auto &provider : statusProviders)
+        provider(statusDoc);
     // Explicit null/zero so merging clients drop a finished process instead of keeping the last one.
     statusDoc["process"] = nullptr;
     statusDoc["pkr"] = 0;

@@ -125,6 +125,12 @@ Settings::Settings() {
         defaultSteamMode.set(independent ? (remember ? 2 : 0) : 1);
         defaultSteamMode.persist();
     }
+    // Persist the initial copy, so later Cup scale edits remain independent.
+    if (!preferences.isKey("sd_pf_scale")) {
+        portafilterScale.initDefault("");
+        portafilterScale.set(smartDoseScale.get());
+    }
+
     // Legacy migrations: derive defaults for keys that were never persisted
     if (!preferences.isKey("sg_m")) {
         smartGrindMode.initDefault(smartGrindToggle.get() ? 1 : 0);

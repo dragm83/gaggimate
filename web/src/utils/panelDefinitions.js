@@ -1,3 +1,4 @@
+import SmartDoseControl from '../components/SmartDoseControl.jsx';
 import { ModeCard } from '../pages/Home/cards/ModeCard.jsx';
 import { ProfileCard } from '../pages/Home/cards/ProfileCard.jsx';
 import { FavoriteProfilesCard } from '../pages/Home/cards/FavoriteProfilesCard.jsx';
@@ -92,6 +93,15 @@ export const PANEL_DEFINITIONS = [
     props: ds => ({ ds }),
   },
   {
+    id: 'dose',
+    labelMsg: msg`Smart Dosing`,
+    required: false,
+    available: ds => !!ds.smartDose?.enabled,
+    availableInSettings: status => !!status.smartDose?.enabled,
+    component: SmartDoseControl,
+    props: ds => ({ dose: ds.smartDose }),
+  },
+  {
     id: 'machinelevels',
     labelMsg: msg`Water Levels`,
     required: false,
@@ -108,7 +118,7 @@ export const PANEL_DEFINITIONS = [
     id: 'watertank',
     labelMsg: msg`Water Tank`,
     required: false,
-    available: ds => ds.albaWaterLevelAvailable && ds.waterLevelPercent !== null,
+    available: ds => !!ds.albaWaterLevelAvailable,
     availableInSettings: status => !!status.albaWaterLevelAvailable,
     component: WaterLevelCard,
     props: ds => ({

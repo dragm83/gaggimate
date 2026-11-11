@@ -13,7 +13,7 @@
 objects_t objects;
 
 static const char *screen_names[] = { "StandbyScreen", "BrewScreen", "StatusScreen", "MenuScreenNew", "SteamScreen", "WaterScreen", "GrindScreen", "InfoScreen", "NewProfileScreen", "WelcomeScreen" };
-static const char *object_names[] = { "standby_screen", "brew_screen", "status_screen", "menu_screen_new", "steam_screen", "water_screen", "grind_screen", "info_screen", "new_profile_screen", "welcome_screen", "brew_dials", "brew_dials__temp_gauge", "brew_dials__temp_gauge_full", "brew_dials__pressure_gauge", "brew_dials__standby_icon", "brew_dials__menu_icon", "brew_dials__temp_icon", "brew_dials__pressure_icon", "brew_dials__pressure_text", "brew_dials__temp_text", "brew_dials__temp_text_full", "brew_dials__temp_text2", "obj0", "obj0__steam_switch_on", "obj0__scale_lost", "obj0__scale_battery", "obj0__flush_reminder", "obj0__water_low", "obj0__temp_unstable", "obj0__clean_pending", "status_dials", "status_dials__temp_gauge", "status_dials__temp_gauge_full", "status_dials__pressure_gauge", "status_dials__standby_icon", "status_dials__menu_icon", "status_dials__temp_icon", "status_dials__pressure_icon", "status_dials__pressure_text", "status_dials__temp_text", "status_dials__temp_text_full", "status_dials__temp_text2", "new_menu_dials", "new_menu_dials__temp_gauge", "new_menu_dials__temp_gauge_full", "new_menu_dials__pressure_gauge", "new_menu_dials__standby_icon", "new_menu_dials__menu_icon", "new_menu_dials__temp_icon", "new_menu_dials__pressure_icon", "new_menu_dials__pressure_text", "new_menu_dials__temp_text", "new_menu_dials__temp_text_full", "new_menu_dials__temp_text2", "obj1", "obj1__steam_switch_on", "obj1__scale_lost", "obj1__scale_battery", "obj1__flush_reminder", "obj1__water_low", "obj1__temp_unstable", "obj1__clean_pending", "steam_dials", "steam_dials__temp_gauge", "steam_dials__temp_gauge_full", "steam_dials__pressure_gauge", "steam_dials__standby_icon", "steam_dials__menu_icon", "steam_dials__temp_icon", "steam_dials__pressure_icon", "steam_dials__pressure_text", "steam_dials__temp_text", "steam_dials__temp_text_full", "steam_dials__temp_text2", "water_dials", "water_dials__temp_gauge", "water_dials__temp_gauge_full", "water_dials__pressure_gauge", "water_dials__standby_icon", "water_dials__menu_icon", "water_dials__temp_icon", "water_dials__pressure_icon", "water_dials__pressure_text", "water_dials__temp_text", "water_dials__temp_text_full", "water_dials__temp_text2", "grind_dials", "grind_dials__temp_gauge", "grind_dials__temp_gauge_full", "grind_dials__pressure_gauge", "grind_dials__standby_icon", "grind_dials__menu_icon", "grind_dials__temp_icon", "grind_dials__pressure_icon", "grind_dials__pressure_text", "grind_dials__temp_text", "grind_dials__temp_text_full", "grind_dials__temp_text2", "obj2", "obj2__temp_gauge", "obj2__temp_gauge_full", "obj2__pressure_gauge", "obj2__standby_icon", "obj2__menu_icon", "obj2__temp_icon", "obj2__pressure_icon", "obj2__pressure_text", "obj2__temp_text", "obj2__temp_text_full", "obj2__temp_text2", "profile_dials_1", "profile_dials_1__temp_gauge", "profile_dials_1__temp_gauge_full", "profile_dials_1__pressure_gauge", "profile_dials_1__standby_icon", "profile_dials_1__menu_icon", "profile_dials_1__temp_icon", "profile_dials_1__pressure_icon", "profile_dials_1__pressure_text", "profile_dials_1__temp_text", "profile_dials_1__temp_text_full", "profile_dials_1__temp_text2", "obj3", "touch_icon", "time", "standby_icons", "wifi_icon", "bluetooth_icon", "update_icon", "status", "obj4", "start_button", "control_container", "mode_switch", "bluetooth_scale_icon", "flow_prediction_icon", "weight_label", "profile_info", "obj5", "profile_select_button", "profile_name", "settings_button", "adjustments", "temp_container", "target_temp", "down_temp_button", "up_temp_button", "obj6", "brew_target_time_container", "target_duration", "obj7", "up_duration_button", "down_duration_button", "brew_target_weight_container", "target_weight_1", "obj8", "up_weight_button", "down_weight_button", "remove_volumetric_button", "save_button", "accept_button", "save_as_new_button", "obj9", "confirm_dialog", "obj10", "obj11", "confirm_back_button", "confirm_ignore_button", "obj12", "progress_view", "pause_button", "process_volume", "check_button", "current_duration", "target_duration_1", "target_weight_2", "target_temp_1", "image7", "image8", "image9", "step_label", "phase_label", "phase_progress", "bar_container", "brew_bar", "chart_view", "current_duration_1", "phase_label_1", "phase_progress_chart", "shot_chart", "process_volume_1", "chart_legend", "chart_legend_temp", "chart_legend_pressure", "chart_legend_flow", "chart_legend_weight", "pause_button_1", "check_button_1", "btn_brew_1", "btn_steam_1", "btn_water_1", "btn_grind_1", "btn_settings_1", "status_icons", "obj13", "obj14", "obj15", "info_btn", "standby_btn", "main_label5", "image5_1", "target_temp2", "steam_down_temp_button", "steam_up_temp_button", "obj16", "main_label6", "water_down_temp_button", "target_temp3", "image10", "water_up_temp_button", "water_start_button", "main_label4", "grind_start_button", "mode_switch1", "obj17", "obj18", "target_weight", "target_duration3_1", "target_symbol_1", "grind_down_weight_button", "grind_up_weight_button", "target_time", "target_duration3", "target_symbol", "grind_down_duration_button", "grind_up_duration_button", "obj19", "standby_icons_1", "wifi_icon_1", "bluetooth_icon_1", "update_icon_1", "obj20", "obj21", "obj22", "obj23", "qrcode", "obj24", "info_menu_icon", "single_view", "obj25", "profile_details", "simple_preview", "obj26", "obj27", "obj28", "obj29", "obj30", "obj31", "obj32", "chart_preview", "profile_temp_time_1", "obj33", "obj34", "obj35", "obj36", "obj37", "profile_chart", "obj38", "image_preview", "profile_preview", "obj39", "list_view", "obj40", "obj41", "obj42", "obj43", "obj44", "obj45", "obj46", "obj47", "obj48", "obj49", "obj50", "obj51", "obj52", "obj53", "obj54", "obj55", "obj56", "obj57", "obj58", "obj59", "obj60", "obj61", "obj62", "obj63", "obj64", "obj65", "obj66", "select_profile_1", "previous_profile_1", "next_profile_1", "obj67", "obj68", "touch_icon_1", "standby_icons_2", "wifi_icon_2", "bluetooth_icon_2", "update_icon_2", "status_1", "qrcode_welcome", "obj69" };
+static const char *object_names[] = { "standby_screen", "brew_screen", "status_screen", "menu_screen_new", "steam_screen", "water_screen", "grind_screen", "info_screen", "new_profile_screen", "welcome_screen", "brew_dials", "brew_dials__temp_gauge", "brew_dials__temp_gauge_full", "brew_dials__pressure_gauge", "brew_dials__standby_icon", "brew_dials__menu_icon", "brew_dials__temp_icon", "brew_dials__pressure_icon", "brew_dials__pressure_text", "brew_dials__temp_text", "brew_dials__temp_text_full", "brew_dials__temp_text2", "obj0", "obj0__steam_switch_on", "obj0__scale_lost", "obj0__scale_battery", "obj0__flush_reminder", "obj0__water_low", "obj0__temp_unstable", "obj0__clean_pending", "status_dials", "status_dials__temp_gauge", "status_dials__temp_gauge_full", "status_dials__pressure_gauge", "status_dials__standby_icon", "status_dials__menu_icon", "status_dials__temp_icon", "status_dials__pressure_icon", "status_dials__pressure_text", "status_dials__temp_text", "status_dials__temp_text_full", "status_dials__temp_text2", "new_menu_dials", "new_menu_dials__temp_gauge", "new_menu_dials__temp_gauge_full", "new_menu_dials__pressure_gauge", "new_menu_dials__standby_icon", "new_menu_dials__menu_icon", "new_menu_dials__temp_icon", "new_menu_dials__pressure_icon", "new_menu_dials__pressure_text", "new_menu_dials__temp_text", "new_menu_dials__temp_text_full", "new_menu_dials__temp_text2", "obj1", "obj1__steam_switch_on", "obj1__scale_lost", "obj1__scale_battery", "obj1__flush_reminder", "obj1__water_low", "obj1__temp_unstable", "obj1__clean_pending", "steam_dials", "steam_dials__temp_gauge", "steam_dials__temp_gauge_full", "steam_dials__pressure_gauge", "steam_dials__standby_icon", "steam_dials__menu_icon", "steam_dials__temp_icon", "steam_dials__pressure_icon", "steam_dials__pressure_text", "steam_dials__temp_text", "steam_dials__temp_text_full", "steam_dials__temp_text2", "water_dials", "water_dials__temp_gauge", "water_dials__temp_gauge_full", "water_dials__pressure_gauge", "water_dials__standby_icon", "water_dials__menu_icon", "water_dials__temp_icon", "water_dials__pressure_icon", "water_dials__pressure_text", "water_dials__temp_text", "water_dials__temp_text_full", "water_dials__temp_text2", "grind_dials", "grind_dials__temp_gauge", "grind_dials__temp_gauge_full", "grind_dials__pressure_gauge", "grind_dials__standby_icon", "grind_dials__menu_icon", "grind_dials__temp_icon", "grind_dials__pressure_icon", "grind_dials__pressure_text", "grind_dials__temp_text", "grind_dials__temp_text_full", "grind_dials__temp_text2", "obj2", "obj2__temp_gauge", "obj2__temp_gauge_full", "obj2__pressure_gauge", "obj2__standby_icon", "obj2__menu_icon", "obj2__temp_icon", "obj2__pressure_icon", "obj2__pressure_text", "obj2__temp_text", "obj2__temp_text_full", "obj2__temp_text2", "profile_dials_1", "profile_dials_1__temp_gauge", "profile_dials_1__temp_gauge_full", "profile_dials_1__pressure_gauge", "profile_dials_1__standby_icon", "profile_dials_1__menu_icon", "profile_dials_1__temp_icon", "profile_dials_1__pressure_icon", "profile_dials_1__pressure_text", "profile_dials_1__temp_text", "profile_dials_1__temp_text_full", "profile_dials_1__temp_text2", "obj3", "touch_icon", "time", "standby_icons", "wifi_icon", "bluetooth_icon", "update_icon", "status", "obj4", "start_button", "control_container", "mode_switch", "bluetooth_scale_icon", "flow_prediction_icon", "weight_label", "smart_dose_cup", "smart_dose_portafilter", "smart_dose_manual", "profile_info", "obj5", "profile_select_button", "profile_name", "settings_button", "adjustments", "temp_container", "target_temp", "down_temp_button", "up_temp_button", "obj6", "brew_target_time_container", "target_duration", "obj7", "up_duration_button", "down_duration_button", "brew_target_weight_container", "target_weight_1", "obj8", "up_weight_button", "down_weight_button", "remove_volumetric_button", "save_button", "accept_button", "save_as_new_button", "obj9", "confirm_dialog", "obj10", "obj11", "confirm_back_button", "confirm_ignore_button", "obj12", "progress_view", "pause_button", "process_volume", "check_button", "current_duration", "target_duration_1", "target_weight_2", "target_temp_1", "image7", "image8", "image9", "step_label", "phase_label", "phase_progress", "bar_container", "brew_bar", "chart_view", "current_duration_1", "phase_label_1", "phase_progress_chart", "shot_chart", "process_volume_1", "chart_legend", "chart_legend_temp", "chart_legend_pressure", "chart_legend_flow", "chart_legend_weight", "pause_button_1", "check_button_1", "btn_brew_1", "btn_steam_1", "btn_water_1", "btn_grind_1", "btn_settings_1", "status_icons", "obj13", "obj14", "obj15", "info_btn", "standby_btn", "main_label5", "image5_1", "target_temp2", "steam_down_temp_button", "steam_up_temp_button", "obj16", "main_label6", "water_down_temp_button", "target_temp3", "image10", "water_up_temp_button", "water_start_button", "main_label4", "grind_start_button", "mode_switch1", "obj17", "obj18", "target_weight", "target_duration3_1", "target_symbol_1", "grind_down_weight_button", "grind_up_weight_button", "target_time", "target_duration3", "target_symbol", "grind_down_duration_button", "grind_up_duration_button", "obj19", "standby_icons_1", "wifi_icon_1", "bluetooth_icon_1", "update_icon_1", "obj20", "obj21", "obj22", "obj23", "qrcode", "obj24", "info_menu_icon", "single_view", "obj25", "profile_details", "simple_preview", "obj26", "obj27", "obj28", "obj29", "obj30", "obj31", "obj32", "chart_preview", "profile_temp_time_1", "obj33", "obj34", "obj35", "obj36", "obj37", "profile_chart", "obj38", "image_preview", "profile_preview", "obj39", "list_view", "obj40", "obj41", "obj42", "obj43", "obj44", "obj45", "obj46", "obj47", "obj48", "obj49", "obj50", "obj51", "obj52", "obj53", "obj54", "obj55", "obj56", "obj57", "obj58", "obj59", "obj60", "obj61", "obj62", "obj63", "obj64", "obj65", "obj66", "select_profile_1", "previous_profile_1", "next_profile_1", "obj67", "obj68", "touch_icon_1", "standby_icons_2", "wifi_icon_2", "bluetooth_icon_2", "update_icon_2", "status_1", "qrcode_welcome", "obj69" };
 
 screen_brew_screen_state_t screen_brew_screen_state;
 screen_status_screen_state_t screen_status_screen_state;
@@ -34,7 +34,7 @@ static void event_handler_cb_standby_screen_standby_screen(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_wakeup(e);
@@ -45,7 +45,7 @@ static void event_handler_cb_brew_screen_brew_screen(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_SCREEN_LOADED) {
         e->user_data = (void *)0;
         action_on_screen_load(e);
@@ -60,7 +60,7 @@ static void event_handler_cb_brew_screen_start_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_SHORT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_start(e);
@@ -75,7 +75,7 @@ static void event_handler_cb_brew_screen_mode_switch(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_volumetric_click(e);
@@ -86,11 +86,44 @@ static void event_handler_cb_brew_screen_mode_switch(lv_event_t *e) {
     }
 }
 
+static void event_handler_cb_brew_screen_smart_dose_cup(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    void *flowState = lv_event_get_user_data(e);
+    (void)flowState;
+
+    if (event == LV_EVENT_CLICKED) {
+        e->user_data = (void *)0;
+        action_on_set_dose(e);
+    }
+}
+
+static void event_handler_cb_brew_screen_smart_dose_portafilter(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    void *flowState = lv_event_get_user_data(e);
+    (void)flowState;
+
+    if (event == LV_EVENT_CLICKED) {
+        e->user_data = (void *)0;
+        action_on_set_dose(e);
+    }
+}
+
+static void event_handler_cb_brew_screen_smart_dose_manual(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    void *flowState = lv_event_get_user_data(e);
+    (void)flowState;
+
+    if (event == LV_EVENT_CLICKED) {
+        e->user_data = (void *)0;
+        action_on_set_dose(e);
+    }
+}
+
 static void event_handler_cb_brew_screen_profile_select_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_profile_select(e);
@@ -101,7 +134,7 @@ static void event_handler_cb_brew_screen_settings_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_profile_settings(e);
@@ -112,7 +145,7 @@ static void event_handler_cb_brew_screen_down_temp_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_temp_lower(e);
@@ -123,7 +156,7 @@ static void event_handler_cb_brew_screen_up_temp_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_temp_raise(e);
@@ -134,7 +167,7 @@ static void event_handler_cb_brew_screen_up_duration_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_time_raise(e);
@@ -145,7 +178,7 @@ static void event_handler_cb_brew_screen_down_duration_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_time_lower(e);
@@ -156,7 +189,7 @@ static void event_handler_cb_brew_screen_up_weight_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_time_raise(e);
@@ -167,7 +200,7 @@ static void event_handler_cb_brew_screen_down_weight_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_time_lower(e);
@@ -178,7 +211,7 @@ static void event_handler_cb_brew_screen_remove_volumetric_button(lv_event_t *e)
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_volumetric_delete(e);
@@ -189,7 +222,7 @@ static void event_handler_cb_brew_screen_save_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_profile_save(e);
@@ -200,7 +233,7 @@ static void event_handler_cb_brew_screen_accept_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_profile_accept(e);
@@ -211,7 +244,7 @@ static void event_handler_cb_brew_screen_save_as_new_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_profile_save_as_new(e);
@@ -222,7 +255,7 @@ static void event_handler_cb_brew_screen_confirm_back_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_warning_back(e);
@@ -233,7 +266,7 @@ static void event_handler_cb_brew_screen_confirm_ignore_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_warning_ignore(e);
@@ -244,7 +277,7 @@ static void event_handler_cb_status_screen_status_screen(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_GESTURE) {
         e->user_data = (void *)0;
         action_on_screen_swipe(e);
@@ -259,7 +292,7 @@ static void event_handler_cb_status_screen_pause_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_cancel(e);
@@ -270,7 +303,7 @@ static void event_handler_cb_status_screen_check_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_cancel(e);
@@ -281,7 +314,7 @@ static void event_handler_cb_status_screen_pause_button_1(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_cancel(e);
@@ -292,7 +325,7 @@ static void event_handler_cb_status_screen_check_button_1(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_cancel(e);
@@ -303,7 +336,7 @@ static void event_handler_cb_menu_screen_new_menu_screen_new(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_SCREEN_LOADED) {
         e->user_data = (void *)0;
         action_on_screen_load(e);
@@ -314,7 +347,7 @@ static void event_handler_cb_menu_screen_new_btn_brew_1(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_brew_screen(e);
@@ -325,7 +358,7 @@ static void event_handler_cb_menu_screen_new_btn_steam_1(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_steam_screen(e);
@@ -336,7 +369,7 @@ static void event_handler_cb_menu_screen_new_btn_water_1(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_water_screen(e);
@@ -347,7 +380,7 @@ static void event_handler_cb_menu_screen_new_btn_grind_1(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_grind_screen(e);
@@ -358,7 +391,7 @@ static void event_handler_cb_menu_screen_new_btn_settings_1(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_info_screen(e);
@@ -369,7 +402,7 @@ static void event_handler_cb_menu_screen_new_info_btn(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_info_screen(e);
@@ -380,7 +413,7 @@ static void event_handler_cb_menu_screen_new_standby_btn(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_standby(e);
@@ -391,7 +424,7 @@ static void event_handler_cb_steam_screen_steam_screen(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_SCREEN_LOADED) {
         e->user_data = (void *)0;
         action_on_screen_load(e);
@@ -406,7 +439,7 @@ static void event_handler_cb_steam_screen_steam_down_temp_button(lv_event_t *e) 
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_steam_temp_lower(e);
@@ -417,7 +450,7 @@ static void event_handler_cb_steam_screen_steam_up_temp_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_steam_temp_raise(e);
@@ -446,7 +479,7 @@ static void event_handler_cb_water_screen_water_screen(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_GESTURE) {
         e->user_data = (void *)0;
         action_on_screen_swipe(e);
@@ -461,7 +494,7 @@ static void event_handler_cb_water_screen_water_down_temp_button(lv_event_t *e) 
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_steam_temp_lower(e);
@@ -472,7 +505,7 @@ static void event_handler_cb_water_screen_water_up_temp_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_steam_temp_raise(e);
@@ -483,7 +516,7 @@ static void event_handler_cb_water_screen_water_start_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -501,7 +534,7 @@ static void event_handler_cb_grind_screen_grind_screen(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_SCREEN_LOADED) {
         e->user_data = (void *)0;
         action_on_screen_load(e);
@@ -516,7 +549,7 @@ static void event_handler_cb_grind_screen_grind_start_button(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -534,7 +567,7 @@ static void event_handler_cb_grind_screen_mode_switch1(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -556,7 +589,7 @@ static void event_handler_cb_grind_screen_obj17(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -570,7 +603,7 @@ static void event_handler_cb_grind_screen_obj18(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -584,7 +617,7 @@ static void event_handler_cb_grind_screen_grind_down_weight_button(lv_event_t *e
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_grind_time_lower(e);
@@ -595,7 +628,7 @@ static void event_handler_cb_grind_screen_grind_up_weight_button(lv_event_t *e) 
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_grind_time_raise(e);
@@ -606,7 +639,7 @@ static void event_handler_cb_grind_screen_grind_down_duration_button(lv_event_t 
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_grind_time_lower(e);
@@ -617,7 +650,7 @@ static void event_handler_cb_grind_screen_grind_up_duration_button(lv_event_t *e
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_grind_time_raise(e);
@@ -628,7 +661,7 @@ static void event_handler_cb_info_screen_info_screen(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_GESTURE) {
         e->user_data = (void *)0;
         action_on_screen_swipe(e);
@@ -643,7 +676,7 @@ static void event_handler_cb_info_screen_info_menu_icon(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_menu_click(e);
@@ -654,7 +687,7 @@ static void event_handler_cb_new_profile_screen_new_profile_screen(lv_event_t *e
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_SCREEN_LOADED) {
         e->user_data = (void *)0;
         action_on_screen_load(e);
@@ -669,7 +702,7 @@ static void event_handler_cb_new_profile_screen_obj25(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -683,7 +716,7 @@ static void event_handler_cb_new_profile_screen_obj38(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_profile_detail_toggle(e);
@@ -694,7 +727,7 @@ static void event_handler_cb_new_profile_screen_obj39(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_profile_detail_toggle(e);
@@ -705,7 +738,7 @@ static void event_handler_cb_new_profile_screen_select_profile_1(lv_event_t *e) 
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_profile_load(e);
@@ -716,7 +749,7 @@ static void event_handler_cb_new_profile_screen_previous_profile_1(lv_event_t *e
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_previous_profile(e);
@@ -727,7 +760,7 @@ static void event_handler_cb_new_profile_screen_next_profile_1(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_next_profile(e);
@@ -738,7 +771,7 @@ static void event_handler_cb_welcome_screen_welcome_screen(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_wakeup(e);
@@ -749,7 +782,7 @@ static void event_handler_cb_welcome_screen_touch_icon_1(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_welcome_continue(e);
@@ -760,7 +793,7 @@ static void event_handler_cb_dials_temp_gauge(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_DRAW_POST) {
         e->user_data = (void *)0;
         action_on_meter_draw(e);
@@ -771,7 +804,7 @@ static void event_handler_cb_dials_temp_gauge_full(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_DRAW_POST) {
         e->user_data = (void *)0;
         action_on_meter_draw(e);
@@ -782,7 +815,7 @@ static void event_handler_cb_dials_pressure_gauge(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_DRAW_POST) {
         e->user_data = (void *)0;
         action_on_meter_draw(e);
@@ -793,7 +826,7 @@ static void event_handler_cb_dials_standby_icon(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_standby(e);
@@ -804,7 +837,7 @@ static void event_handler_cb_dials_menu_icon(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_CLICKED) {
         e->user_data = (void *)0;
         action_on_menu_click(e);
@@ -815,7 +848,7 @@ static void event_handler_cb_dials_temp_icon(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -829,7 +862,7 @@ static void event_handler_cb_warnings_steam_switch_on(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -843,7 +876,7 @@ static void event_handler_cb_warnings_scale_lost(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -857,7 +890,7 @@ static void event_handler_cb_warnings_scale_battery(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -871,7 +904,7 @@ static void event_handler_cb_warnings_flush_reminder(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -885,7 +918,7 @@ static void event_handler_cb_warnings_water_low(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -899,7 +932,7 @@ static void event_handler_cb_warnings_temp_unstable(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -913,7 +946,7 @@ static void event_handler_cb_warnings_clean_pending(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     void *flowState = lv_event_get_user_data(e);
     (void)flowState;
-    
+
     if (event == LV_EVENT_VALUE_CHANGED) {
         lv_obj_t *ta = lv_event_get_target(e);
         if (tick_value_change_obj != ta) {
@@ -1047,7 +1080,7 @@ void create_screen_standby_screen() {
             lv_label_set_text(obj, "");
         }
     }
-    
+
     tick_screen_standby_screen();
 }
 
@@ -1252,7 +1285,7 @@ void create_screen_brew_screen() {
                             lv_obj_t *obj = lv_obj_create(parent_obj);
                             objects.mode_switch = obj;
                             lv_obj_set_pos(obj, 0, 0);
-                            lv_obj_set_size(obj, 160, 50);
+                            lv_obj_set_size(obj, 180, 50);
                             lv_obj_add_event_cb(obj, event_handler_cb_brew_screen_mode_switch, LV_EVENT_ALL, flowState);
                             lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW);
                             lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1300,6 +1333,51 @@ void create_screen_brew_screen() {
                                     lv_obj_set_style_text_font(obj, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
                                     lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
                                     lv_label_set_text(obj, "");
+                                }
+                                {
+                                    // smartDoseCup
+                                    lv_obj_t *obj = lv_img_create(parent_obj);
+                                    objects.smart_dose_cup = obj;
+                                    lv_obj_set_pos(obj, 0, 0);
+                                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                                    lv_img_set_src(obj, &img_dosing_cup_40x40);
+                                    lv_img_set_size_mode(obj, LV_IMG_SIZE_MODE_REAL);
+                                    lv_obj_add_event_cb(obj, event_handler_cb_brew_screen_smart_dose_cup, LV_EVENT_ALL, flowState);
+                                    lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
+                                    lv_obj_set_style_img_recolor(obj, lv_color_hex(theme_colors[eez_flow_get_selected_theme_index()][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    lv_obj_set_style_img_recolor_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    lv_obj_set_style_width(obj, 40, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    lv_obj_set_style_height(obj, 40, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                }
+                                {
+                                    // smartDosePortafilter
+                                    lv_obj_t *obj = lv_img_create(parent_obj);
+                                    objects.smart_dose_portafilter = obj;
+                                    lv_obj_set_pos(obj, 0, 0);
+                                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                                    lv_img_set_src(obj, &img_portafilter_40x40);
+                                    lv_img_set_size_mode(obj, LV_IMG_SIZE_MODE_REAL);
+                                    lv_obj_add_event_cb(obj, event_handler_cb_brew_screen_smart_dose_portafilter, LV_EVENT_ALL, flowState);
+                                    lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
+                                    lv_obj_set_style_img_recolor(obj, lv_color_hex(theme_colors[eez_flow_get_selected_theme_index()][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    lv_obj_set_style_img_recolor_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    lv_obj_set_style_width(obj, 40, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    lv_obj_set_style_height(obj, 40, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                }
+                                {
+                                    // smartDoseManual
+                                    lv_obj_t *obj = lv_img_create(parent_obj);
+                                    objects.smart_dose_manual = obj;
+                                    lv_obj_set_pos(obj, 0, 0);
+                                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                                    lv_img_set_src(obj, &img_coffee_beans_three_40x40);
+                                    lv_img_set_size_mode(obj, LV_IMG_SIZE_MODE_REAL);
+                                    lv_obj_add_event_cb(obj, event_handler_cb_brew_screen_smart_dose_manual, LV_EVENT_ALL, flowState);
+                                    lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
+                                    lv_obj_set_style_img_recolor(obj, lv_color_hex(theme_colors[eez_flow_get_selected_theme_index()][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    lv_obj_set_style_img_recolor_opa(obj, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    lv_obj_set_style_width(obj, 40, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    lv_obj_set_style_height(obj, 40, LV_PART_MAIN | LV_STATE_DEFAULT);
                                 }
                             }
                         }
@@ -1702,7 +1780,7 @@ void create_screen_brew_screen() {
                     lv_obj_set_style_pad_bottom(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_bg_opa(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_border_width(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                    create_user_widget_warnings(obj, getFlowState(flowState, 36), 23);
+                    create_user_widget_warnings(obj, getFlowState(flowState, 39), 23);
                     lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
                 }
                 {
@@ -1782,7 +1860,7 @@ void create_screen_brew_screen() {
             }
         }
     }
-    
+
     tick_screen_brew_screen();
 }
 
@@ -1797,6 +1875,9 @@ void delete_screen_brew_screen() {
     objects.bluetooth_scale_icon = 0;
     objects.flow_prediction_icon = 0;
     objects.weight_label = 0;
+    objects.smart_dose_cup = 0;
+    objects.smart_dose_portafilter = 0;
+    objects.smart_dose_manual = 0;
     objects.profile_info = 0;
     objects.obj5 = 0;
     objects.profile_select_button = 0;
@@ -1914,6 +1995,71 @@ void tick_screen_brew_screen() {
     }
     {
         bool new_val = evalBooleanProperty(flowState, 9, 3, "Failed to evaluate Hidden flag");
+        bool cur_val = lv_obj_has_flag(objects.smart_dose_cup, LV_OBJ_FLAG_HIDDEN);
+        if (new_val != cur_val) {
+            tick_value_change_obj = objects.smart_dose_cup;
+            if (new_val) {
+                lv_obj_add_flag(objects.smart_dose_cup, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_clear_flag(objects.smart_dose_cup, LV_OBJ_FLAG_HIDDEN);
+            }
+            tick_value_change_obj = NULL;
+        }
+    }
+    {
+        bool new_val = evalBooleanProperty(flowState, 9, 4, "Failed to evaluate Disabled state");
+        bool cur_val = lv_obj_has_state(objects.smart_dose_cup, LV_STATE_DISABLED);
+        if (new_val != cur_val) {
+            tick_value_change_obj = objects.smart_dose_cup;
+            if (new_val) {
+                lv_obj_add_state(objects.smart_dose_cup, LV_STATE_DISABLED);
+            } else {
+                lv_obj_clear_state(objects.smart_dose_cup, LV_STATE_DISABLED);
+            }
+            tick_value_change_obj = NULL;
+        }
+    }
+    {
+        bool new_val = evalBooleanProperty(flowState, 10, 3, "Failed to evaluate Hidden flag");
+        bool cur_val = lv_obj_has_flag(objects.smart_dose_portafilter, LV_OBJ_FLAG_HIDDEN);
+        if (new_val != cur_val) {
+            tick_value_change_obj = objects.smart_dose_portafilter;
+            if (new_val) {
+                lv_obj_add_flag(objects.smart_dose_portafilter, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_clear_flag(objects.smart_dose_portafilter, LV_OBJ_FLAG_HIDDEN);
+            }
+            tick_value_change_obj = NULL;
+        }
+    }
+    {
+        bool new_val = evalBooleanProperty(flowState, 10, 4, "Failed to evaluate Disabled state");
+        bool cur_val = lv_obj_has_state(objects.smart_dose_portafilter, LV_STATE_DISABLED);
+        if (new_val != cur_val) {
+            tick_value_change_obj = objects.smart_dose_portafilter;
+            if (new_val) {
+                lv_obj_add_state(objects.smart_dose_portafilter, LV_STATE_DISABLED);
+            } else {
+                lv_obj_clear_state(objects.smart_dose_portafilter, LV_STATE_DISABLED);
+            }
+            tick_value_change_obj = NULL;
+        }
+    }
+    {
+        bool new_val = evalBooleanProperty(flowState, 11, 3, "Failed to evaluate Hidden flag");
+        bool cur_val = lv_obj_has_flag(objects.smart_dose_manual, LV_OBJ_FLAG_HIDDEN);
+        if (new_val != cur_val) {
+            tick_value_change_obj = objects.smart_dose_manual;
+            if (new_val) {
+                lv_obj_add_flag(objects.smart_dose_manual, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_clear_flag(objects.smart_dose_manual, LV_OBJ_FLAG_HIDDEN);
+            }
+            tick_value_change_obj = NULL;
+        }
+    }
+    {
+        bool new_val = evalBooleanProperty(flowState, 12, 3, "Failed to evaluate Hidden flag");
         bool cur_val = lv_obj_has_flag(objects.profile_info, LV_OBJ_FLAG_HIDDEN);
         if (new_val != cur_val) {
             tick_value_change_obj = objects.profile_info;
@@ -1926,7 +2072,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        const char *new_val = evalTextProperty(flowState, 13, 3, "Failed to evaluate Text in Label widget");
+        const char *new_val = evalTextProperty(flowState, 16, 3, "Failed to evaluate Text in Label widget");
         const char *cur_val = lv_label_get_text(objects.profile_name);
         if (strcmp(new_val, cur_val) != 0) {
             tick_value_change_obj = objects.profile_name;
@@ -1935,7 +2081,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        bool new_val = evalBooleanProperty(flowState, 15, 3, "Failed to evaluate Hidden flag");
+        bool new_val = evalBooleanProperty(flowState, 18, 3, "Failed to evaluate Hidden flag");
         bool cur_val = lv_obj_has_flag(objects.adjustments, LV_OBJ_FLAG_HIDDEN);
         if (new_val != cur_val) {
             tick_value_change_obj = objects.adjustments;
@@ -1948,7 +2094,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        const char *new_val = evalTextProperty(flowState, 17, 3, "Failed to evaluate Text in Label widget");
+        const char *new_val = evalTextProperty(flowState, 20, 3, "Failed to evaluate Text in Label widget");
         const char *cur_val = lv_label_get_text(objects.target_temp);
         if (strcmp(new_val, cur_val) != 0) {
             tick_value_change_obj = objects.target_temp;
@@ -1957,7 +2103,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        bool new_val = evalBooleanProperty(flowState, 21, 3, "Failed to evaluate Hidden flag");
+        bool new_val = evalBooleanProperty(flowState, 24, 3, "Failed to evaluate Hidden flag");
         bool cur_val = lv_obj_has_flag(objects.brew_target_time_container, LV_OBJ_FLAG_HIDDEN);
         if (new_val != cur_val) {
             tick_value_change_obj = objects.brew_target_time_container;
@@ -1970,7 +2116,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        const char *new_val = evalTextProperty(flowState, 22, 3, "Failed to evaluate Text in Label widget");
+        const char *new_val = evalTextProperty(flowState, 25, 3, "Failed to evaluate Text in Label widget");
         const char *cur_val = lv_label_get_text(objects.target_duration);
         if (strcmp(new_val, cur_val) != 0) {
             tick_value_change_obj = objects.target_duration;
@@ -1979,7 +2125,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        bool new_val = evalBooleanProperty(flowState, 26, 3, "Failed to evaluate Hidden flag");
+        bool new_val = evalBooleanProperty(flowState, 29, 3, "Failed to evaluate Hidden flag");
         bool cur_val = lv_obj_has_flag(objects.brew_target_weight_container, LV_OBJ_FLAG_HIDDEN);
         if (new_val != cur_val) {
             tick_value_change_obj = objects.brew_target_weight_container;
@@ -1992,7 +2138,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        const char *new_val = evalTextProperty(flowState, 27, 3, "Failed to evaluate Text in Label widget");
+        const char *new_val = evalTextProperty(flowState, 30, 3, "Failed to evaluate Text in Label widget");
         const char *cur_val = lv_label_get_text(objects.target_weight_1);
         if (strcmp(new_val, cur_val) != 0) {
             tick_value_change_obj = objects.target_weight_1;
@@ -2001,7 +2147,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        bool new_val = evalBooleanProperty(flowState, 32, 3, "Failed to evaluate Hidden flag");
+        bool new_val = evalBooleanProperty(flowState, 35, 3, "Failed to evaluate Hidden flag");
         bool cur_val = lv_obj_has_flag(objects.obj12, LV_OBJ_FLAG_HIDDEN);
         if (new_val != cur_val) {
             tick_value_change_obj = objects.obj12;
@@ -2014,7 +2160,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        bool new_val = evalBooleanProperty(flowState, 33, 3, "Failed to evaluate Disabled state");
+        bool new_val = evalBooleanProperty(flowState, 36, 3, "Failed to evaluate Disabled state");
         bool cur_val = lv_obj_has_state(objects.save_button, LV_STATE_DISABLED);
         if (new_val != cur_val) {
             tick_value_change_obj = objects.save_button;
@@ -2027,7 +2173,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        bool new_val = evalBooleanProperty(flowState, 35, 3, "Failed to evaluate Disabled state");
+        bool new_val = evalBooleanProperty(flowState, 38, 3, "Failed to evaluate Disabled state");
         bool cur_val = lv_obj_has_state(objects.save_as_new_button, LV_STATE_DISABLED);
         if (new_val != cur_val) {
             tick_value_change_obj = objects.save_as_new_button;
@@ -2039,9 +2185,9 @@ void tick_screen_brew_screen() {
             tick_value_change_obj = NULL;
         }
     }
-    tick_user_widget_warnings(getFlowState(flowState, 36), 23);
+    tick_user_widget_warnings(getFlowState(flowState, 39), 23);
     {
-        const char *new_val = evalTextProperty(flowState, 37, 3, "Failed to evaluate Text in Label widget");
+        const char *new_val = evalTextProperty(flowState, 40, 3, "Failed to evaluate Text in Label widget");
         const char *cur_val = lv_label_get_text(objects.obj9);
         if (strcmp(new_val, cur_val) != 0) {
             tick_value_change_obj = objects.obj9;
@@ -2050,7 +2196,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        bool new_val = evalBooleanProperty(flowState, 38, 3, "Failed to evaluate Hidden flag");
+        bool new_val = evalBooleanProperty(flowState, 41, 3, "Failed to evaluate Hidden flag");
         bool cur_val = lv_obj_has_flag(objects.confirm_dialog, LV_OBJ_FLAG_HIDDEN);
         if (new_val != cur_val) {
             tick_value_change_obj = objects.confirm_dialog;
@@ -2063,7 +2209,7 @@ void tick_screen_brew_screen() {
         }
     }
     {
-        const char *new_val = evalTextProperty(flowState, 40, 3, "Failed to evaluate Text in Label widget");
+        const char *new_val = evalTextProperty(flowState, 43, 3, "Failed to evaluate Text in Label widget");
         const char *cur_val = lv_label_get_text(objects.obj11);
         if (strcmp(new_val, cur_val) != 0) {
             tick_value_change_obj = objects.obj11;
@@ -2542,7 +2688,7 @@ void create_screen_status_screen() {
             }
         }
     }
-    
+
     tick_screen_status_screen();
 }
 
@@ -3193,7 +3339,7 @@ void create_screen_menu_screen_new() {
             lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
         }
     }
-    
+
     tick_screen_menu_screen_new();
 }
 
@@ -3465,7 +3611,7 @@ void create_screen_steam_screen() {
             }
         }
     }
-    
+
     tick_screen_steam_screen();
 }
 
@@ -3711,7 +3857,7 @@ void create_screen_water_screen() {
             }
         }
     }
-    
+
     tick_screen_water_screen();
 }
 
@@ -4084,7 +4230,7 @@ void create_screen_grind_screen() {
             }
         }
     }
-    
+
     tick_screen_grind_screen();
 }
 
@@ -4439,7 +4585,7 @@ void create_screen_info_screen() {
             lv_obj_set_style_bg_color(obj, lv_color_hex(theme_colors[eez_flow_get_selected_theme_index()][1]), LV_PART_MAIN | LV_STATE_DEFAULT);
         }
     }
-    
+
     tick_screen_info_screen();
 }
 
@@ -5582,7 +5728,7 @@ void create_screen_new_profile_screen() {
             lv_obj_set_style_img_opa(obj, 125, LV_PART_MAIN | LV_STATE_DISABLED);
         }
     }
-    
+
     tick_screen_new_profile_screen();
 }
 
@@ -6027,7 +6173,7 @@ void create_screen_welcome_screen() {
             lv_label_set_text_static(obj, "Scan the QR Code to start setting up your machine");
         }
     }
-    
+
     tick_screen_welcome_screen();
 }
 
@@ -7135,6 +7281,9 @@ void change_color_theme(uint32_t theme_index) {
         if (objects.bluetooth_scale_icon) lv_obj_set_style_img_recolor(objects.bluetooth_scale_icon, lv_color_hex(theme_colors[theme_index][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
         if (objects.flow_prediction_icon) lv_obj_set_style_img_recolor(objects.flow_prediction_icon, lv_color_hex(theme_colors[theme_index][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
         if (objects.weight_label) lv_obj_set_style_text_color(objects.weight_label, lv_color_hex(theme_colors[theme_index][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
+        if (objects.smart_dose_cup) lv_obj_set_style_img_recolor(objects.smart_dose_cup, lv_color_hex(theme_colors[theme_index][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
+        if (objects.smart_dose_portafilter) lv_obj_set_style_img_recolor(objects.smart_dose_portafilter, lv_color_hex(theme_colors[theme_index][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
+        if (objects.smart_dose_manual) lv_obj_set_style_img_recolor(objects.smart_dose_manual, lv_color_hex(theme_colors[theme_index][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
         if (objects.obj5) lv_obj_set_style_text_color(objects.obj5, lv_color_hex(theme_colors[theme_index][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
         if (objects.profile_select_button) lv_obj_set_style_img_recolor(objects.profile_select_button, lv_color_hex(theme_colors[theme_index][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
         if (objects.profile_name) lv_obj_set_style_text_color(objects.profile_name, lv_color_hex(theme_colors[theme_index][0]), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -7736,21 +7885,21 @@ void create_screens() {
     eez_flow_init_style_names(style_names, sizeof(style_names) / sizeof(const char *));
 
 eez_flow_init_fonts(fonts, sizeof(fonts) / sizeof(ext_font_desc_t));
-    
+
     eez_flow_init_themes(theme_names, sizeof(theme_names) / sizeof(const char *), change_color_theme, &theme_colors[0][0], sizeof(theme_colors[0]) / sizeof(uint32_t));
 
 // Set default LVGL theme
     lv_disp_t *dispp = lv_disp_get_default();
     lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
-    
+
     // Initialize screens
     eez_flow_init_screen_names(screen_names, sizeof(screen_names) / sizeof(const char *));
     eez_flow_init_object_names(object_names, sizeof(object_names) / sizeof(const char *));
-    
+
     eez_flow_set_create_screen_func(create_screen);
     eez_flow_set_delete_screen_func(delete_screen);
-    
+
     // Create screens
     create_screen_standby_screen();
     create_screen_brew_screen();

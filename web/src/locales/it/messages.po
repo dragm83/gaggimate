@@ -618,6 +618,7 @@ msgstr "Plugin di riempimento caldaia"
 msgid "Brightness"
 msgstr ""
 
+
 #: src/app/machineStatus.js
 #: src/pages/Home/utils.js
 #: src/pages/Settings/tabs/GeneralTab.jsx
@@ -1385,6 +1386,7 @@ msgstr "Deseleziona {itemName}"
 msgid "Detected board"
 msgstr ""
 
+
 #: src/components/Navigation.jsx
 #: src/pages/Settings/index.jsx
 msgid "Device Settings"
@@ -1402,6 +1404,7 @@ msgstr "Disattiva modalità confronto"
 #: src/components/MachineProfileControl.jsx
 msgid "Disabled"
 msgstr ""
+
 
 #: src/components/PumpFlowCalibration/Footer.jsx
 #: src/pages/Settings/index.jsx
@@ -1681,6 +1684,10 @@ msgid "Enter a name for this profile"
 msgstr "Inserisci un nome per questo profilo"
 
 #: src/pages/Settings/tabs/MachineTab.jsx
+msgid "Enter a whole number of millimeters, 0 or more."
+msgstr "Inserisci un numero intero di millimetri, 0 o più."
+
+#: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Enter the bar rating of the pressure sensor being used"
 msgstr "Inserisci la portata in bar del sensore di pressione utilizzato"
 
@@ -1913,6 +1920,7 @@ msgstr "Termina"
 msgid "Finish and restart"
 msgstr ""
 
+
 #: src/pages/Home/cards/ProfileCard.jsx
 #: src/pages/Settings/tabs/SystemTab.jsx
 msgid "Finished"
@@ -2054,6 +2062,10 @@ msgstr "GaggiMate non ha accettato la richiesta. Controlla la connessione e ripr
 #: src/pages/SetupWizard/index.jsx
 msgid "GaggiMate is joining {ssid}"
 msgstr ""
+
+#: src/app/shareFiles.js
+msgid "GaggiMate export"
+msgstr "Esportazione GaggiMate"
 
 #: src/pages/Settings/PluginCard.jsx
 msgid "GaggiMate is not affiliated with, endorsed by or supported by Mahlkönig or its parent company, the Hemro Group. Mahlkönig, E64 WS, Grind-by-Sync and Xenia are trademarks of their respective owners."
@@ -2685,6 +2697,7 @@ msgstr ""
 #~ msgid "Machine Setup"
 #~ msgstr ""
 
+
 #: src/app/AppSettings.jsx
 #: src/app/MachineSwitcher.jsx
 msgid "Machines"
@@ -2921,6 +2934,10 @@ msgid "Multiple Cards"
 msgstr "Schede multiple"
 
 #: src/pages/Settings/tabs/MachineTab.jsx
+msgid "Must be larger than the distance to the fill line."
+msgstr "Deve essere maggiore della distanza dalla linea di riempimento."
+
+#: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Must match the physical RATE-jumper configuration on the HX711 board. This setting does not switch the RATE pin."
 msgstr "Deve corrispondere alla configurazione fisica del ponticello RATE sulla scheda HX711. Questa impostazione non commuta il pin RATE."
 
@@ -3056,6 +3073,7 @@ msgid "No phases"
 msgstr "Nessuna fase"
 
 #: src/pages/ProfileEdit/ExtendedProfileForm.jsx
+#: src/pages/ProfileEdit/StandardProfileForm.jsx
 msgid "No phases yet. Add a phase to configure brewing."
 msgstr "Ancora nessuna fase. Aggiungi una fase per configurare l'erogazione."
 
@@ -3503,6 +3521,7 @@ msgstr "Riattiva GaggiMate dallo standby per usare le bilance Bluetooth."
 #: src/pages/Settings/index.jsx
 #: src/pages/Settings/tabs/PluginsTab.jsx
 #: src/pages/SetupWizard/index.jsx
+
 msgid "Plugins"
 msgstr "Plugin"
 
@@ -4598,6 +4617,10 @@ msgstr "Errore del server: l'API potrebbe non supportare questo formato di dati 
 #: src/pages/ShotAnalyzer/components/shotDetails/ShotMainInfoCard.jsx
 msgid "Set rating to {value} of 5"
 msgstr "Imposta la valutazione a {value} su 5"
+
+#: src/pages/Home/cards/WaterLevelCard.jsx
+msgid "Set the tank distances in Settings → Machine to see the level."
+msgstr "Imposta le distanze del serbatoio in Impostazioni → Macchina per vedere il livello."
 
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Set to 0 to disable feedforward control."

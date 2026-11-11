@@ -72,6 +72,7 @@ class DefaultUI {
         brewConfirmVisible = visible;
         rerender = true;
     }
+    bool isBrewConfirmVisible() const { return brewConfirmVisible; }
 
     void markDirty() { rerender = true; }
     void markProfileDirty() { profileDirty = true; }

@@ -1677,6 +1677,10 @@ msgid "Enter a name for this profile"
 msgstr "Enter a name for this profile"
 
 #: src/pages/Settings/tabs/MachineTab.jsx
+msgid "Enter a whole number of millimeters, 0 or more."
+msgstr "Enter a whole number of millimeters, 0 or more."
+
+#: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Enter the bar rating of the pressure sensor being used"
 msgstr "Enter the bar rating of the pressure sensor being used"
 
@@ -2050,6 +2054,10 @@ msgstr "GaggiMate didn't accept the request. Check the connection and try again.
 #: src/pages/SetupWizard/index.jsx
 msgid "GaggiMate is joining {ssid}"
 msgstr "GaggiMate is joining {ssid}"
+
+#: src/app/shareFiles.js
+msgid "GaggiMate export"
+msgstr "GaggiMate export"
 
 #: src/pages/Settings/PluginCard.jsx
 msgid "GaggiMate is not affiliated with, endorsed by or supported by Mahlkönig or its parent company, the Hemro Group. Mahlkönig, E64 WS, Grind-by-Sync and Xenia are trademarks of their respective owners."
@@ -2917,6 +2925,10 @@ msgid "Multiple Cards"
 msgstr "Multiple Cards"
 
 #: src/pages/Settings/tabs/MachineTab.jsx
+msgid "Must be larger than the distance to the fill line."
+msgstr "Must be larger than the distance to the fill line."
+
+#: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Must match the physical RATE-jumper configuration on the HX711 board. This setting does not switch the RATE pin."
 msgstr "Must match the physical RATE-jumper configuration on the HX711 board. This setting does not switch the RATE pin."
 
@@ -3052,6 +3064,7 @@ msgid "No phases"
 msgstr "No phases"
 
 #: src/pages/ProfileEdit/ExtendedProfileForm.jsx
+#: src/pages/ProfileEdit/StandardProfileForm.jsx
 msgid "No phases yet. Add a phase to configure brewing."
 msgstr "No phases yet. Add a phase to configure brewing."
 
@@ -4594,6 +4607,10 @@ msgstr "Server error - the API may not support this data format or account type"
 #: src/pages/ShotAnalyzer/components/shotDetails/ShotMainInfoCard.jsx
 msgid "Set rating to {value} of 5"
 msgstr "Set rating to {value} of 5"
+
+#: src/pages/Home/cards/WaterLevelCard.jsx
+msgid "Set the tank distances in Settings → Machine to see the level."
+msgstr "Set the tank distances in Settings → Machine to see the level."
 
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Set to 0 to disable feedforward control."
