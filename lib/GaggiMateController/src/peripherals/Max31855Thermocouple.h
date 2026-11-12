@@ -12,7 +12,6 @@ constexpr float MAX31855_MAX_ERROR_RATE = 0.5f;
 constexpr int MAX31855_MAX_ERRORS = static_cast<int>(static_cast<float>(MAX31855_ERROR_WINDOW) * MAX31855_MAX_ERROR_RATE);
 
 using temperature_callback_t = std::function<void(float)>;
-using temperature_error_callback_t = std::function<void()>;
 
 class Max31855Thermocouple : public TemperatureSensor {
   public:

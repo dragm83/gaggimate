@@ -81,6 +81,7 @@ message BoilerControl {
     uint32 index = 1;
     BoilerMode mode = 2;
     float setpoint = 3; // degC or bar per `mode`, 0 = off
+    bool steaming = 4; // single boiler is heating for steam
 }
 
 enum PumpMode {
@@ -300,4 +301,8 @@ enum ErrorCode {
 
 message Error {
     ErrorCode code = 1;
+    string detail = 2;
+    float temperature = 3; // raw sensor temperature at the fault
+    float target = 4;      // raw heater target at the fault, 0 = off
+    uint32 boiler = 5;     // 0 = brew/single boiler, 1 = separate steam boiler
 }

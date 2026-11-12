@@ -31,7 +31,10 @@ struct BoilerCommand {
     uint8_t index = 0;
     BoilerControlMode mode = BoilerControlMode::Temperature;
     float setpoint = 0.0f;
-    bool operator==(const BoilerCommand &o) const { return index == o.index && mode == o.mode && setpoint == o.setpoint; }
+    bool steaming = false;
+    bool operator==(const BoilerCommand &o) const {
+        return index == o.index && mode == o.mode && setpoint == o.setpoint && steaming == o.steaming;
+    }
     bool operator!=(const BoilerCommand &o) const { return !(*this == o); }
 };
 struct PumpCommand {

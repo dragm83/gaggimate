@@ -47,7 +47,9 @@ void GaggiMateController::setup() {
     if (!_config.capabilites.dualBoiler) {
         brewTemperature = std::make_unique<Max31855Thermocouple>(
             _config.maxCsPin, _config.maxMisoPin, _config.maxSckPin, [this](float temperature) { /* noop */ },
-            [this]() { thermalRunawayShutdown(); });
+            [this](const char *reason, float temperature) {
+                thermalRunawayShutdown(0, reason, temperature, heater ? heater->getSetpoint() : 0.0f);
+            });
     }
     if (_config.capabilites.pressure || _config.capabilites.dualBoiler) {
         adc = std::make_unique<ADSAdc>(_config.pressureSda, _config.pressureScl, _config.adcRates,
@@ -55,24 +57,35 @@ void GaggiMateController::setup() {
         pressureSensor = std::make_unique<PressureSensor>(this->adc.get(), _config.pressureControlRate);
         if (_config.capabilites.dualBoiler) {
             this->brewTemperature = std::make_unique<NtcThermistor>(
-                this->adc.get(), 2, [this]() { thermalRunawayShutdown(); }, machineHardware.ntc_brew_nominal_resistance,
-                machineHardware.ntc_brew_series_resistance, machineHardware.ntc_brew_supply_voltage,
-                machineHardware.ntc_brew_beta, _config.ntcTiming[2]);
+                this->adc.get(), 2,
+                [this](const char *reason, float temperature) {
+                    thermalRunawayShutdown(0, reason, temperature, heater ? heater->getSetpoint() : 0.0f);
+                },
+                machineHardware.ntc_brew_nominal_resistance, machineHardware.ntc_brew_series_resistance,
+                machineHardware.ntc_brew_supply_voltage, machineHardware.ntc_brew_beta, _config.ntcTiming[2]);
             this->steamTemperature = std::make_unique<NtcThermistor>(
-                this->adc.get(), 3, [this]() { thermalRunawayShutdown(); }, machineHardware.ntc_steam_nominal_resistance,
-                machineHardware.ntc_steam_series_resistance, machineHardware.ntc_steam_supply_voltage,
-                machineHardware.ntc_steam_beta, _config.ntcTiming[3]);
+                this->adc.get(), 3,
+                [this](const char *reason, float temperature) {
+                    thermalRunawayShutdown(1, reason, temperature, heater2 ? heater2->getSetpoint() : 0.0f);
+                },
+                machineHardware.ntc_steam_nominal_resistance, machineHardware.ntc_steam_series_resistance,
+                machineHardware.ntc_steam_supply_voltage, machineHardware.ntc_steam_beta, _config.ntcTiming[3]);
         }
     }
     heater = std::make_unique<Heater>(
-        this->brewTemperature.get(), _config.heaterPin, [this]() { thermalRunawayShutdown(); },
+        this->brewTemperature.get(), _config.heaterPin,
+        [this](const char *reason, float temperature, float target) { thermalRunawayShutdown(0, reason, temperature, target); },
         [this](float Kp, float Ki, float Kd, float Kf) { _comms.sendAutotuneResult(Kp, Ki, Kd, Kf); },
         [this]() { _comms.sendError(ERROR_CODE_AUTOTUNE_TIMEOUT); });
     if (_config.capabilites.dualBoiler) {
         heater2 = std::make_unique<Heater>(
-            this->steamTemperature.get(), _config.altPin, [this]() { thermalRunawayShutdown(); },
+            this->steamTemperature.get(), _config.altPin,
+            [this](const char *reason, float temperature, float target) {
+                thermalRunawayShutdown(1, reason, temperature, target);
+            },
             [this](float Kp, float Ki, float Kd, float Kf) { _comms.sendAutotuneResult(Kp, Ki, Kd, Kf); },
             [this]() { _comms.sendError(ERROR_CODE_AUTOTUNE_TIMEOUT); });
+        heater2->setHeatingCheckTime(60000);
         heaterCoordinator = std::make_unique<HeaterCoordinator>(heater.get(), heater2.get());
         refill = std::make_unique<SimpleRelay>(_config.refillPin, _config.valveOn);
         aux = std::make_unique<SimpleRelay>(_config.auxPin, _config.valveOn);
@@ -211,6 +224,7 @@ void GaggiMateController::setup() {
                 ledController->setChannel(channel, brightness);
         });
     brewTemperature->setup();
+    heater->setHeatingCheckPump(pump->getPumpPowerPtr());
     heater->setup();
     valve->setup();
     pump->setup();
@@ -251,7 +265,7 @@ void GaggiMateController::setup() {
     // Output control is split into per-component, device-numbered messages. Each
     // arrives independently (or batched together in one frame for an atomic
     // update). Control messages feed the connection watchdog via handlePing().
-    _comms.onBoilerControl([this](uint8_t index, BoilerControlMode mode, float setpoint) {
+    _comms.onBoilerControl([this](uint8_t index, BoilerControlMode mode, float setpoint, bool steaming) {
         if (!_config.capabilites.dualBoiler && index > 0) {
             return;
         }
@@ -263,6 +277,7 @@ void GaggiMateController::setup() {
             return;
         }
         if (mode == BoilerControlMode::Temperature) {
+            target->setSteaming(steaming && !_config.capabilites.dualBoiler);
             if (_config.capabilites.dualBoiler && index == 1) {
                 steamRequestedSetpoint = setpoint;
                 target->setSetpoint(machineHardware.steam_level_enabled && (!steamLevelKnown || steamLevelLow) ? 0.0f : setpoint);
@@ -418,8 +433,12 @@ void GaggiMateController::loop() {
         _comms.sendMachineHardwareStatus(machineHardwareHash(machineHardware), hardwareSessionReady, hardwareConfigurationError);
     // Report a pre-existing fault after the encrypted comms session is established.
     // NONE also clears the display's old fault after a successful controller restart.
-    if (_comms.isConnected() && controllerErrorPending.exchange(false))
-        _comms.sendError(errorState);
+    if (_comms.isConnected() && controllerErrorPending.exchange(false)) {
+        if (errorState == ERROR_CODE_RUNAWAY)
+            _comms.sendError(temperatureError);
+        else
+            _comms.sendError(errorState);
+    }
     unsigned long now = millis();
 
     // Keep zero tracking and idle display quantization out of the measurement
@@ -576,11 +595,17 @@ void GaggiMateController::handlePingTimeout() {
     errorState = ERROR_CODE_TIMEOUT;
 }
 
-void GaggiMateController::thermalRunawayShutdown() {
-    if (errorState == ERROR_CODE_RUNAWAY)
+void GaggiMateController::thermalRunawayShutdown(uint8_t boiler, const char *reason, float temperature, float target) {
+    if (temperatureFaultLatched.exchange(true))
         return;
     clearRetainedOutputDemands();
-    ESP_LOGE(LOG_TAG, "Thermal runaway detected! Turning off heater and pump!\n");
+    temperatureError.code = gaggimate_ErrorCode_ERROR_CODE_RUNAWAY;
+    temperatureError.boiler = boiler;
+    temperatureError.temperature = temperature;
+    temperatureError.target = target;
+    snprintf(temperatureError.detail, sizeof(temperatureError.detail), "%s", reason);
+    ESP_LOGE(LOG_TAG, "%s temperature fault: %s (T=%.2f target=%.2f). Turning off heater and pump!",
+             boiler == 1 ? "Steam" : "Brew", reason, temperature, target);
     // Turn off the heater and pump immediately
     this->heater->stop();
     this->pump->setPower(0);
@@ -595,7 +620,7 @@ void GaggiMateController::thermalRunawayShutdown() {
         this->alt->set(false);
     }
     errorState = ERROR_CODE_RUNAWAY;
-    _comms.sendError(ERROR_CODE_RUNAWAY);
+    _comms.sendError(temperatureError);
 }
 
 void GaggiMateController::sendSensorData() {

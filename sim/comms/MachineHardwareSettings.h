@@ -5,6 +5,7 @@
 
 namespace gm {
 using MachineHardwareSettings = gaggimate_MachineHardwareSettings;
+using Error = gaggimate_Error;
 }
 
 #ifndef NANOPBCOMM_MESSAGES_H

@@ -356,7 +356,8 @@ void Controller::setupBluetooth() {
         buttons.setConfig(buttonConfig()); // settings may have changed since the last edge
         buttons.onRawState(index, pressed, millis());
     });
-    comms.onError([this](int error) {
+    comms.onError([this](const gm::Error &fault) {
+        const int error = static_cast<int>(fault.code);
         // Autotune timeout = info-level, not runaway. Controller already
         // preserved NVS PID. Clear autotuning flag, fire dedicated Web UI
         // event. Don't latch this->error (would gate future setupBluetooth).
@@ -366,12 +367,26 @@ void Controller::setupBluetooth() {
             pluginManager->trigger("controller:autotune:failed");
             return;
         }
+        if (error != ERROR_CODE_TIMEOUT) {
+            std::lock_guard<std::mutex> guard(errorDetailMutex);
+            controllerErrorDetail = "";
+            if (error == ERROR_CODE_RUNAWAY && fault.detail[0]) {
+                controllerErrorDetail = String(fault.boiler == 1 ? "Steam: " : "Brew: ") + fault.detail;
+                if (std::isfinite(fault.temperature) && fault.temperature > 0.0f) {
+                    const float offset = fault.boiler == 0 ? settings.getTemperatureOffset() : 0.0f;
+                    char values[64];
+                    snprintf(values, sizeof(values), " (T=%.1fC, target=%.1fC)", fault.temperature - offset,
+                             fault.target > 0.0f ? fault.target - offset : 0.0f);
+                    controllerErrorDetail += values;
+                }
+            }
+        }
         if (error != ERROR_CODE_TIMEOUT && error != this->error) {
             this->error = error;
             deactivate();
             setMode(MODE_STANDBY);
             pluginManager->trigger(F("controller:error"));
-            ESP_LOGE(LOG_TAG, "Received error %d", error);
+            ESP_LOGE(LOG_TAG, "Received error %d: %s", error, getSystemStateMessage().c_str());
         }
     });
     comms.onAutotuneResult([this](float Kp, float Ki, float Kd, float Kf) {
@@ -793,8 +808,13 @@ String Controller::getSystemStateMessage() const {
     case SYSTEM_PROTOCOL_MISMATCH:
         return systemInfo.protocolVersion > gm_proto::PROTOCOL_VERSION ? "Version mismatch, update display"
                                                                        : "Version mismatch, update controller";
-    case SYSTEM_ERROR:
-        return error == ERROR_CODE_RUNAWAY ? "Temperature error, restart..." : "Unknown error";
+    case SYSTEM_ERROR: {
+        std::lock_guard<std::mutex> guard(errorDetailMutex);
+        if (error == ERROR_CODE_RUNAWAY)
+            return controllerErrorDetail.isEmpty() ? String("Temperature error, restart...")
+                                                   : String("Temperature error - ") + controllerErrorDetail;
+        return "Unknown error";
+    }
     case SYSTEM_WAITING_CONTROLLER:
         return "Waiting for controller...";
     case SYSTEM_STARTING:
@@ -1102,6 +1122,7 @@ void Controller::updateControl() {
     BoilerCommand boiler;
     boiler.index = 0;
     boiler.setpoint = targetTemp;
+    boiler.steaming = mode == MODE_STEAM && !systemInfo.capabilities.dualBoiler;
     PumpCommand pump;
     pump.index = 0;
     RelayCommand relay; // index 0 = brew valve
@@ -1144,7 +1165,7 @@ void Controller::updateControl() {
     size_t count = 0;
     const bool full = !controlStateSent.exchange(true); // claim the flag first so a concurrent reset is never lost
     if (full || boiler != lastBoiler)
-        batch[count++] = comms.buildBoilerControl(boiler.index, boiler.mode, boiler.setpoint);
+        batch[count++] = comms.buildBoilerControl(boiler.index, boiler.mode, boiler.setpoint, boiler.steaming);
 
     if (systemInfo.capabilities.dualBoiler) {
         float targetSteamTemp = getTargetSteamTemp();

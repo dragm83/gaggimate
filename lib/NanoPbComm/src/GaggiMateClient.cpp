@@ -121,12 +121,13 @@ gm::Payload GaggiMateClient::buildPing() {
     return p;
 }
 
-gm::Payload GaggiMateClient::buildBoilerControl(uint8_t index, BoilerControlMode mode, float setpoint) {
+gm::Payload GaggiMateClient::buildBoilerControl(uint8_t index, BoilerControlMode mode, float setpoint, bool steaming) {
     gm::Payload p = gaggimate_Payload_init_zero;
     p.which_content = gaggimate_Payload_boiler_tag;
     p.content.boiler.index = index;
     p.content.boiler.mode = static_cast<gm::BoilerMode>(mode);
     p.content.boiler.setpoint = setpoint;
+    p.content.boiler.steaming = steaming;
     return p;
 }
 
@@ -341,6 +342,6 @@ void GaggiMateClient::registerHandlers() {
     });
     _endpoint.on(gaggimate_Payload_error_tag, [this](const gm::Payload &p) {
         if (_errorCb)
-            _errorCb(static_cast<int>(p.content.error.code));
+            _errorCb(p.content.error);
     });
 }

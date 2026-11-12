@@ -353,6 +353,8 @@ class Controller {
     unsigned long steamRefillClearedAt = 0;
     bool steamRefillPostClear = false;
     int error = 0;
+    mutable std::mutex errorDetailMutex;
+    String controllerErrorDetail;
 
     // Bluetooth scale connection monitoring
     VolumetricMeasurementSource currentVolumetricSource = VolumetricMeasurementSource::INACTIVE;

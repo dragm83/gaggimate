@@ -17,7 +17,7 @@ class GaggiMateServer {
   public:
     using ConnectionCallback = std::function<void(bool connected)>;
     using PingCallback = std::function<void()>;
-    using BoilerCallback = std::function<void(uint8_t index, BoilerControlMode mode, float setpoint)>;
+    using BoilerCallback = std::function<void(uint8_t index, BoilerControlMode mode, float setpoint, bool steaming)>;
     using PumpCallback = std::function<void(uint8_t index, PumpControlMode mode, float power, float pressure, float flow)>;
     // Binary output: index 0 = brew valve, index 1 = alt relay.
     using RelayCallback = std::function<void(uint8_t index, bool open)>;
@@ -69,6 +69,7 @@ class GaggiMateServer {
                               bool cell2Valid = false);
     void sendTofMeasurement(uint32_t distance);
     void sendError(int code);
+    void sendError(const gm::Error &error);
 
     // Drop the active link; the ping watchdog uses this so the display sees a real disconnect, not an in-band error.
     void disconnect();

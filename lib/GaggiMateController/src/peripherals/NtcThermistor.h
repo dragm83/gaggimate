@@ -13,7 +13,6 @@ constexpr float DEFAULT_BETA = 3950.0f; // Beta value
 constexpr float To = 298.15f;           // Temperature in Kelvin for 25 degree Celsius
 constexpr float DEFAULT_RO = 100000.0f; // Resistance of Thermistor at 25 degree Celsius
 
-using temperature_error_callback_t = std::function<void()>;
 
 class NtcThermistor : public TemperatureSensor {
   public:

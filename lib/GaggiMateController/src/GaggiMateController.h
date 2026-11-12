@@ -46,7 +46,7 @@ class GaggiMateController {
     void handlePing();
     void handlePingTimeout(void);
     void stopOutputs();
-    void thermalRunawayShutdown(void);
+    void thermalRunawayShutdown(uint8_t boiler, const char *reason, float temperature, float target);
     void startPidAutotune(void);
     void stopPidAutotune(void);
     void sendSensorData(void);
@@ -107,6 +107,8 @@ class GaggiMateController {
     unsigned long lastLedHealthCheck = 0;
     unsigned long lastTankLevelSend = 0;
     size_t errorState = ERROR_CODE_NONE;
+    std::atomic<bool> temperatureFaultLatched{false};
+    gm::Error temperatureError = gaggimate_Error_init_zero;
 
     const char *LOG_TAG = "GaggiMateController";
 };

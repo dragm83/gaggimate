@@ -1,6 +1,7 @@
 #ifndef HEATER_H
 #define HEATER_H
 #include "Autotune/Autotune.h"
+#include "HeatingCheck.h"
 #include "Max31855Thermocouple.h"
 #include "TemperatureSensor.h"
 #include <SimplePID/SimplePID.h>
@@ -12,7 +13,7 @@
 constexpr float MAX_AUTOTUNE_TEMP = 125.0f;
 constexpr float TUNER_OUTPUT_SPAN = 1000.0f;
 
-using heater_error_callback_t = std::function<void()>;
+using heater_error_callback_t = std::function<void(const char *reason, float temperature, float target)>;
 using heater_autotune_fail_callback_t = std::function<void()>;
 // Kff = combinedKff = output units per watt (disturbance feedforward), derived
 // in Heater::loopAutotune as 1000 / heaterWattage when wattage > 0; 0 when the
@@ -26,6 +27,11 @@ class Heater {
     Heater(TemperatureSensor *sensor, uint8_t heaterPin, const heater_error_callback_t &error_callback,
            const pid_result_callback_t &pid_callback, const heater_autotune_fail_callback_t &autotune_fail_callback = nullptr);
     void setup();
+    // Configure before setup(): high-duty observation time to gain at least 2 degrees.
+    void setHeatingCheckTime(uint32_t ms) { heatingCheck.setHeatingTime(ms); }
+    void setSteaming(bool steaming) { this->steaming = steaming; }
+    // Attach only to the brew heater: water flow invalidates a no-rise observation.
+    void setHeatingCheckPump(float *power) { heatingCheckPumpPower = power; }
     void loop();
 
     void setSetpoint(float setpoint);
@@ -44,6 +50,7 @@ class Heater {
     void setFeedforwardScale(float combinedKff); // Set combined Kff value (output units per watt)
 
   private:
+    bool checkHeating();
     void setupPid();
     void setupAutotune(int testTimeSec, int windowSize, int heaterWattage);
     void loopPid();
@@ -64,6 +71,15 @@ class Heater {
     pid_result_callback_t pid_callback;
     heater_autotune_fail_callback_t autotune_fail_callback;
     HeaterCoordinator *coordinator = nullptr;
+
+    HeatingCheck heatingCheck;
+    float *heatingCheckPumpPower = nullptr;
+    std::atomic<bool> heatingFault{false};
+    std::atomic<bool> steaming{false};
+    portMUX_TYPE outputMux = portMUX_INITIALIZER_UNLOCKED;
+    uint32_t outputAccountedAt = 0;
+    uint32_t totalOnMs = 0;
+    bool outputOn = false;
 
     float temperature = 0.0f;
     float output = 0.0f;

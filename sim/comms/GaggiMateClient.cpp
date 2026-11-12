@@ -45,9 +45,9 @@ void GaggiMateClient::loop() {
 }
 
 gm::Payload GaggiMateClient::buildPing() { return {gm::Payload::Ping}; }
-gm::Payload GaggiMateClient::buildBoilerControl(uint8_t index, BoilerControlMode mode, float setpoint) {
+gm::Payload GaggiMateClient::buildBoilerControl(uint8_t index, BoilerControlMode mode, float setpoint, bool steaming) {
     gm::Payload p{gm::Payload::Boiler};
-    p.boiler = {index, mode, setpoint};
+    p.boiler = {index, mode, setpoint, steaming};
     return p;
 }
 gm::Payload GaggiMateClient::buildPumpControl(uint8_t index, PumpControlMode mode, float power, float pressure, float flow) {

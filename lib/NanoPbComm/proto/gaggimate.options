@@ -25,3 +25,6 @@ gaggimate.LedChannel.brightness int_size:IS_8
 gaggimate.LedChannel.effect int_size:IS_8
 gaggimate.LedChannel.min_brightness int_size:IS_8
 gaggimate.LedChannel.cycle_time_ms int_size:IS_16
+
+# Fault reasons are sent only when latched, not with periodic telemetry.
+gaggimate.Error.detail max_size:64

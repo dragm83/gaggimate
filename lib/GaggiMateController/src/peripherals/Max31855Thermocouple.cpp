@@ -29,7 +29,7 @@ void Max31855Thermocouple::setup() {
 void Max31855Thermocouple::loop() {
     if (errorCount >= MAX31855_MAX_ERRORS || temperature > MAX_SAFE_TEMP) {
         ESP_LOGE(LOG_TAG, "Thermocouple failure! Error Count: %d, Temperature: %.2f\n", errorCount, temperature);
-        error_callback();
+        error_callback(temperature > MAX_SAFE_TEMP ? "overtemperature" : "thermocouple read failure", temperature);
         return;
     }
     // If buffer has been filled up, remove the previous result from the error count

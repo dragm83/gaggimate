@@ -19,7 +19,7 @@ void NtcThermistor::fail(const char *reason) {
         return;
     _fault = true;
     ESP_LOGE(LOG_TAG, "NTC channel %u fault: %s (last temperature=%.2f)", _channel, reason, temperature);
-    error_callback();
+    error_callback(reason, temperature);
 }
 
 void NtcThermistor::setup() {
