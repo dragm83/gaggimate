@@ -15,6 +15,7 @@ class HeatingCheck {
     static constexpr uint32_t DUTY_WINDOW_MS = 5000;
     static constexpr uint32_t MIN_DUTY_PERCENT = 85;
     static constexpr uint32_t SENSOR_SETTLE_MS = 10000;
+    static constexpr uint32_t POST_HEATING_SETTLE_MS = 60000;
     static constexpr uint32_t OFF_MINIMUM_CONFIRM_MS = 1000;
     static constexpr uint32_t POST_PUMP_SETTLE_MS = 10000;
     static constexpr float STEAM_TARGET_MARGIN_C = 20.0f;
@@ -37,13 +38,17 @@ class HeatingCheck {
         const uint32_t poweredMs = totalOnMs - previousOnMs;
         previousOnMs = totalOnMs;
         if (on || poweredMs != 0) {
+            lastHeatingAt = now;
+            heatingSettling = true;
             offMinimum = temperature;
             offMinimumPending = false;
-        } else if (now - startedAt < SENSOR_SETTLE_MS) {
-            // Existing thermocouple filtering ramps from zero on startup.
+        } else if (now - startedAt < SENSOR_SETTLE_MS || (heatingSettling && now - lastHeatingAt <= POST_HEATING_SETTLE_MS)) {
+            // Follow sensor startup and residual heating for 60 seconds after
+            // output turns off, then use the settled temperature as the baseline.
             offMinimum = temperature;
             offMinimumPending = false;
         } else {
+            heatingSettling = false;
             // Confirm a lower baseline for a full second; a brief dip must not
             // turn recovery into an unexpected heating fault. Use the highest
             // reading in that interval, rather than capturing its lowest point.
@@ -62,7 +67,7 @@ class HeatingCheck {
             } else {
                 offMinimumPending = false;
             }
-            // Ten degrees of residual rise is allowed after output switches off.
+            // After settling, a rise above the confirmed minimum signals unexpected heating.
             if (temperature - offMinimum > MAX_OFF_RISE_C)
                 return Fault::UnexpectedRise;
         }
@@ -125,6 +130,8 @@ class HeatingCheck {
     float offMinimumCandidate = 0;
     uint32_t offMinimumStartedAt = 0;
     bool offMinimumPending = false;
+    uint32_t lastHeatingAt = 0;
+    bool heatingSettling = false;
     bool initialized = false;
     bool watchingRise = false;
     bool wasSteaming = false;
