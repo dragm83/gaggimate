@@ -1156,8 +1156,10 @@ void Controller::updateControl() {
         RelayCommand water; // index 3 = steam-pressure hot-water valve
         water.index = 3;
 
-        // On dual-boiler machines, steam pressure supplies the hot water. Opening
-        // the dedicated valve must not start the brew pump or create a PumpProcess.
+        const int waterFunction = settings.getWaterFunction();
+        const bool waterUsesPump = waterFunction == WATER_AUX_PUMP_1 || waterFunction == WATER_AUX_PUMP_2;
+        if (waterFunction == WATER_NONE || mode == MODE_STANDBY || (waterUsesPump && active))
+            waterValveActive = false;
         water.open = waterValveActive;
 
         const int steamRefillMode = settings.getSteamRefillMode();
@@ -1177,6 +1179,20 @@ void Controller::updateControl() {
             pump.power = 100;
             refill.open = true;
             handled = true;
+        }
+
+        // Automatic refill using the brew pump takes priority over pump-assisted hot water.
+        if (waterUsesPump && steamRefillMode == 1 && refill.open)
+            water.open = false;
+        if (water.open && waterFunction == WATER_AUX_PUMP_1) {
+            targetPressure = 0.0f;
+            targetFlow = 0.0f;
+            relay.open = false;
+            pump.mode = PumpControlMode::Power;
+            pump.power = 100;
+            handled = true;
+        } else if (water.open && waterFunction == WATER_AUX_PUMP_2) {
+            refill.open = true; // Pump 2 uses the steam refill output.
         }
 
         if (full || boiler2 != lastBoiler2)
@@ -1818,7 +1834,11 @@ void Controller::handleSteamButton(bool pressed) {
 
 void Controller::handleWaterButton(bool pressed) {
     if (systemInfo.capabilities.dualBoiler) {
-        if (getMode() == MODE_STANDBY) {
+        std::lock_guard<std::recursive_mutex> guard(processMutex);
+        const int waterFunction = settings.getWaterFunction();
+        const bool waterUsesPump = waterFunction == WATER_AUX_PUMP_1 || waterFunction == WATER_AUX_PUMP_2;
+        if (getMode() == MODE_STANDBY || waterFunction == WATER_NONE || (waterUsesPump && isActiveLocked())) {
+            waterValveActive = false;
             waterButtonPressed = false;
             return;
         }

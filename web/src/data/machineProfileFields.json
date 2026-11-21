@@ -259,6 +259,20 @@
     "hardware": true,
     "restart": false
   },
+  "waterFunction": {
+    "label": "Water Function",
+    "type": "integer",
+    "values": [0, 1, 2, 3],
+    "capability": "dualBoiler",
+    "hardware": true,
+    "restart": false,
+    "options": {
+      "0": "None",
+      "1": "Aux Only",
+      "2": "Aux + Pump 1",
+      "3": "Aux + Pump 2"
+    }
+  },
   "steamRefillMode": {
     "label": "Steam refill arrangement",
     "type": "integer",
