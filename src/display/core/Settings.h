@@ -375,6 +375,14 @@ class Settings {
         return "";
     };
     std::vector<String> getButtonBehaviorList() const { return buttonBehavior.get(); }
+    String getLongPressBehavior(int index) const {
+        if (index >= 0 && index < longPressBehavior.get().size())
+            return longPressBehavior.get()[index];
+        return "none";
+    }
+    std::vector<String> getLongPressBehaviorList() const { return longPressBehavior.get(); }
+    void setLongPressBehaviorList(const std::vector<String> &behaviors) { longPressBehavior.set(behaviors); }
+
     float getCommutationGain() const { return commutationGain.get(); }
     float getConvergenceGain() const { return convergenceGain.get(); }
     float getIntegralGain() const { return integralGain.get(); }
@@ -637,6 +645,7 @@ class Settings {
 
     Property<int> altRelayFunction{registry, "alt_relay", ALT_RELAY_GRIND}; // Default to grind
     Property<std::vector<String>> buttonBehavior{registry, "btnb", {"brew", "steam", "water"}};
+    Property<std::vector<String>> longPressBehavior{registry, "btnlp", {"flush", "none", "none"}};
 
     // Pump settings
     Property<String> pumpModelCoeffs{registry, "pmc", DEFAULT_PUMP_MODEL_COEFFS};

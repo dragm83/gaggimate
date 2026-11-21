@@ -1676,23 +1676,21 @@ void Controller::onVolumetricDelete() {
     }
 }
 
-// A long press on a momentary button that starts a shot (brew or a profile) flushes instead.
-static bool longPressFlushes(const String &behavior) {
-    return behavior != "" && behavior != "none" && behavior != "steam" && behavior != "water" && behavior != "flush";
-}
-
 ButtonHandler::Config Controller::buttonConfig() const {
     ButtonHandler::Config cfg;
     cfg.momentary = settings.isMomentaryButtons();
     const bool holdFlush = settings.getFlushDuration() == 0;
     for (uint8_t i = 0; i < ButtonHandler::BUTTON_COUNT; i++) {
         const String behavior = settings.getButtonBehavior(i);
-        cfg.longPress[i] = cfg.momentary && longPressFlushes(behavior);
-        cfg.clickOnPress[i] = holdFlush && behavior == "flush"; // a hold-to-flush has to start on press
+        const String held = settings.getLongPressBehavior(i);
+        cfg.longPress[i] = cfg.momentary && held != "" && held != "none";
+        cfg.clickOnPress[i] = !cfg.longPress[i] && holdFlush && behavior == "flush";
     }
     // Only pay the combo window when the virtual third button does something
     const String third = settings.getButtonBehavior(ButtonHandler::COMBO_BUTTON);
+    const String thirdHeld = settings.getLongPressBehavior(ButtonHandler::COMBO_BUTTON);
     cfg.combo = third != "" && third != "none";
+    cfg.combo = cfg.combo || (cfg.momentary && thirdHeld != "" && thirdHeld != "none");
     return cfg;
 }
 
@@ -1709,10 +1707,11 @@ void Controller::onButtonEvent(uint8_t index, ButtonHandler::Event event) {
         runButtonBehavior(behavior, false);
         break;
     case Event::LONG_PRESS:
-        handleFlushButton(true);
+        runButtonBehavior(settings.getLongPressBehavior(index), true);
         break;
     case Event::LONG_PRESS_END:
-        handleFlushButton(false);
+        if (settings.getLongPressBehavior(index) == "flush")
+            onFlushRelease();
         break;
     case Event::CLICK_END:
         if (behavior == "flush")
@@ -1733,8 +1732,21 @@ void Controller::runButtonBehavior(const String &behavior, bool pressed) {
         handleSteamButton(pressed);
     } else if (behavior == "water") {
         handleWaterButton(pressed);
+        // A momentary action completes on the click/hold event, not its later release.
+        if (pressed && settings.isMomentaryButtons() && systemInfo.capabilities.dualBoiler)
+            handleWaterButton(false);
     } else if (behavior == "flush") {
         handleFlushButton(pressed);
+    } else if (behavior == "tare") {
+        if (pressed) {
+            comms.tare();
+#ifndef GAGGIMATE_SIM
+            BLEScales.tare();
+#endif
+        }
+    } else if (behavior == "standby") {
+        if (pressed)
+            activateStandby();
     } else {
         handleProfileButton(pressed, behavior); // anything else is a profile id
     }

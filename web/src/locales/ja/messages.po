@@ -185,8 +185,8 @@ msgid "Actions for {label} profile"
 msgstr "{label} プロファイルの操作"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Activate this if your coffee machine is equipped with momentary buttons. A momentary button set to Brew or a profile starts a flush instead when held."
-msgstr "コーヒーマシンにモメンタリーボタンが付いている場合は有効にしてください。抽出またはプロファイルに設定したモメンタリーボタンを長押しすると、代わりにフラッシュが始まります。"
+msgid "Activate this if your coffee machine is equipped with momentary buttons."
+msgstr ""
 
 #: src/pages/Statistics/components/toolbar/subcomponents.jsx
 msgctxt "selected menu item"
@@ -655,8 +655,8 @@ msgid "Brew button"
 msgstr "抽出ボタン"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Brew Button Behavior"
-msgstr "抽出ボタンの動作"
+msgid "Brew Button"
+msgstr ""
 
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Brew Color"
@@ -2239,6 +2239,10 @@ msgstr "全体のメトリクス平均"
 msgid "Go Home"
 msgstr "ホームへ"
 
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Go to standby"
+msgstr ""
+
 #: src/pages/SetupWizard/WifiStep.jsx
 msgid "Good"
 msgstr "良好"
@@ -2399,6 +2403,10 @@ msgstr "量の多い順"
 msgctxt "flush duration"
 msgid "Hold"
 msgstr "長押し"
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Hold for 400 ms to trigger the assigned action instead of the primary action. Release to stop a hold-to-flush."
+msgstr ""
 
 #: src/pages/Settings/tabs/GeneralTab.jsx
 msgid "Hold runs the flush for as long as the button is held. The valve stays open for one more second after the pump stops."
@@ -2729,6 +2737,10 @@ msgstr "ローカルブラウザーストレージ (WEB)"
 #: src/pages/Statistics/components/StatisticsSearchHelp.jsx
 msgid "Local browser time is used."
 msgstr "ローカルブラウザーの時刻を使用します。"
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Long Press Function"
+msgstr ""
 
 #: src/pages/ShotHistory/index.jsx
 msgid "Longest Duration"
@@ -3844,6 +3856,10 @@ msgstr "前のショット"
 #: src/pages/ProfileEdit/ExtendedPhase.jsx
 msgid "Previous target"
 msgstr "前の目標"
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Primary Function"
+msgstr ""
 
 #: src/pages/ProfileList/index.jsx
 msgctxt "profile type"
@@ -5301,8 +5317,8 @@ msgid "Steam button"
 msgstr "スチームボタン"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Steam Button Behavior"
-msgstr "スチームボタンの動作"
+msgid "Steam Button"
+msgstr ""
 
 #: src/app/notifications.js
 msgid "Steam has been on for 5 minutes."
@@ -5497,6 +5513,10 @@ msgstr "プロファイルをタップすると選択できます。"
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Tare"
 msgstr "風袋引き"
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Tare Scales"
+msgstr ""
 
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Tare the scale, then place a known weight and calibrate each load cell."
@@ -6434,8 +6454,8 @@ msgid "Water button"
 msgstr "給湯ボタン"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Water Button Behavior"
-msgstr "給湯ボタンの動作"
+msgid "Water Button"
+msgstr ""
 
 #: src/pages/ProfileEdit/ExtendedPhaseTarget.jsx
 msgid "Water drawn"

@@ -185,8 +185,8 @@ msgid "Actions for {label} profile"
 msgstr "{label} 曲线的操作"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Activate this if your coffee machine is equipped with momentary buttons. A momentary button set to Brew or a profile starts a flush instead when held."
-msgstr "如果你的咖啡机配备的是自复位按钮，请启用此项。设置为冲煮或某条曲线的自复位按钮在长按时会改为执行冲洗。"
+msgid "Activate this if your coffee machine is equipped with momentary buttons."
+msgstr ""
 
 #: src/pages/Statistics/components/toolbar/subcomponents.jsx
 msgctxt "selected menu item"
@@ -655,8 +655,8 @@ msgid "Brew button"
 msgstr "冲煮按钮"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Brew Button Behavior"
-msgstr "冲煮按钮行为"
+msgid "Brew Button"
+msgstr ""
 
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Brew Color"
@@ -2239,6 +2239,10 @@ msgstr "全局指标平均值"
 msgid "Go Home"
 msgstr "返回首页"
 
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Go to standby"
+msgstr ""
+
 #: src/pages/SetupWizard/WifiStep.jsx
 msgid "Good"
 msgstr "良好"
@@ -2399,6 +2403,10 @@ msgstr "出液量最多"
 msgctxt "flush duration"
 msgid "Hold"
 msgstr "按住"
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Hold for 400 ms to trigger the assigned action instead of the primary action. Release to stop a hold-to-flush."
+msgstr ""
 
 #: src/pages/Settings/tabs/GeneralTab.jsx
 msgid "Hold runs the flush for as long as the button is held. The valve stays open for one more second after the pump stops."
@@ -2729,6 +2737,10 @@ msgstr "本地浏览器存储 (WEB)"
 #: src/pages/Statistics/components/StatisticsSearchHelp.jsx
 msgid "Local browser time is used."
 msgstr "使用本地浏览器时间。"
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Long Press Function"
+msgstr ""
 
 #: src/pages/ShotHistory/index.jsx
 msgid "Longest Duration"
@@ -3844,6 +3856,10 @@ msgstr "上一次萃取"
 #: src/pages/ProfileEdit/ExtendedPhase.jsx
 msgid "Previous target"
 msgstr "上一个目标"
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Primary Function"
+msgstr ""
 
 #: src/pages/ProfileList/index.jsx
 msgctxt "profile type"
@@ -5301,8 +5317,8 @@ msgid "Steam button"
 msgstr "蒸汽按钮"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Steam Button Behavior"
-msgstr "蒸汽按钮行为"
+msgid "Steam Button"
+msgstr ""
 
 #: src/app/notifications.js
 msgid "Steam has been on for 5 minutes."
@@ -5497,6 +5513,10 @@ msgstr "点按曲线即可选择。"
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Tare"
 msgstr "去皮"
+
+#: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
+msgid "Tare Scales"
+msgstr ""
 
 #: src/pages/Settings/tabs/MachineTab.jsx
 msgid "Tare the scale, then place a known weight and calibrate each load cell."
@@ -6434,8 +6454,8 @@ msgid "Water button"
 msgstr "热水按钮"
 
 #: src/pages/Settings/tabs/PhysicalButtonsSection.jsx
-msgid "Water Button Behavior"
-msgstr "热水按钮行为"
+msgid "Water Button"
+msgstr ""
 
 #: src/pages/ProfileEdit/ExtendedPhaseTarget.jsx
 msgid "Water drawn"
