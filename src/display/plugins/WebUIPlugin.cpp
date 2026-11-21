@@ -420,16 +420,18 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
              request->arg("steamRefillMode").toInt() != currentSettings.getSteamRefillMode()) ||
             (request->hasArg("steamRefillPostClearSeconds") &&
              request->arg("steamRefillPostClearSeconds").toInt() != currentSettings.getSteamRefillPostClearSeconds());
+        const bool waterRequest = request->hasArg("waterFunction") &&
+                                  request->arg("waterFunction").toInt() != currentSettings.getWaterFunction();
         const bool profileChanged =
             request->hasArg("machineProfileSelection") &&
             request->arg("machineProfileSelection") != controller->getSettings().getMachineProfileSelection();
-        if ((profileChanged || hardwareRequest || refillRequest) &&
+        if ((profileChanged || hardwareRequest || refillRequest || waterRequest) &&
             (controller->isActive() || controller->isUpdating() || controller->isAutotuning())) {
             request->send(409, "application/json",
                           "{\"error\":\"Stop the current process before applying a machine configuration\"}");
             return;
         }
-        if (profileChanged || hardwareRequest || refillRequest)
+        if (profileChanged || hardwareRequest || refillRequest || waterRequest)
             controller->activateStandby();
         bool saved = false;
         controller->getSettings().batchUpdate([request, &saved, &profileError](Settings *settings) {
@@ -474,6 +476,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setBaristaLedMinBrightness(request->arg("baristaLedMinBrightness").toInt());
             if (request->hasArg("baristaLedCycleTimeMs"))
                 settings->setBaristaLedCycleTimeMs(request->arg("baristaLedCycleTimeMs").toInt());
+            if (request->hasArg("waterFunction"))
+                settings->setWaterFunction(request->arg("waterFunction").toInt());
             if (request->hasArg("steamRefillMode"))
                 settings->setSteamRefillMode(request->arg("steamRefillMode").toInt());
             if (request->hasArg("steamRefillPostClearSeconds"))
@@ -762,6 +766,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
         doc["baristaLedBrightness"] = settings.getBaristaLedBrightness();
         doc["baristaLedMinBrightness"] = settings.getBaristaLedMinBrightness();
         doc["baristaLedCycleTimeMs"] = settings.getBaristaLedCycleTimeMs();
+        doc["waterFunction"] = settings.getWaterFunction();
         doc["steamRefillMode"] = settings.getSteamRefillMode();
         doc["steamRefillPostClearSeconds"] = settings.getSteamRefillPostClearSeconds();
         writeMachineHardware(doc.as<JsonObject>(), settings.getMachineHardware());

@@ -10,6 +10,7 @@ constexpr int BREW_MIN_DURATION_MS = 5000;
 constexpr int BREW_MAX_DURATION_MS = 300000;
 constexpr int BREW_SAFETY_DURATION_MS = BREW_MAX_DURATION_MS;
 constexpr double BREW_MIN_VOLUMETRIC = 5.0;
+enum WaterFunction { WATER_NONE = 0, WATER_AUX_ONLY = 1, WATER_AUX_PUMP_1 = 2, WATER_AUX_PUMP_2 = 3 };
 constexpr int DEFAULT_FLUSH_DURATION_S = 5;
 constexpr int MAX_FLUSH_DURATION_S = 60;
 constexpr int FLUSH_HOLD_MAX_DURATION_S = 60; // safety cap for hold-to-flush (flush duration 0)

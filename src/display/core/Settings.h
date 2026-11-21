@@ -149,6 +149,11 @@ class Settings {
                 baristaLedMinBrightness.set(value);
         }
     }
+    int getWaterFunction() const { return waterFunction.get(); }
+    void setWaterFunction(int value) {
+        if (value >= WATER_NONE && value <= WATER_AUX_PUMP_2)
+            waterFunction.set(value);
+    }
     int getSteamRefillMode() const { return steamRefillMode.get(); }
     int getSteamRefillPostClearSeconds() const { return steamRefillPostClearSeconds.get(); }
     int getSteamLevelDebounceChecks() const { return steamLevelDebounceChecks.get(); }
@@ -508,6 +513,7 @@ class Settings {
     Property<int> baristaLedBrightness{registry, "led_bar_bri", 255};
     Property<int> baristaLedMinBrightness{registry, "led_bar_min", 0};
     Property<int> baristaLedCycleTimeMs{registry, "led_bar_ms", DEFAULT_LED_CYCLE_MS};
+    Property<int> waterFunction{registry, "water_fn", WATER_AUX_ONLY};
     Property<int> steamRefillMode{registry, "rf_mode", 1};
     Property<int> steamRefillPostClearSeconds{registry, "rf_post", 0};
     Property<int> steamLevelDebounceChecks{registry, "sl_db", 25};

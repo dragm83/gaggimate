@@ -91,13 +91,15 @@ export function MachineProfileFields({ formData, setFields, hardwareOnly = false
   const hardware = fields.filter(([key, field]) => inHardwareSection(key, field));
   const ordinary = fields.filter(([key, field]) => !inHardwareSection(key, field));
   const toggles = hardware.filter(([, field]) => field.type === 'boolean');
-  const defaults = hardware.filter(([key]) => key === 'defaultSteamMode');
+  const defaults = hardware.filter(([key]) => ['defaultSteamMode', 'waterFunction'].includes(key));
   const lights = hardware.filter(
     ([key]) => key === 'systemLedFunction' || key === 'baristaLedFunction',
   );
   const advanced = hardware.filter(
     ([key, field]) =>
-      field.type !== 'boolean' && !LIGHT_FIELDS.includes(key) && key !== 'defaultSteamMode',
+      field.type !== 'boolean' &&
+      !LIGHT_FIELDS.includes(key) &&
+      !['defaultSteamMode', 'waterFunction'].includes(key),
   );
 
   const renderField = ([key, field]) => {
