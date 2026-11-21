@@ -16,8 +16,6 @@ constexpr uint8_t PHASE_FAILED = 5;
 using phase_callback_t = std::function<void(uint8_t phase)>;
 using progress_callback_t = std::function<void(uint8_t phase, int progress)>;
 
-extern const uint8_t x509_crt_imported_bundle_bin_start[] asm("_binary_x509_crt_bundle_start");
-
 class GitHubOTA {
   public:
     GitHubOTA(const String &display_version, const String &controller_version, const String &release_url,
@@ -29,7 +27,7 @@ class GitHubOTA {
     void checkForUpdates();
     bool isUpdateAvailable(bool controller = false) const;
     String getCurrentVersion() const;
-    void update(bool controller = true, bool display = true, NimBLEClient *client = nullptr);
+    void update(bool controller = true, bool display = true, OtaSender *controllerLink = nullptr);
     void setReleaseUrl(const String &release_url, bool allowDowngrade = false,
                        const String &controller_firmware_name = "board-firmware.bin");
     void setControllerVersion(const String &controller_version);

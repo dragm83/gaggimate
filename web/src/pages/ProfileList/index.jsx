@@ -21,7 +21,16 @@ import { ExtendedProfileChart } from '../../components/ExtendedProfileChart.jsx'
 import { useConfirmAction } from '../../hooks/useConfirmAction.js';
 import { ProfileAddCard } from './ProfileAddCard.jsx';
 import { ApiServiceContext, machine } from '../../services/ApiService.js';
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'preact/hooks';
+import { memo } from 'preact/compat';
 import { Spinner } from '../../components/Spinner.jsx';
 import Card from '../../components/Card.jsx';
 import { parseProfile } from './utils.js';
@@ -66,13 +75,29 @@ const PhaseLabels = {
   brew: msg({ message: 'Brew', context: 'phase type' }),
 };
 
+// Delay function for turning icons into spinners while awaiting response
+function useDelayedValue(value, delayMs) {
+  const [delayed, setDelayed] = useState();
+  useEffect(() => {
+    if (!value) {
+      setDelayed(undefined);
+      return undefined;
+    }
+    const timer = setTimeout(() => setDelayed(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return value ? delayed : undefined;
+}
+
+const PENDING_VISUAL_DELAY_MS = 200;
+
 function ProfileCard({
   data,
   onDelete,
   onSelect,
-  onFavorite,
-  onUnfavorite,
+  onSetFavorite,
   onDuplicate,
+  pending,
   favoriteDisabled,
   unfavoriteDisabled,
   disabledDrag,
@@ -83,6 +108,8 @@ function ProfileCard({
   isLast,
 }) {
   const { t } = useLingui();
+  const visiblePending = useDelayedValue(pending, PENDING_VISUAL_DELAY_MS);
+  const busy = Boolean(pending);
   const { armed: confirmDelete, armOrRun: confirmOrDelete } = useConfirmAction(4000);
   const [tooltipsDisabled, setTooltipsDisabled] = useState(false);
 
@@ -108,11 +135,12 @@ function ProfileCard({
   const typeClass = data.type === 'pro' ? 'badge badge-primary' : 'badge badge-neutral';
   const favoriteToggleDisabled = data.favorite ? unfavoriteDisabled : favoriteDisabled;
   const favoriteToggleClass = favoriteToggleDisabled ? 'opacity-50 cursor-not-allowed' : '';
+  const deleteDisabled = data.selected;
+  const deleteClass = deleteDisabled ? 'opacity-50 cursor-not-allowed' : '';
 
   const onFavoriteToggle = useCallback(() => {
-    if (data.favorite && !unfavoriteDisabled) onUnfavorite(data.id);
-    else if (!data.favorite && !favoriteDisabled) onFavorite(data.id);
-  }, [data.favorite, unfavoriteDisabled, favoriteDisabled, onUnfavorite, onFavorite, data.id]);
+    if (!favoriteToggleDisabled) onSetFavorite(data.id, !data.favorite);
+  }, [favoriteToggleDisabled, onSetFavorite, data.id, data.favorite]);
 
   const onDownload = useCallback(async () => {
     const download = await withExportedImage(data);
@@ -174,7 +202,7 @@ function ProfileCard({
     setMenuOpen(v => !v);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!menuOpen) return;
     // Position now (DOM is mounted because the conditional render put the div
     // in the tree this tick) and then re-position on resize/scroll.
@@ -205,30 +233,40 @@ function ProfileCard({
   }, [menuOpen, positionPopover]);
 
   return (
-    <Card sm={12} role='listitem' className='profile-card-container mb-2'>
+    <Card
+      sm={12}
+      role='listitem'
+      className={`profile-card-container mb-2 ${pending ? 'pointer-events-none' : ''}`}
+    >
       <div
-        className='flex flex-row items-center'
+        className={`flex flex-row items-center transition-opacity ${visiblePending ? 'opacity-50' : ''}`}
         role='group'
         aria-labelledby={`profile-${data.id}-title`}
+        aria-busy={Boolean(pending)}
       >
         <div className='flex flex-grow flex-col overflow-hidden'>
           <div className='mx-2 flex flex-row items-center gap-2 align-middle'>
             <div className='flex min-w-0 flex-grow flex-row items-center gap-4'>
               {/* CheckBox */}
-              <div>
-                <label className='cursor-pointer'>
-                  <input
-                    checked={data.selected}
-                    type='checkbox'
-                    onClick={e => {
-                      // Keep the box driven by data.selected: the browser must not toggle it itself
-                      e.preventDefault();
-                      onSelect(data.id, data.selected);
-                    }}
-                    className='checkbox checkbox-success checkbox-sm'
-                    aria-label={t`Select ${label} profile`}
-                  />
-                </label>
+              <div className='flex size-5 items-center justify-center'>
+                {visiblePending === 'select' ? (
+                  <Spinner size={4} />
+                ) : (
+                  <label className='cursor-pointer'>
+                    <input
+                      checked={data.selected}
+                      type='checkbox'
+                      onClick={e => {
+                        // Keep the box driven by data.selected: the browser must not toggle it itself
+                        e.preventDefault();
+                        onSelect(data.id, data.selected);
+                      }}
+                      disabled={busy}
+                      className='checkbox checkbox-success checkbox-sm'
+                      aria-label={t`Select ${label} profile`}
+                    />
+                  </label>
+                )}
               </div>
               {/* Label and Type */}
               <div className='flex flex-row flex-wrap items-center gap-4'>
@@ -279,13 +317,18 @@ function ProfileCard({
                   <button
                     ref={kebabRef}
                     onClick={toggleMenu}
+                    disabled={busy}
                     className='btn btn-sm btn-ghost sm:hidden'
                     aria-label={t`Open actions menu for ${label} profile`}
                     aria-haspopup='menu'
                     aria-expanded={menuOpen}
                     aria-controls={`profile-${data.id}-menu`}
                   >
-                    <FontAwesomeIcon icon={faEllipsisVertical} />
+                    {visiblePending ? (
+                      <Spinner size={4} />
+                    ) : (
+                      <FontAwesomeIcon icon={faEllipsisVertical} />
+                    )}
                   </button>
                   {menuOpen && (
                     <div
@@ -293,6 +336,7 @@ function ProfileCard({
                       ref={popoverRef}
                       role='menu'
                       className='bg-base-100 rounded-box z-50 w-56 p-2 shadow'
+                      style={{ position: 'fixed', top: 0, left: 0 }}
                       onKeyDown={e => {
                         if (e.key === 'Escape') closeMenu();
                       }}
@@ -305,7 +349,7 @@ function ProfileCard({
                               onFavoriteToggle();
                               closeMenu();
                             }}
-                            disabled={favoriteToggleDisabled}
+                            disabled={favoriteToggleDisabled || busy}
                             className={`justify-start ${favoriteToggleClass}`}
                             aria-label={
                               data.favorite
@@ -352,6 +396,7 @@ function ProfileCard({
                               onDownload();
                               closeMenu();
                             }}
+                            disabled={busy}
                             className='text-primary justify-start'
                             aria-label={t`Export ${label} profile`}
                           >
@@ -368,6 +413,7 @@ function ProfileCard({
                               onDuplicate(data.id);
                               closeMenu();
                             }}
+                            disabled={busy}
                             className='text-success justify-start'
                             aria-label={t`Duplicate ${label} profile`}
                           >
@@ -387,7 +433,8 @@ function ProfileCard({
                                   closeMenu();
                                 });
                               }}
-                              className={`justify-start ${confirmDelete ? 'bg-error text-error-content rounded font-semibold' : 'text-error'}`}
+                              disabled={deleteDisabled || busy}
+                              className={`justify-start ${deleteClass} ${confirmDelete ? 'bg-error text-error-content rounded font-semibold' : 'text-error'}`}
                               aria-label={
                                 confirmDelete
                                   ? t`Confirm deletion of ${label} profile`
@@ -414,7 +461,7 @@ function ProfileCard({
                   <Tooltip content={data.favorite ? t`Remove from favorites` : t`Add to favorites`}>
                     <button
                       onClick={onFavoriteToggle}
-                      disabled={favoriteToggleDisabled}
+                      disabled={favoriteToggleDisabled || busy}
                       className={`btn btn-sm btn-ghost ${favoriteToggleClass}`}
                       aria-label={
                         data.favorite
@@ -423,7 +470,11 @@ function ProfileCard({
                       }
                       aria-pressed={data.favorite}
                     >
-                      <FontAwesomeIcon icon={faStar} className={bookmarkClass} />
+                      {visiblePending === 'favorite' ? (
+                        <Spinner size={4} />
+                      ) : (
+                        <FontAwesomeIcon icon={faStar} className={bookmarkClass} />
+                      )}
                     </button>
                   </Tooltip>
                   <Tooltip content={t`Edit profile`}>
@@ -447,6 +498,7 @@ function ProfileCard({
                   <Tooltip content={t`Export profile`}>
                     <button
                       onClick={onDownload}
+                      disabled={busy}
                       className='btn btn-sm btn-ghost text-primary'
                       aria-label={t`Export ${label} profile`}
                     >
@@ -456,26 +508,44 @@ function ProfileCard({
                   <Tooltip content={t`Duplicate profile`}>
                     <button
                       onClick={() => onDuplicate(data.id)}
+                      disabled={busy}
                       className='btn btn-sm btn-ghost text-success'
                       aria-label={t`Duplicate ${label} profile`}
                     >
-                      <FontAwesomeIcon icon={faCopy} />
+                      {visiblePending === 'duplicate' ? (
+                        <Spinner size={4} />
+                      ) : (
+                        <FontAwesomeIcon icon={faCopy} />
+                      )}
                     </button>
                   </Tooltip>
                   {!isSystem && (
-                    <Tooltip content={confirmDelete ? t`Click to confirm` : t`Delete profile`}>
+                    <Tooltip
+                      content={
+                        deleteDisabled
+                          ? t`The selected profile can't be deleted`
+                          : confirmDelete
+                            ? t`Click to confirm`
+                            : t`Delete profile`
+                      }
+                    >
                       <button
                         onClick={() => {
                           confirmOrDelete(() => onDelete(data.id));
                         }}
-                        className={`btn btn-sm btn-ghost ${confirmDelete ? 'bg-error text-error-content' : 'text-error'}`}
+                        disabled={deleteDisabled || busy}
+                        className={`btn btn-sm btn-ghost ${deleteClass} ${confirmDelete ? 'bg-error text-error-content' : 'text-error'}`}
                         aria-label={
                           confirmDelete
                             ? t`Confirm deletion of ${label} profile`
                             : t`Delete ${label} profile`
                         }
                       >
-                        <FontAwesomeIcon icon={faTrashCan} />
+                        {visiblePending === 'delete' ? (
+                          <Spinner size={4} />
+                        ) : (
+                          <FontAwesomeIcon icon={faTrashCan} />
+                        )}
                         {confirmDelete && (
                           <span className='ml-2 font-semibold'>
                             <Trans>Confirm</Trans>
@@ -521,7 +591,7 @@ function ProfileCard({
                 <Tooltip content={t`Move to top`} disabled={isDragging || tooltipsDisabled}>
                   <button
                     onClick={handleMoveTop}
-                    disabled={isFirst}
+                    disabled={isFirst || busy}
                     className='drag-to-top btn btn-sm btn-ghost'
                     aria-label={t`Move ${label} to top`}
                     aria-disabled={isFirst}
@@ -542,7 +612,7 @@ function ProfileCard({
                 <Tooltip content={t`Move to bottom`} disabled={isDragging || tooltipsDisabled}>
                   <button
                     onClick={handleMoveBottom}
-                    disabled={isLast}
+                    disabled={isLast || busy}
                     className='drag-to-bottom btn btn-sm btn-ghost'
                     aria-label={t`Move ${label} to bottom`}
                     aria-disabled={isLast}
@@ -630,6 +700,9 @@ function SimpleStep(props) {
     </div>
   );
 }
+
+// Cards whose props did not change skip rendering, e.g. on another card's select or favorite (GM-292)
+const MemoProfileCard = memo(ProfileCard);
 
 // Profile images only exist with an SD card; without one the export carries no "image" field.
 async function withExportedImage(profile) {
@@ -866,13 +939,34 @@ export function ProfileList() {
     };
   }, [loading, searchTerm, onDragStart, onDragChange, onDragEnd]);
 
+  const [pendingById, setPendingById] = useState({});
+  const withPending = useCallback(async (id, kind, task) => {
+    setPendingById(prev => ({ ...prev, [id]: kind }));
+    try {
+      await task();
+    } finally {
+      setPendingById(prev => {
+        const { [id]: _done, ...rest } = prev;
+        return rest;
+      });
+    }
+  }, []);
+
   const onDelete = useCallback(
-    async id => {
-      setLoading(true);
-      await apiService.request({ tp: 'req:profiles:delete', id });
-      await invalidateProfiles();
-    },
-    [apiService, setLoading, invalidateProfiles],
+    id =>
+      withPending(id, 'delete', async () => {
+        try {
+          const response = await apiService.request({ tp: 'req:profiles:delete', id });
+          if (response?.error) {
+            await invalidateProfiles();
+            return;
+          }
+          setProfiles(prev => prev.filter(p => p.id !== id));
+        } catch {
+          await invalidateProfiles();
+        }
+      }),
+    [apiService, setProfiles, invalidateProfiles, withPending],
   );
 
   // onSelect will exit early if the requested id is the same as the pending id
@@ -883,48 +977,70 @@ export function ProfileList() {
       if (pendingSelectionRef.current === id) return;
       if (alreadySelected && pendingSelectionRef.current === null) return;
       pendingSelectionRef.current = id;
-      try {
-        await apiService.request({ tp: 'req:profiles:select', id });
-      } finally {
-        if (pendingSelectionRef.current === id) pendingSelectionRef.current = null;
-      }
+      return withPending(id, 'select', async () => {
+        try {
+          await apiService.request({ tp: 'req:profiles:select', id });
+        } catch {
+          // Timeout or closed socket: the checkbox simply stays where it was.
+        } finally {
+          if (pendingSelectionRef.current === id) pendingSelectionRef.current = null;
+        }
+      });
     },
-    [apiService],
+    [apiService, withPending],
   );
 
-  const onFavorite = useCallback(
-    async id => {
-      setLoading(true);
-      await apiService.request({ tp: 'req:profiles:favorite', id });
-      await invalidateProfiles();
+  const setFavorite = useCallback(
+    (id, favorite) => {
+      const apply = value =>
+        setProfiles(prev => prev.map(p => (p.id === id ? { ...p, favorite: value } : p)));
+      apply(favorite);
+      return withPending(id, 'favorite', async () => {
+        try {
+          const response = await apiService.request({
+            tp: favorite ? 'req:profiles:favorite' : 'req:profiles:unfavorite',
+            id,
+          });
+          if (response?.error) {
+            await invalidateProfiles();
+            return;
+          }
+          apply(favorite);
+        } catch {
+          // A thrown request has an unknown outcome (the machine may have applied it), so resync
+          // from the machine instead of guessing a rollback.
+          await invalidateProfiles();
+        }
+      });
     },
-    [apiService, setLoading, invalidateProfiles],
+    [apiService, setProfiles, invalidateProfiles, withPending],
   );
 
-  const onUnfavorite = useCallback(
-    async id => {
-      setLoading(true);
-      await apiService.request({ tp: 'req:profiles:unfavorite', id });
-      await invalidateProfiles();
-    },
-    [apiService, setLoading, invalidateProfiles],
-  );
+  // Read through a ref so onDuplicate keeps its identity when the list changes
+  const profilesRef = useRef(profiles);
+  profilesRef.current = profiles;
 
+  // The machine assigns the new id and may favorite the copy on its own, so the list is reloaded
+  // quietly (no page spinner) once the copy is saved, while the source card shows a spinner.
   const onDuplicate = useCallback(
-    async id => {
-      setLoading(true);
-      const original = profiles.find(p => p.id === id);
-      if (original) {
-        const copy = { ...original };
-        delete copy.id;
-        delete copy.selected;
-        delete copy.favorite;
-        copy.label = `${original.label} Copy`;
-        await apiService.request({ tp: 'req:profiles:save', profile: copy });
-      }
-      await invalidateProfiles();
-    },
-    [apiService, profiles, setLoading, invalidateProfiles],
+    id =>
+      withPending(id, 'duplicate', async () => {
+        const original = profilesRef.current.find(p => p.id === id);
+        if (original) {
+          const copy = { ...original };
+          delete copy.id;
+          delete copy.selected;
+          delete copy.favorite;
+          copy.label = `${original.label} Copy`;
+          try {
+            await apiService.request({ tp: 'req:profiles:save', profile: copy });
+          } catch {
+            // Resynced below.
+          }
+        }
+        await invalidateProfiles();
+      }),
+    [apiService, invalidateProfiles, withPending],
   );
 
   const onExport = useCallback(async () => {
@@ -1083,15 +1199,15 @@ export function ProfileList() {
         {profilesToShow
           .filter(p => (activeTab === 'utility' ? p.utility : !p.utility))
           .map((data, idx, filtered) => (
-            <ProfileCard
+            <MemoProfileCard
               key={data.id}
               data={data}
               onDelete={onDelete}
+              pending={pendingById[data.id]}
               onSelect={onSelect}
               favoriteDisabled={favoriteDisabled}
               unfavoriteDisabled={unfavoriteDisabled}
-              onUnfavorite={onUnfavorite}
-              onFavorite={onFavorite}
+              onSetFavorite={setFavorite}
               onDuplicate={onDuplicate}
               disabledDrag={!!searchTerm.trim()}
               isDragging={isDragging}

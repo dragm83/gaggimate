@@ -9,6 +9,7 @@
 #include <display/util/PsramAllocator.h>
 #include <display/webassets/machine_profile_schema.h>
 #include <mbedtls/sha256.h>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -84,7 +85,8 @@ bool isProfileCompatible(JsonObjectConst profile, const SystemInfo &system, bool
             return fail(error, "Machine profile board mismatch");
     }
     JsonDocument schema;
-    deserializeJson(schema, MACHINE_PROFILE_FIELDS);
+    if (deserializeJson(schema, MACHINE_PROFILE_FIELDS))
+        return fail(error, "Could not read machine profile schema");
     for (auto entry : profile["settings"].as<JsonObjectConst>())
         if (!supportsField(schema[entry.key()].as<JsonObjectConst>(), system, hardware))
             return fail(error, String("Unsupported machine profile setting: ") + entry.key().c_str());
@@ -142,7 +144,8 @@ bool validateMachineProfile(JsonVariantConst value, String &error) {
                 return fail(error, "Unknown recommended plugin");
     }
     JsonDocument schema;
-    deserializeJson(schema, MACHINE_PROFILE_FIELDS);
+    if (deserializeJson(schema, MACHINE_PROFILE_FIELDS))
+        return fail(error, "Could not read machine profile schema");
     for (auto entry : value["settings"].as<JsonObjectConst>()) {
         const auto field = schema[entry.key()].as<JsonObjectConst>();
         if (field.isNull() || !validateFieldValue(entry.value(), field, entry.key().c_str()))
@@ -159,7 +162,8 @@ bool validateMachineProfile(JsonVariantConst value, String &error) {
 
 bool validateMachineProfileRequest(AsyncWebServerRequest *request, const SystemInfo &system, bool hardware, String &error) {
     JsonDocument schema;
-    deserializeJson(schema, MACHINE_PROFILE_FIELDS);
+    if (deserializeJson(schema, MACHINE_PROFILE_FIELDS))
+        return fail(error, "Could not read machine profile schema");
     for (auto entry : schema.as<JsonObject>()) {
         if (!entry.value()["hardware"].as<bool>() || !request->hasArg(entry.key().c_str()))
             continue;
@@ -200,7 +204,10 @@ bool validateMachineProfileRequest(AsyncWebServerRequest *request, const SystemI
     return true;
 }
 
-void addMachineProfileSettings(JsonDocument &doc, const Settings &settings, const SystemInfo &system, bool hardware) {
+bool addMachineProfileSettings(JsonDocument &doc, const Settings &settings, const SystemInfo &system, bool hardware) {
+    JsonDocument schema;
+    if (deserializeJson(schema, MACHINE_PROFILE_FIELDS))
+        return false;
     doc["machineProfileSelection"] = settings.getMachineProfileSelection();
     doc["machineProfileBoard"] = system.hardware;
     doc["machineProfileCapabilities"]["pressure"] = system.capabilities.pressure;
@@ -209,12 +216,11 @@ void addMachineProfileSettings(JsonDocument &doc, const Settings &settings, cons
     doc["machineProfileCapabilities"]["gearpumpAddon"] = system.capabilities.hasAddon(7);
     doc["machineProfileCapabilities"]["albaAddon"] = system.capabilities.ledControl;
     doc["machineHardwareConfiguration"] = hardware;
-    JsonDocument schema;
-    deserializeJson(schema, MACHINE_PROFILE_FIELDS);
     auto supported = doc["machineProfileSupportedFields"].to<JsonArray>();
     for (auto entry : schema.as<JsonObject>())
         if (supportsField(entry.value(), system, hardware))
             supported.add(entry.key().c_str());
+    return !doc.overflowed();
 }
 
 void logMachineProfile(const char *event, const String &selection) {
@@ -255,7 +261,7 @@ String machineProfileHash(JsonVariantConst profile) {
     if (canonical.overflowed())
         return "";
     String serialized;
-    if (serializeJson(canonical, serialized) != measureJson(canonical))
+    if (serializeJson(canonical, serialized) != measureJson(canonical) || serialized.length() != measureJson(canonical))
         return "";
     uint8_t digest[32];
     if (mbedtls_sha256_ret(reinterpret_cast<const unsigned char *>(serialized.c_str()), serialized.length(), digest, 0))
@@ -268,20 +274,38 @@ String machineProfileHash(JsonVariantConst profile) {
     return String(result);
 }
 
-String machineProfileReference(const String &selection) {
-    if (selection.isEmpty())
-        return selection;
+bool machineProfileReference(const String &selection, String &result) {
+    if (selection.isEmpty()) {
+        result = "";
+        return true;
+    }
     JsonDocument profile;
-    if (deserializeJson(profile, selection) || !profile["settings"].is<JsonObjectConst>())
-        return selection;
+    if (deserializeJson(profile, selection))
+        return false;
+    if (isMachineProfileReference(profile.as<JsonVariantConst>())) {
+        String reference = selection;
+        if (reference != selection)
+            return false;
+        result = std::move(reference);
+        return true;
+    }
+    if (!profile["settings"].is<JsonObjectConst>())
+        return false;
+    const String hash = machineProfileHash(profile.as<JsonVariantConst>());
+    if (hash.length() != 16)
+        return false;
     JsonDocument reference;
     reference["id"] = profile["id"];
-    reference["hash"] = machineProfileHash(profile.as<JsonVariantConst>());
+    reference["hash"] = hash;
     if (profile["locks"].is<JsonObjectConst>())
         reference["locks"] = profile["locks"];
-    String result;
-    serializeJson(reference, result);
-    return result;
+    if (reference.overflowed() || !isMachineProfileReference(reference.as<JsonVariantConst>()))
+        return false;
+    String serialized;
+    if (serializeJson(reference, serialized) != measureJson(reference) || serialized.length() != measureJson(reference))
+        return false;
+    result = std::move(serialized);
+    return true;
 }
 
 bool isMachineProfileReference(JsonVariantConst value) {

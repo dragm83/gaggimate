@@ -36,15 +36,15 @@
 #include <display/plugins/mDNSPlugin.h>
 #endif
 #include <display/util/PsramAllocator.h>
-#ifndef GAGGIMATE_HEADLESS
-#ifdef GAGGIMATE_SIM
+#if defined(GAGGIMATE_HEADLESS)
+#include <display/drivers/HeadlessDriver.h>
+#elif defined(GAGGIMATE_SIM)
 #include <SdlDriver.h> // desktop SDL panel stands in for the hardware drivers
 #else
 #include <Preferences.h>
 #include <display/drivers/AmoledDisplayDriver.h>
 #include <display/drivers/LilyGoDriver.h>
 #include <display/drivers/WaveshareDriver.h>
-#endif
 #endif
 
 const String LOG_TAG = F("Controller");
@@ -68,21 +68,19 @@ void Controller::setup() {
         Serial.println(F("An Error has occurred while mounting LittleFS"));
     }
 
-#ifndef GAGGIMATE_HEADLESS
     setupPanel();
-#endif
 
     pluginManager = new PluginManager();
     warnings.setup(this);
 #ifndef GAGGIMATE_HEADLESS
     ui = new DefaultUI(this, driver, pluginManager);
+#endif
     if (driver->supportsSDCard() && driver->installSDCard()) {
         sdcard = true;
         ESP_LOGI(LOG_TAG, "SD Card detected and mounted");
         ESP_LOGI(LOG_TAG, "Used: %lluMB, Capacity: %lluMB", SD_MMC.usedBytes() / 1024 / 1024, SD_MMC.cardSize() / 1024 / 1024);
         seedSDCard();
     }
-#endif
     FS *fs = &LittleFS;
     if (sdcard) {
         fs = &SD_MMC;
@@ -168,9 +166,10 @@ void Controller::connect() {
     initialized = true;
 }
 
-#ifndef GAGGIMATE_HEADLESS
+#if !defined(GAGGIMATE_HEADLESS) && !defined(GAGGIMATE_SIM)
 // NVS values for the cached panel detection result (GM-140) — only append, never renumber
 enum PanelModel : uint8_t { PANEL_UNKNOWN = 0, PANEL_LILYGO = 1, PANEL_AMOLED = 2, PANEL_WAVESHARE = 3 };
+#endif
 
 // Hidden, so an interrupted copy still counts as an empty card and is retried on next boot.
 static constexpr const char *SD_SEED_MARKER = "/.gm-seeding";
@@ -196,7 +195,10 @@ void Controller::seedSDCard() {
 }
 
 void Controller::setupPanel() {
-#ifdef GAGGIMATE_SIM
+#if defined(GAGGIMATE_HEADLESS)
+    driver = HeadlessDriver::getInstance(); // no panel, only the board's SD slot and controller UART
+    driver->init();
+#elif defined(GAGGIMATE_SIM)
     driver = SdlDriver::getInstance(); // desktop SDL panel
     driver->init();
 #else
@@ -250,7 +252,6 @@ void Controller::setupPanel() {
     panelPrefs.end();
 #endif
 }
-#endif
 
 // Parse a comma-separated float string ("a,b,c,d") into `out`. Missing fields
 // are left at `def` -- used so pump-model coeffs can carry NaN to signal
@@ -274,6 +275,11 @@ static void parseFloatCsv(const String &csv, float *out, size_t count, float def
 }
 
 void Controller::setupBluetooth() {
+    // Boards plugged onto the controller PCB also offer a wired link; whichever link connects first is used.
+    if (driver->supportsUART()) {
+        const UartConf uart = driver->getUARTConf();
+        comms.enableUart(uart.rxPin, uart.txPin);
+    }
     comms.init("GPBLC");
     comms.onSendFailed([this]() { requestStateResend(); });
     comms.onConnectionChanged([this](bool connected) {
@@ -285,6 +291,7 @@ void Controller::setupBluetooth() {
         controlStateSent = false;
         settleResendAt = 0;
         if (connected) {
+            waitingForController = false;
             applyConnectionPriority(true);
             requestStateResend();
         } else if (initialized) {
@@ -299,7 +306,8 @@ void Controller::setupBluetooth() {
     });
     comms.onIncompatibleController([this](const String &info) { onIncompatibleController(info); });
     pluginManager->on("ota:update:start", [this](Event const &event) {
-        if (event.getString("component") != "display") {
+        // A wired controller link needs no radio time, so the download keeps its Wi-Fi share.
+        if (event.getString("component") != "display" && comms.getLinkType() != LinkType::Uart) {
             connLowLatency = true;
             comms.setLowLatency(true);
             esp_coex_preference_set(ESP_COEX_PREFER_BT);
@@ -683,7 +691,7 @@ void Controller::loopLogic() {
         if (currentProcess != nullptr) {
             updateLastAction();
             if (currentProcess->getType() == MODE_BREW) {
-                auto brewProcess = static_cast<BrewProcess *>(currentProcess);
+                auto brewProcess = static_cast<BrewProcess *>(currentProcess.get());
                 brewProcess->updatePressure(pressure);
                 brewProcess->updateFlow(currentPumpFlow);
                 brewProcess->updateWaterPumped(currentWaterPumped);
@@ -702,12 +710,12 @@ void Controller::loopLogic() {
         if (lastProcess != nullptr && lastProcess->isComplete() && !processCompleted && settings.isDelayAdjust()) {
             processCompleted = true;
             if (lastProcess->getType() == MODE_BREW) {
-                if (auto *brewProcess = static_cast<BrewProcess *>(lastProcess);
+                if (auto *brewProcess = static_cast<BrewProcess *>(lastProcess.get());
                     brewProcess->target == ProcessTarget::VOLUMETRIC) {
                     newBrewDelay = brewProcess->getNewDelayTime();
                 }
             } else if (lastProcess->getType() == MODE_GRIND) {
-                if (auto *grindProcess = static_cast<GrindProcess *>(lastProcess);
+                if (auto *grindProcess = static_cast<GrindProcess *>(lastProcess.get());
                     grindProcess->target == ProcessTarget::VOLUMETRIC) {
                     newGrindDelay = grindProcess->getNewDelayTime();
                 }
@@ -817,26 +825,25 @@ void Controller::autotune(int testTime, int samples, int heaterWattage) {
 }
 
 void Controller::startProcess(Process *process) {
+    std::unique_ptr<Process> owned(process);
     if (!isMachineHardwareReady()) {
-        delete process;
         return;
     }
     std::vector<const char *> events;
     {
         std::lock_guard<std::recursive_mutex> guard(processMutex);
-        startProcessLocked(process, events);
+        startProcessLocked(std::move(owned), events);
     }
     updateControl(); // queue the pump/valve command now instead of on the next logic cycle
     dispatchEvents(events);
 }
 
-void Controller::startProcessLocked(Process *process, std::vector<const char *> &events) {
+void Controller::startProcessLocked(std::unique_ptr<Process> process, std::vector<const char *> &events) {
     if (isActiveLocked() || !isReady()) {
-        delete process;
         return;
     }
     processCompleted = false;
-    this->currentProcess = process;
+    this->currentProcess = std::move(process);
     applyConnectionPriority(); // shot started -> tight BLE interval
     events.push_back("controller:process:start");
     updateLastAction();
@@ -853,7 +860,8 @@ void Controller::applyConnectionPriority(bool force) {
     if (force || lowLatency != connLowLatency) {
         connLowLatency = lowLatency;
         comms.setLowLatency(lowLatency);
-        esp_coex_preference_set(lowLatency ? ESP_COEX_PREFER_BT : ESP_COEX_PREFER_WIFI);
+        const bool radioLink = comms.getLinkType() != LinkType::Uart;
+        esp_coex_preference_set(lowLatency && radioLink ? ESP_COEX_PREFER_BT : ESP_COEX_PREFER_WIFI);
     }
 }
 
@@ -868,7 +876,7 @@ float Controller::getTargetTemp() const {
     case MODE_BREW:
     case MODE_GRIND: {
         std::lock_guard<std::recursive_mutex> guard(processMutex);
-        Process *proc = currentProcess;
+        Process *proc = currentProcess.get();
         if (proc != nullptr && proc->isActive() && proc->getType() == MODE_BREW) {
             auto brewProcess = static_cast<BrewProcess *>(proc);
             return brewProcess->getTemperature();
@@ -999,15 +1007,17 @@ void Controller::lowerTemp() {
 }
 
 void Controller::raiseSteamTemp() {
-    float temp = settings.getTargetSteamTemp();
+    float temp = getTargetSteamTemp();
     temp = constrain(temp + 1.0f, MIN_TEMP, MAX_TEMP);
     settings.setTargetSteamTemp(static_cast<int>(temp));
+    pluginManager->trigger("boiler:targetSteamTemperature:change", "value", temp);
 }
 
 void Controller::lowerSteamTemp() {
-    float temp = settings.getTargetSteamTemp();
+    float temp = getTargetSteamTemp();
     temp = constrain(temp - 1.0f, MIN_TEMP, MAX_TEMP);
     settings.setTargetSteamTemp(static_cast<int>(temp));
+    pluginManager->trigger("boiler:targetSteamTemperature:change", "value", temp);
 }
 
 void Controller::raiseBrewTarget() {
@@ -1071,7 +1081,7 @@ void Controller::updateControl() {
     // can delete the process mid-computation (GM-147). comms sends are queued
     // (pumped from comms.loop()), so no cross-task blocking happens under the lock.
     std::lock_guard<std::recursive_mutex> guard(processMutex);
-    Process *proc = currentProcess;
+    Process *proc = currentProcess.get();
     bool active = isActiveLocked();
 
     float targetTemp = getTargetTemp();
@@ -1280,7 +1290,7 @@ void Controller::afterDeactivate() {
     {
         std::lock_guard<std::recursive_mutex> guard(processMutex);
         shot = lastProcess != nullptr && lastProcess->getType() == MODE_BREW &&
-               !static_cast<BrewProcess *>(lastProcess)->isUtility();
+               !static_cast<BrewProcess *>(lastProcess.get())->isUtility();
     }
     if (!shot)
         comms.tare(); // shots tare on history:shot:recorded, once their final weight is written
@@ -1292,12 +1302,10 @@ void Controller::deactivateLocked(std::vector<const char *> &events) {
     if (currentProcess == nullptr) {
         return;
     }
-    delete lastProcess;
-    lastProcess = currentProcess;
-    currentProcess = nullptr;
+    lastProcess = std::move(currentProcess);
     bool utility = false;
     if (lastProcess->getType() == MODE_BREW) {
-        utility = static_cast<BrewProcess *>(lastProcess)->isUtility();
+        utility = static_cast<BrewProcess *>(lastProcess.get())->isUtility();
         if (!utility)
             flushPending = true; // a shot leaves grounds behind, a flush does not
         events.push_back("controller:brew:end");
@@ -1324,8 +1332,7 @@ void Controller::clearLocked(std::vector<const char *> &events) {
     if (lastProcess != nullptr && lastProcess->getType() == MODE_BREW) {
         events.push_back("controller:brew:clear");
     }
-    delete lastProcess;
-    lastProcess = nullptr;
+    lastProcess.reset();
     currentVolumetricSource = VolumetricMeasurementSource::INACTIVE;
 #ifdef NIGHTLY_BUILD
     latestFlowEstimation = 0.0;
@@ -1638,17 +1645,16 @@ void Controller::onFlush() {
     Profile profile = FLUSH_PROFILE;
     profile.temperature = profileManager->getSelectedProfile().temperature;
     profile.phases[0].duration = duration > 0 ? duration : FLUSH_HOLD_MAX_DURATION_S; // 0 = hold, capped
-    auto *flush = new BrewProcess(profile, ProcessTarget::TIME, settings.getBrewDelay());
+    auto flush = std::make_unique<BrewProcess>(profile, ProcessTarget::TIME, settings.getBrewDelay());
     flush->holdPhase = duration == 0; // pump phase ends on onFlushRelease(), the drain phase still runs
     std::vector<const char *> events;
     {
         std::lock_guard<std::recursive_mutex> guard(processMutex);
         if (isActiveLocked()) {
-            delete flush;
             return;
         }
         clearLocked(events);
-        startProcessLocked(flush, events);
+        startProcessLocked(std::move(flush), events);
         flushPending = false;
         events.push_back("controller:brew:start");
     }
@@ -1660,7 +1666,7 @@ void Controller::onFlush() {
 void Controller::onFlushRelease() {
     std::lock_guard<std::recursive_mutex> guard(processMutex);
     if (currentProcess != nullptr && currentProcess->getType() == MODE_BREW) {
-        static_cast<BrewProcess *>(currentProcess)->release();
+        static_cast<BrewProcess *>(currentProcess.get())->release();
     }
 }
 

@@ -59,7 +59,7 @@ export function useDashboardState() {
   });
 
   // ── water level (Alba) ────────────────────────────────────
-  // The tank card follows the Alba hardware only; null means "attached but not calibrated".
+  // The tank card follows an Alba with its percentage sensor; null means "attached but not calibrated".
   const ledControl = caps?.ledControl || false;
   const albaWaterLevelAvailable = !!s.albaWaterLevelAvailable;
   const waterLevelPercent = albaWaterLevelAvailable
@@ -131,12 +131,12 @@ export function useDashboardState() {
 
   return {
     // raw status
+    smartDose: s.smartDose,
     albaWaterLevelAvailable,
     hasTankLevel: !!s.hasTankLevel,
     tankLevelOK: s.tankLevelOK ?? null,
     hasSteamLevel: !!s.hasSteamLevel,
     steamBoilerLow: s.steamBoilerLow ?? null,
-    smartDose: s.smartDose,
     mode,
     systemReady,
     systemMessage,

@@ -194,7 +194,7 @@ message ScaleFactors {
 
 // One LED output's target brightness.
 message LedChannel {
-    uint32 channel = 1;    // 0..7 Alba outputs, 8 system LED, 9 barista light
+    uint32 channel = 1;    // PCA9634 output index (0..7)
     uint32 brightness = 2; // 0..255
     uint32 effect = 3; // Onboard channels: 0 off, 1 flashing, 2 breathing, 3 on; Alba ignores this.
     uint32 min_brightness = 4; // onboard animation floor (0..brightness)

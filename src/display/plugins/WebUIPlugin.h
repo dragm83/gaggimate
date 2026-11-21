@@ -4,6 +4,7 @@
 #define ELEGANTOTA_USE_ASYNC_WEBSERVER 1
 
 #include <DNSServer.h>
+#include <memory>
 
 #include "GitHubOTA.h"
 #include <ArduinoJson.h>
@@ -20,11 +21,11 @@ const String RELEASE_URL = "https://github.com/jniebuhr/gaggimate/releases/tag/n
 const String BETA_RELEASE_URL = "https://github.com/dragm83/gaggimate/releases/tag/dual-boiler-beta-latest";
 // Headless builds must pull their own release assets; the screen firmware would not boot on them.
 #ifdef GAGGIMATE_HEADLESS
-#define OTA_DISPLAY_FIRMWARE "display-headless-firmware.bin"
-#define OTA_DISPLAY_FILESYSTEM "display-headless-filesystem.bin"
+constexpr char OTA_DISPLAY_FIRMWARE[] = "display-headless-firmware.bin";
+constexpr char OTA_DISPLAY_FILESYSTEM[] = "display-headless-filesystem.bin";
 #else
-#define OTA_DISPLAY_FIRMWARE "display-firmware.bin"
-#define OTA_DISPLAY_FILESYSTEM "display-filesystem.bin"
+constexpr char OTA_DISPLAY_FIRMWARE[] = "display-firmware.bin";
+constexpr char OTA_DISPLAY_FILESYSTEM[] = "display-filesystem.bin";
 #endif
 
 class ProfileManager;
@@ -72,7 +73,7 @@ class WebUIPlugin : public Plugin {
     WebSocketHandler wsHandler;
     Controller *controller = nullptr;
     PluginManager *pluginManager = nullptr;
-    DNSServer *dnsServer = nullptr;
+    std::unique_ptr<DNSServer> dnsServer;
     ProfileManager *profileManager = nullptr;
     MachineProfileStore *machineProfiles = nullptr;
 

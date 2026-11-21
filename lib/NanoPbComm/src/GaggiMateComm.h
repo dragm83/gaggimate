@@ -1,8 +1,8 @@
 #ifndef GAGGIMATE_COMM_H
 #define GAGGIMATE_COMM_H
 
-#include <cstdint>
 #include "LedEffect.h"
+#include <cstdint>
 
 // Public protocol vocabulary shared by GaggiMateClient and GaggiMateServer; firmware never sees the nanopb structs.
 
@@ -17,6 +17,13 @@ enum class PumpControlMode : uint8_t {
 enum class BoilerControlMode : uint8_t {
     Temperature = 0, // setpoint is a target temperature in degC
     Pressure = 1,    // setpoint is a target pressure in bar
+};
+
+// Physical link carrying the controller session.
+enum class LinkType : uint8_t {
+    None = 0,
+    Ble = 1,
+    Uart = 2,
 };
 
 // Per-component commands: drive several components atomically in one frame, comparable so callers send only deltas.
@@ -52,8 +59,8 @@ struct LedChannelCommand {
     uint8_t minBrightness = 0;
     uint16_t cycleTimeMs = 0; // Alba ignores animation fields.
     bool operator==(const LedChannelCommand &o) const {
-        return channel == o.channel && brightness == o.brightness && effect == o.effect &&
-               minBrightness == o.minBrightness && cycleTimeMs == o.cycleTimeMs;
+        return channel == o.channel && brightness == o.brightness && effect == o.effect && minBrightness == o.minBrightness &&
+               cycleTimeMs == o.cycleTimeMs;
     }
     bool operator!=(const LedChannelCommand &o) const { return !(*this == o); }
 };

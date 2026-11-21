@@ -68,6 +68,11 @@ bool SmartDosePlugin::canAdjustDose() const {
            !controller->isActive() && !controller->isUpdating() && !controller->isAutotuning() &&
            !controller->getProfileManager()->getSelectedProfile().utility;
 }
+bool SmartDosePlugin::canCalibrate() const {
+    return controller && controller->getSettings().isSmartDoseActive() && controller->getMode() == MODE_BREW &&
+           !controller->isActive() && !controller->isUpdating() && !controller->isAutotuning() &&
+           !controller->getSettings().isSmartDoseAutomagic();
+}
 bool SmartDosePlugin::skipDisabled() {
     if (!controller)
         return true;
@@ -132,12 +137,12 @@ void SmartDosePlugin::measurement(float value, bool hardware) {
     if (skipDisabled())
         return;
     // All entry points use process -> plugin; the first serialized valid event wins.
-    std::lock_guard<std::recursive_mutex> processLock(controller->getProcessLock());
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::scoped_lock lock(controller->getProcessLock(), mutex);
     auto &live = liveReadings[hardware];
-    live.weight = value;
-    live.last = millis();
-    live.present = std::isfinite(value);
+    if (std::isfinite(value))
+        live.update(value, millis());
+    else
+        live = Reading{};
     sync();
     if (!canAdjustDose() || !healthy(hardware))
         return;
@@ -146,14 +151,13 @@ void SmartDosePlugin::measurement(float value, bool hardware) {
 void SmartDosePlugin::loop() {
     if (skipDisabled())
         return;
-    std::lock_guard<std::recursive_mutex> processLock(controller->getProcessLock());
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::scoped_lock lock(controller->getProcessLock(), mutex);
     sync();
     if (tarePending && coordinator.owner == Accessory::CUP && coordinator.phase == smartdose::Phase::TARING) {
         tarePending = false;
         coordinator.tareIssued = true;
         if (coordinator.ownerHardware)
-            controller->getClientController()->tare();
+            controller->getClientController()->tareHardwareScale();
         else
             BLEScales.tare();
     } else
@@ -162,8 +166,7 @@ void SmartDosePlugin::loop() {
 bool SmartDosePlugin::setDose() {
     if (skipDisabled())
         return false;
-    std::lock_guard<std::recursive_mutex> processLock(controller->getProcessLock());
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::scoped_lock lock(controller->getProcessLock(), mutex);
     sync();
     if (!available())
         return false;
@@ -176,8 +179,7 @@ bool SmartDosePlugin::setDose() {
 bool SmartDosePlugin::adjustDose(int direction) {
     if (!controller || (direction != -1 && direction != 1))
         return false;
-    std::lock_guard<std::recursive_mutex> processLock(controller->getProcessLock());
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::scoped_lock lock(controller->getProcessLock(), mutex);
     sync();
     if (!canAdjustDose())
         return false;
@@ -193,17 +195,16 @@ bool SmartDosePlugin::adjustDose(int direction) {
 bool SmartDosePlugin::calibrate(const String &accessory) {
     if (skipDisabled() || (accessory != "cup" && accessory != "portafilter"))
         return false;
-    std::lock_guard<std::recursive_mutex> processLock(controller->getProcessLock());
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::scoped_lock lock(controller->getProcessLock(), mutex);
     sync();
     const auto requested = accessory == "cup" ? Accessory::CUP : Accessory::PORTAFILTER;
     // The user tares the empty scale and places the accessory before saving.
     // Automagic must be off so it cannot tare the object during measurement.
-    if (coordinator.config.automatic)
+    if (!canCalibrate())
         return false;
     const bool hardware = requested == Accessory::CUP ? coordinator.config.cupHardware : coordinator.config.pfHardware;
-    const auto &r = coordinator.readings[hardware];
-    if (!canAdjustDose() || !healthy(hardware) || !r.stable(millis()) || r.weight <= 0 || r.weight > 2000)
+    const auto &r = liveReadings[hardware];
+    if (!healthy(hardware) || !r.stable(millis()) || r.weight <= 0 || r.weight > 2000)
         return false;
     auto &settings = controller->getSettings();
     if (requested == Accessory::CUP)
@@ -217,22 +218,20 @@ bool SmartDosePlugin::calibrate(const String &accessory) {
 void SmartDosePlugin::cancelCycle() {
     if (!controller)
         return;
-    std::lock_guard<std::recursive_mutex> processLock(controller->getProcessLock());
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::scoped_lock lock(controller->getProcessLock(), mutex);
     tarePending = false;
     coordinator.cancel();
 }
 void SmartDosePlugin::onTare(bool hardware) {
     if (!controller)
         return;
-    std::lock_guard<std::recursive_mutex> processLock(controller->getProcessLock());
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::scoped_lock lock(controller->getProcessLock(), mutex);
     if (coordinator.owner == Accessory::NONE || coordinator.ownerHardware == hardware)
         cancelCycle();
     // An explicit tare changes this scale's coordinate system. Non-owner tares
     // must not cancel or alter the active owner's cycle.
     coordinator.readings[hardware] = Reading{};
-    liveReadings[hardware] = LiveReading{};
+    liveReadings[hardware] = Reading{};
 }
 void SmartDosePlugin::status(JsonObject out) {
     out.clear();
@@ -244,8 +243,7 @@ void SmartDosePlugin::status(JsonObject out) {
         out["adjustable"] = false;
         return;
     }
-    std::lock_guard<std::recursive_mutex> processLock(controller->getProcessLock());
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::scoped_lock lock(controller->getProcessLock(), mutex);
     sync();
     const auto &config = coordinator.config;
     const auto &r = coordinator.readings[selectedHardware()];
@@ -253,7 +251,7 @@ void SmartDosePlugin::status(JsonObject out) {
     out["enabled"] = true;
     out["connected"] = ready;
     out["weight"] = ready ? doseWeight() : 0;
-    out["gross"] = ready ? r.weight - r.baseline : 0;
+    out["gross"] = ready ? r.weight - (portafilterSelected() ? r.baseline : 0) : 0;
     out["doseIn"] = controller->getProfileManager()->getSelectedProfile().dose;
     out["adjustable"] = canAdjustDose();
     out["available"] = available();
@@ -286,7 +284,8 @@ void SmartDosePlugin::status(JsonObject out) {
     auto writeMeasurement = [&](const char *key, bool hardware, bool portafilter) {
         const auto &live = liveReadings[hardware];
         const bool connected = live.present && healthy(hardware) && now - live.last < READING_STALE_MS;
-        const float gross = live.weight - coordinator.readings[hardware].baseline;
+        const bool activePortafilter = portafilterSelected() && coordinator.ownerHardware == hardware;
+        const float gross = live.weight - (activePortafilter ? coordinator.readings[hardware].baseline : 0);
         auto measurement = out[key].to<JsonObject>();
         measurement["source"] = hardware ? "hardware" : "bluetooth";
         measurement["connected"] = connected;
@@ -310,8 +309,7 @@ SmartDosePlugin::DoseUIState SmartDosePlugin::getUIState() {
     DoseUIState result;
     if (skipDisabled())
         return result;
-    std::lock_guard<std::recursive_mutex> processLock(controller->getProcessLock());
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::scoped_lock lock(controller->getProcessLock(), mutex);
     sync();
     if (!canAdjustDose())
         return result;

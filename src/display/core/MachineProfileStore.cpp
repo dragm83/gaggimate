@@ -8,8 +8,8 @@
 
 namespace {
 constexpr size_t MAX_PROFILES = 64;
-constexpr size_t MAX_PROFILE_BYTES = 3500; // Selected snapshot still fits an NVS string.
-const char *DIRECTORY = "/m";
+constexpr size_t MAX_PROFILE_BYTES = 3500; // Bound imported profile size.
+constexpr char DIRECTORY[] = "/m";
 String path(const String &id, const char *extension = ".json") { return String(DIRECTORY) + "/" + id + extension; }
 bool fail(String &error, const char *message) {
     error = message;

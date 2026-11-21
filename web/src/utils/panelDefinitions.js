@@ -119,7 +119,6 @@ export const PANEL_DEFINITIONS = [
     labelMsg: msg`Water Tank`,
     required: false,
     available: ds => !!ds.albaWaterLevelAvailable,
-    availableInSettings: status => !!status.albaWaterLevelAvailable,
     component: WaterLevelCard,
     props: ds => ({
       waterLevelPercent: ds.waterLevelPercent,

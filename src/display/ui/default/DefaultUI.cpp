@@ -213,14 +213,23 @@ void DefaultUI::init() {
             rerender = true;
         }
     });
-    pluginManager->on("controller:targetVolume:change", [=](Event const &event) { rerender = true; });
-    pluginManager->on("controller:targetDuration:change", [=](Event const &event) { rerender = true; });
-    pluginManager->on("controller:grindDuration:change", [=](Event const &event) { rerender = true; });
-    pluginManager->on("controller:grindVolume:change", [=](Event const &event) { rerender = true; });
+    pluginManager->on("boiler:targetSteamTemperature:change", [=](Event const &event) {
+        int newTemp = static_cast<int>(event.getFloat("value"));
+        if (newTemp != targetSteamTemp) {
+            targetTemp = newTemp;
+            rerender = true;
+        }
+    });
+    pluginManager->on("controller:targetVolume:change", [this](Event const &event) { rerender = true; });
+    pluginManager->on("controller:targetDuration:change", [this](Event const &event) { rerender = true; });
+    pluginManager->on("controller:grindDuration:change", [this](Event const &event) { rerender = true; });
+    pluginManager->on("controller:grindVolume:change", [this](Event const &event) { rerender = true; });
     pluginManager->on("controller:grind:end", triggerRender);
     pluginManager->on("controller:grind:start", triggerRender);
     pluginManager->on("controller:process:end", triggerRender);
     pluginManager->on("controller:process:start", triggerRender);
+    pluginManager->on("boiler:steamHeater:activate", triggerRender);
+    pluginManager->on("boiler:steamHeater:deactivate", triggerRender);
     pluginManager->on("controller:mode:change", [this](Event const &event) {
         mode = event.getInt("value");
         if (mode >= MODE_STANDBY && mode <= MODE_GRIND)
@@ -625,10 +634,13 @@ void DefaultUI::setupState() {
     effect_mgr.use_effect([this]() { return currentScreen == SCREEN_ID_MENU_SCREEN_NEW; },
                           [this]() {
                               int radius = 135;
-                              int count = grindAvailable ? 4 : 3;
-                              int step = 360 / (grindAvailable ? 4 : 3);
-                              int iconOffset = grindAvailable ? 1 : 0;
-                              int rotationOffset = count == 4 ? 45 : 0;
+                              int count = 4;
+                              if (!grindAvailable)
+                                  count--;
+                              if (dualBoiler)
+                                  count--;
+                              int step = 360 / count;
+                              int rotationOffset = count == 4 ? 45 : count == 2 ? 90 : 0;
                               positionMenuIcon(objects.btn_brew_1, step * 0 - rotationOffset, radius);
                               positionMenuIcon(objects.btn_steam_1, step * 1 - rotationOffset, radius);
                               positionMenuIcon(objects.btn_water_1, step * 2 - rotationOffset, radius);
@@ -668,12 +680,11 @@ void DefaultUI::updateAccessQrCode(lv_obj_t *qrcode) {
 }
 
 void DefaultUI::handleScreenChange() {
-    // Loading a screen mid-fade frees the startup screen twice; wait for the boot fade to finish
-    const lv_disp_t *disp = lv_disp_get_default();
-    if (disp != nullptr && disp->scr_to_load != nullptr) {
-        rerender = true;
+    // Wait for an animated screen load (the startup fade) to finish. Interrupting it makes LVGL 8
+    // finish the load early and, with auto-delete set, delete the screen being loaded instead of
+    // the previous one, then load the deleted screen (crash on a mode change right after boot).
+    if (lv_disp_get_default()->scr_to_load != nullptr)
         return;
-    }
     if (currentScreen != targetScreen) {
         if (currentScreen == SCREEN_ID_BREW_SCREEN)
             brewConfirmVisible = false; // leaving the brew screen dismisses the confirm overlay
@@ -780,8 +791,9 @@ void DefaultUI::updateState() {
     uiFlags.has_prev_profile(currentProfileIdx > 0);
     uiFlags.brew_confirm_visible(brewConfirmVisible);
     uiFlags.profile_details_visible(profileDetailsVisible);
-    const bool chartMode = settings.getStatusDisplayMode() == STATUS_DISPLAY_CHART && pressureAvailable && isProShot();
+    const bool chartMode = settings.getStatusDisplayMode() == STATUS_DISPLAY_CHART && pressureAvailable && isChartShot();
     uiFlags.chart_mode(chartMode);
+    uiFlags.steam_active(dualBoiler && controller->isSteamHeaterActive());
     if (chartMode != tickChartMode) {
         // Re-animate the ring when the mode flips while the status screen is open.
         if (currentScreen == SCREEN_ID_STATUS_SCREEN && currentScreen == targetScreen)
@@ -794,8 +806,8 @@ void DefaultUI::updateState() {
     }
 }
 
-// The chart needs pressure data, so it only applies to Pro profiles; prefer the running brew's profile.
-bool DefaultUI::isProShot() {
+// Pro hardware shows the chart for every brew except utility profiles; prefer the running brew's profile.
+bool DefaultUI::isChartShot() {
     if (!initialized)
         return false;
     std::lock_guard<std::recursive_mutex> guard(controller->getProcessLock());
@@ -803,8 +815,8 @@ bool DefaultUI::isProShot() {
     if (process == nullptr)
         process = controller->getLastProcess();
     if (process != nullptr && process->getType() == MODE_BREW)
-        return static_cast<BrewProcess *>(process)->profile.type == "pro";
-    return profileManager->getSelectedProfile().type == "pro";
+        return !static_cast<BrewProcess *>(process)->profile.utility;
+    return !profileManager->getSelectedProfile().utility;
 }
 
 void DefaultUI::updateSystemStatus() {
@@ -848,6 +860,7 @@ void DefaultUI::updateSystemStatus() {
     systemStatus.pressure_available(pressureAvailable);
     systemStatus.grind_available(grindAvailable);
     systemStatus.mode(mode);
+    systemStatus.dual_boiler(dualBoiler);
     const String ip = apActive ? String("4.4.4.1") : WiFi.localIP().toString();
     if (stringChanged(systemStatus.ip(), ip.c_str()))
         systemStatus.ip(ip.c_str());
@@ -888,7 +901,7 @@ void DefaultUI::updateWarnings() {
         warnings.labels(labels.c_str());
 }
 
-static void populateProfileInfo(ProfileInfoValue &info, const Profile &profile, bool isCurrent, bool hasImage) {
+static void populateProfileInfo(ProfileInfoValue &info, const Profile &profile, bool isCurrent, bool hasImage, bool imageLoaded) {
     char timeBuf[12];
     formatDuration(static_cast<unsigned long>(profile.getTotalDuration() * 1000.0f), timeBuf, sizeof(timeBuf));
     if (stringChanged(info.name(), profile.label.c_str()))
@@ -903,6 +916,7 @@ static void populateProfileInfo(ProfileInfoValue &info, const Profile &profile, 
     info.target_weight(profile.getTotalVolume());
     info.is_pro(profile.type == "pro");
     info.has_image(hasImage);
+    info.image_loaded(imageLoaded);
 }
 
 void DefaultUI::updateProfileInfo() {
@@ -910,6 +924,7 @@ void DefaultUI::updateProfileInfo() {
         return;
     }
     const Profile &selected = profileManager->getSelectedProfile();
+    const auto imageLoaded = [this](const String &id) { return imageShown != nullptr && imageShownId == id; };
     bool populated = false;
     bool selectedHasImage = false;
     {
@@ -919,14 +934,15 @@ void DefaultUI::updateProfileInfo() {
         if (!favoritedProfiles.empty() && currentProfileIdx >= 0 &&
             currentProfileIdx < static_cast<int>(favoritedProfiles.size())) {
             populateProfileInfo(previewProfileInfo, favoritedProfiles[currentProfileIdx],
-                                favoritedProfileIds[currentProfileIdx] == selected.id, favoritedHasImage[currentProfileIdx]);
+                                favoritedProfileIds[currentProfileIdx] == selected.id, favoritedHasImage[currentProfileIdx],
+                                imageLoaded(favoritedProfileIds[currentProfileIdx]));
             populated = true;
         }
     }
-    populateProfileInfo(selectedProfileInfo, selected, true, selectedHasImage);
+    populateProfileInfo(selectedProfileInfo, selected, true, selectedHasImage, imageLoaded(selected.id));
     selectedProfileInfo.dirty(profileDirty);
     if (!populated) {
-        populateProfileInfo(previewProfileInfo, selected, true, selectedHasImage);
+        populateProfileInfo(previewProfileInfo, selected, true, selectedHasImage, imageLoaded(selected.id));
     }
 }
 
@@ -934,7 +950,7 @@ void DefaultUI::updateBoiler() {
     const ::Settings &settings = controller->getSettings();
     bool showSteamTemp = dualBoiler && currentScreen == SCREEN_ID_STEAM_SCREEN;
     boiler.current_temperature(showSteamTemp ? controller->getCurrentSteamTemp() : controller->getCurrentTemp());
-    boiler.target_temperature(showSteamTemp ? settings.getTargetSteamTemp() : controller->getTargetTemp());
+    boiler.target_temperature(showSteamTemp ? controller->getTargetSteamTemp() : controller->getTargetTemp());
     boiler.current_pressure(pressure);
     boiler.target_pressure(controller->getTargetPressure());
     boiler.max_temperature(160.0f);
@@ -1054,9 +1070,13 @@ void DefaultUI::updateBrewProcess() {
     }
 
     brewProcess.is_complete(process->isComplete());
+    brewProcess.shot_max_pressure(shotMaxPressure);
+    brewProcess.shot_avg_flow(shotFlowSamples > 0 ? shotFlowSum / shotFlowSamples : 0.0f);
 }
 
-void DefaultUI::updateMenuScreen() {}
+void DefaultUI::updateMenuScreen() {
+    // menu screen has no dynamic content to refresh
+}
 
 void DefaultUI::setupShotChart() {
     shotChart = objects.shot_chart;
@@ -1120,6 +1140,9 @@ void DefaultUI::updateShotChart() {
         shotChartLive = true;
         lv_anim_del(this, shotChartZoomAnimCb);
         shotChartZoom = 0.0f;
+        shotMaxPressure = 0.0f;
+        shotFlowSum = 0.0f;
+        shotFlowSamples = 0;
         resetShotChart(bp->getTemperature(), volumetric ? static_cast<float>(bp->getBrewVolume()) : 0.0f);
         shotPhaseIndex = bp->phaseIndex;
     }
@@ -1145,6 +1168,9 @@ void DefaultUI::addShotChartSample(float weight) {
     const float targetFlow = controller->getTargetFlow();
     shotFlowRange = growShotRange(shotFlowRange, LV_MAX(LV_MAX(pressure, flow), LV_MAX(targetPressure, targetFlow)), 2.0f);
     shotWeightRange = growShotRange(shotWeightRange, weight, 10.0f);
+    shotMaxPressure = LV_MAX(shotMaxPressure, pressure);
+    shotFlowSum += flow;
+    shotFlowSamples++;
 
     // Oldest sample is overwritten once the 2 min history is full.
     if (shotHistoryCount == SHOT_HISTORY_POINTS) {
@@ -1313,6 +1339,8 @@ void DefaultUI::updateProfilePreview() {
         imageShown = nullptr;
         imageShownId = "";
     }
+    // EEZ hides the image widget until its pixels are in place; a sourceless image would draw LVGL's "No data".
+    previewProfileInfo.image_loaded(imageShown != nullptr && imageShownId == id);
 
     lv_obj_t *chart = objects.profile_chart;
     if (!isPro || chart == nullptr)

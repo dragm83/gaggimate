@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "spx",
   "name": "Rancilio Silvia Pro X - 120V",
-  "revision": 8,
+  "revision": 5,
   "requires": {
     "dualBoiler": true,
     "pressure": true
@@ -18,8 +18,6 @@
     "ntcSteamBeta": 3950,
     "tankLevelEnabled": true,
     "steamLevelEnabled": true,
-    "systemLedFunction": 1,
-    "baristaLedFunction": 3,
     "steamRefillMode": 2,
     "steamRefillPostClearSeconds": 10,
     "steamLevelDebounceChecks": 25,
@@ -30,6 +28,8 @@
     "pressureScaling": 16,
     "temperatureOffset": 7,
     "steamPid": "58.397,1.027,249.055",
+    "systemLedFunction": 1,
+    "baristaLedFunction": 3,
     "systemLedBrightness": 255,
     "baristaLedBrightness": 255,
     "systemLedMinBrightness": 0,

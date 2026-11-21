@@ -1,6 +1,7 @@
 #include "GitHubOTA.h"
 #include "EspHttpTransport.h"
 #include "ResumableDownloader.h"
+#include "ca_bundle.h"
 #include "common.h"
 #include "semver_extensions.h"
 #include <esp_ota_ops.h>
@@ -29,7 +30,7 @@ GitHubOTA::GitHubOTA(const String &display_version, const String &controller_ver
     _phase_callback = phase_callback;
     _progress_callback = progress_callback;
 
-    _wifi_client.setCACertBundle(x509_crt_imported_bundle_bin_start);
+    _wifi_client.setCACertBundle(gm_ca_bundle);
 }
 
 void GitHubOTA::init() {
@@ -109,7 +110,7 @@ void GitHubOTA::setPhase(uint8_t newPhase) {
     _phase_callback(newPhase);
 }
 
-void GitHubOTA::update(bool controller, bool display, NimBLEClient *client) {
+void GitHubOTA::update(bool controller, bool display, OtaSender *controllerLink) {
     const char *TAG = "update";
     OtaWatchdogRelax watchdogRelax;
 
@@ -128,7 +129,7 @@ void GitHubOTA::update(bool controller, bool display, NimBLEClient *client) {
     if (controller && _controller_update_required) {
         ESP_LOGI(TAG, "Controller update is required, running firmware update.");
         setPhase(PHASE_CONTROLLER_FW);
-        if (!_controller_ota.update(client, _latest_url + _controller_firmware_name)) {
+        if (!_controller_ota.update(controllerLink, _latest_url + _controller_firmware_name)) {
             ESP_LOGE(TAG, "Controller update failed");
             setPhase(PHASE_FAILED);
             return;

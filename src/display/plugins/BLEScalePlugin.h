@@ -4,6 +4,7 @@
 #include "remote_scales.h"
 #include "remote_scales_plugin_registry.h"
 #include <atomic>
+#include <memory>
 
 void on_ble_measurement(float value);
 
@@ -99,7 +100,7 @@ class BLEScalePlugin : public Plugin {
     Controller *controller = nullptr;
     PluginManager *pluginManager = nullptr;
     RemoteScalesPluginRegistry *pluginRegistry = nullptr;
-    RemoteScalesScanner *scanner = nullptr;
+    std::unique_ptr<RemoteScalesScanner> scanner;
     std::unique_ptr<RemoteScales> scale = nullptr;
 };
 

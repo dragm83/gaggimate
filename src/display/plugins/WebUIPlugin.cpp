@@ -83,11 +83,11 @@ void WebUIPlugin::setup(Controller *_controller, PluginManager *_pluginManager) 
 void WebUIPlugin::loop() {
     if (updating) {
         // Pass which component is being flashed: a controller update streams the
-        // firmware over BLE (wants a low-latency link), a display update is over
-        // Wi-Fi (wants BLE to stay out of the radio's way). "" = both.
+        // firmware over the controller link (BLE wants low latency), a display update
+        // is over Wi-Fi (wants BLE to stay out of the radio's way). "" = both.
         pluginManager->trigger("ota:update:start", "component", updateComponent);
         ota->update(updateComponent != "display", updateComponent != "controller",
-                    controller->getClientController()->getClient());
+                    controller->getClientController()->getOtaSender());
         pluginManager->trigger("ota:update:end");
         updating = false;
     }
@@ -275,7 +275,7 @@ void WebUIPlugin::start() {
     server.begin();
     ESP_LOGI("WebUIPlugin", "Started webserver");
     if (apMode) {
-        dnsServer = new DNSServer();
+        dnsServer = std::make_unique<DNSServer>();
         dnsServer->setTTL(3600);
         dnsServer->start(53, "*", WIFI_AP_IP);
         ESP_LOGI("WebUIPlugin", "Started catchall DNS for captive portal");
@@ -291,8 +291,7 @@ void WebUIPlugin::stop() {
     server.end();
     if (dnsServer != nullptr) {
         dnsServer->stop();
-        delete dnsServer;
-        dnsServer = nullptr;
+        dnsServer.reset();
     }
     serverRunning = false;
     ESP_LOGI("WebUIPlugin", "WebUIPlugin stopped (wifi disconnected)");
@@ -406,6 +405,9 @@ void WebUIPlugin::handleMachineProfiles(AsyncWebServerRequest *request) {
 
 void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     const uint32_t previousHardwareHash = machineHardwareHash(controller->getSettings().getMachineHardware());
+    // Dual-boiler fields are only exposed when the POST validator will accept them back.
+    const bool hardwareSupported =
+        controller->getSystemInfo().capabilities.dualBoiler && !controller->getSystemInfo().protocolMismatch;
     if (request->method() == HTTP_POST) {
         if (request->hasArg("setupStep")) {
             const String step = request->arg("setupStep");
@@ -416,10 +418,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
             }
         }
         String profileError;
-        if (!validateMachineProfileRequest(request, controller->getSystemInfo(),
-                                           controller->getSystemInfo().capabilities.dualBoiler &&
-                                               !controller->getSystemInfo().protocolMismatch,
-                                           profileError)) {
+        if (!validateMachineProfileRequest(request, controller->getSystemInfo(), hardwareSupported, profileError)) {
             JsonDocument failure;
             failure["error"] = profileError;
             String body;
@@ -455,11 +454,12 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
         if (profileChanged || hardwareRequest || refillRequest)
             controller->activateStandby();
         bool saved = false;
-        controller->getSettings().batchUpdate([request, &saved](Settings *settings) {
-            if (request->hasArg("setupStep"))
-                settings->setSetupStep(request->arg("setupStep"));
-            if (request->hasArg("machineProfileSelection"))
-                settings->setMachineProfileSelection(request->arg("machineProfileSelection"));
+        controller->getSettings().batchUpdate([request, &saved, &profileError](Settings *settings) {
+            if (request->hasArg("machineProfileSelection") &&
+                !settings->setMachineProfileSelection(request->arg("machineProfileSelection"))) {
+                profileError = "Could not create machine profile reference; previous selection retained";
+                return;
+            }
             if (request->hasArg("ntcBrewNominalResistance"))
                 settings->setNtcBrewNominalResistance(request->arg("ntcBrewNominalResistance").toFloat());
             if (request->hasArg("ntcBrewSeriesResistance"))
@@ -564,6 +564,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setWifiPassword(request->arg("wifiPassword"));
             if (request->hasArg("apPassword") && request->arg("apPassword").length() >= WIFI_AP_PASSWORD_MIN_LENGTH)
                 settings->setWifiApPassword(request->arg("apPassword"));
+            if (request->hasArg("setupStep"))
+                settings->setSetupStep(request->arg("setupStep"));
             if (request->hasArg("setupDone"))
                 settings->setSetupDone(parseBoolArg(request->arg("setupDone")));
             if (request->hasArg("homekit"))
@@ -746,7 +748,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
         });
         if (!saved) {
             JsonDocument failure;
-            failure["error"] = controller->getSettings().getSaveError() + ". Restart cancelled; retry saving.";
+            failure["error"] = (profileError.isEmpty() ? controller->getSettings().getSaveError() : profileError) +
+                               ". Restart cancelled; retry saving.";
             String body;
             serializeJson(failure, body);
             request->send(500, "application/json", body);
@@ -761,38 +764,38 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
         controller->setPumpModelCoeffs();
     }
 
-    AsyncResponseStream *response = request->beginResponseStream("application/json");
     JsonDocument doc(&psramAllocator);
     Settings const &settings = controller->getSettings();
     doc["controllerError"] = controller->getError();
-    doc["machineHardwareConfiguration"] = controller->getSystemInfo().capabilities.dualBoiler;
+    doc["machineHardwareConfiguration"] = hardwareSupported;
     doc["machineHardwareReady"] = controller->isMachineHardwareReady();
     if (request->method() == HTTP_POST)
         doc["machineHardwareApplyPending"] =
             previousHardwareHash != machineHardwareHash(settings.getMachineHardware()) && !controller->isMachineHardwareReady();
     doc["machineHardwareError"] = controller->isMachineHardwareError();
-    if (controller->getSystemInfo().capabilities.dualBoiler)
-        doc["defaultSteamMode"] = settings.getDefaultSteamMode();
-    doc["systemLedFunction"] = settings.getSystemLedFunction();
-    doc["baristaLedFunction"] = settings.getBaristaLedFunction();
-    doc["systemLedBrightness"] = settings.getSystemLedBrightness();
-    doc["systemLedMinBrightness"] = settings.getSystemLedMinBrightness();
-    doc["systemLedCycleTimeMs"] = settings.getSystemLedCycleTimeMs();
-    doc["baristaLedBrightness"] = settings.getBaristaLedBrightness();
-    doc["baristaLedMinBrightness"] = settings.getBaristaLedMinBrightness();
-    doc["baristaLedCycleTimeMs"] = settings.getBaristaLedCycleTimeMs();
     doc["steamControlsAvailable"] = controller->isSteamControlsAvailable();
-    doc["steamRefillMode"] = settings.getSteamRefillMode();
-    doc["steamRefillPostClearSeconds"] = settings.getSteamRefillPostClearSeconds();
-    if (controller->getSystemInfo().capabilities.dualBoiler)
+    if (hardwareSupported) {
+        doc["defaultSteamMode"] = settings.getDefaultSteamMode();
+        doc["systemLedFunction"] = settings.getSystemLedFunction();
+        doc["baristaLedFunction"] = settings.getBaristaLedFunction();
+        doc["systemLedBrightness"] = settings.getSystemLedBrightness();
+        doc["systemLedMinBrightness"] = settings.getSystemLedMinBrightness();
+        doc["systemLedCycleTimeMs"] = settings.getSystemLedCycleTimeMs();
+        doc["baristaLedBrightness"] = settings.getBaristaLedBrightness();
+        doc["baristaLedMinBrightness"] = settings.getBaristaLedMinBrightness();
+        doc["baristaLedCycleTimeMs"] = settings.getBaristaLedCycleTimeMs();
+        doc["steamRefillMode"] = settings.getSteamRefillMode();
+        doc["steamRefillPostClearSeconds"] = settings.getSteamRefillPostClearSeconds();
         writeMachineHardware(doc.as<JsonObject>(), settings.getMachineHardware());
+    }
     doc["startupMode"] = settings.getStartupMode() == MODE_BREW ? "brew" : "standby";
     doc["startupProfile"] = settings.getStartupProfile();
     doc["targetSteamTemp"] = settings.getTargetSteamTemp();
     doc["targetWaterTemp"] = settings.getTargetWaterTemp();
-    addMachineProfileSettings(doc, settings, controller->getSystemInfo(),
-                              controller->getSystemInfo().capabilities.dualBoiler &&
-                                  !controller->getSystemInfo().protocolMismatch);
+    if (!addMachineProfileSettings(doc, settings, controller->getSystemInfo(), hardwareSupported)) {
+        request->send(500, "application/json", "{\"error\":\"Could not read machine profile settings\"}");
+        return;
+    }
     doc["setupDone"] = settings.isSetupDone();
     doc["setupStep"] = settings.getSetupStep();
     doc["homekit"] = settings.isHomekit();
@@ -905,6 +908,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
         }
     }
     doc["autowakeupSchedules"] = schedulesStr;
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
     serializeJson(doc, *response);
     request->send(response);
 
@@ -1165,8 +1169,8 @@ void WebUIPlugin::handleCoreDumpDownload(AsyncWebServerRequest *request) {
 
     // Find the coredump partition
     const esp_partition_t *coredump_partition =
-        esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_COREDUMP, NULL);
-    if (coredump_partition == NULL) {
+        esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_COREDUMP, nullptr);
+    if (coredump_partition == nullptr) {
         request->send(500, "text/plain", "Core dump partition not found");
         return;
     }

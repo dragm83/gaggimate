@@ -7,13 +7,13 @@
 #include <esp_http_client.h>
 #include <string>
 
-// HttpTransport on esp_http_client + esp-tls with the Arduino certificate bundle.
+// HttpTransport on esp_http_client + esp-tls with the roots from ca_bundle.h.
 class EspHttpTransport : public HttpTransport {
   public:
     static constexpr int DEFAULT_TIMEOUT_MS = 15000;
 
     explicit EspHttpTransport(int timeoutMs = DEFAULT_TIMEOUT_MS) : _timeoutMs(timeoutMs) {}
-    ~EspHttpTransport() override { end(); }
+    ~EspHttpTransport() override { EspHttpTransport::end(); }
 
     bool begin(const std::string &url) override;
     void setHeader(const char *key, const char *value) override;

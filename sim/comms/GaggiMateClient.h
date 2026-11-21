@@ -5,8 +5,8 @@
 #pragma once
 
 #include "GaggiMateComm.h"
+#include "MachineHardwareSettings.h"
 #include "MockController.h"
-#include "NimBLEClient.h"
 #include <Arduino.h>
 #include <cstdint>
 #include <functional>
@@ -47,6 +47,8 @@ struct Payload {
 };
 } // namespace gm
 
+class OtaSender;
+
 class GaggiMateClient {
   public:
     using ConnectionCallback = std::function<void(bool connected)>;
@@ -62,11 +64,15 @@ class GaggiMateClient {
     using VolumetricCallback = std::function<void(float volume)>;
     using ScaleCallback =
         std::function<void(float weight, float cell1Weight, float cell2Weight, bool cell1Valid, bool cell2Valid)>;
+    using SteamLevelCallback = std::function<void(bool low)>;
+    using TankLevelCallback = std::function<void(bool present, bool full)>;
+    using MachineHardwareCallback = std::function<void(uint32_t hash, bool ready, bool error)>;
     using TofCallback = std::function<void(uint32_t distance)>;
     using ErrorCallback = std::function<void(int code)>;
 
     GaggiMateClient();
 
+    void enableUart(uint8_t, uint8_t) {} // the mocked link has no wire
     void init(const String &deviceName);
     void loop();
 
@@ -81,14 +87,17 @@ class GaggiMateClient {
     uint32_t getRetransmits() const { return 0; }
     bool isIdle() const { return true; }
     void setLowLatency(bool) {}
-    NimBLEClient *getClient() const { return const_cast<NimBLEClient *>(&_nativeClient); }
+    LinkType getLinkType() const { return _connected ? LinkType::Ble : LinkType::None; }
+    int getRssi() const { return _connected ? -50 : 0; }
+    OtaSender *getOtaSender() { return nullptr; }
 
     // build*: compose a command without sending.
     gm::Payload buildPing();
     gm::Payload buildBoilerControl(uint8_t index, BoilerControlMode mode, float setpoint);
     gm::Payload buildPumpControl(uint8_t index, PumpControlMode mode, float power, float pressure, float flow);
     gm::Payload buildRelayControl(uint8_t index, bool open);
-    gm::Payload buildHeaterSettings(float kp, float ki, float kd, float kf, bool heaterCoordinationEnabled, uint32_t handoverMs);
+    gm::Payload buildHeaterSettings(float kp, float ki, float kd, float kf, bool heaterCoordinationEnabled, uint32_t handoverMs,
+                                    float steamKp, float steamKi, float steamKd);
     gm::Payload buildPumpSettings(float a, float b, float c, float d, float commutationGain, float convergenceGain,
                                   float integralGain, float maxPower);
     gm::Payload buildAutotune(uint32_t testTime, uint32_t samples, uint32_t heaterWattage);
@@ -104,7 +113,13 @@ class GaggiMateClient {
     void sendBoilerControl(uint8_t index, BoilerControlMode mode, float setpoint);
     void sendPumpControl(uint8_t index, PumpControlMode mode, float power, float pressure, float flow);
     void sendRelayControl(uint8_t index, bool open);
-    void sendHeaterSettings(float kp, float ki, float kd, float kf, bool heaterCoordinationEnabled, uint32_t handoverMs);
+    void sendHeaterSettings(float kp, float ki, float kd, float kf, bool heaterCoordinationEnabled, uint32_t handoverMs,
+                            float steamKp, float steamKi, float steamKd);
+    // The mock accepts any hardware configuration at once, like a controller that needs no restart.
+    void sendMachineHardware(const gm::MachineHardwareSettings &settings) {
+        if (_machineHardwareCb)
+            _machineHardwareCb(machineHardwareHash(settings), true, false);
+    }
     void sendPumpSettings(float a, float b, float c, float d, float commutationGain, float convergenceGain, float integralGain,
                           float maxPower, float slipA, float slipB, float slipC, float slipD);
     void sendAutotune(uint32_t testTime, uint32_t samples, uint32_t heaterWattage);
@@ -132,11 +147,13 @@ class GaggiMateClient {
     void onVolumetricMeasurement(VolumetricCallback cb) { _volumetricCb = std::move(cb); }
     void onScaleMeasurement(ScaleCallback cb) { _scaleCb = std::move(cb); }
     void onTofMeasurement(TofCallback cb) { _tofCb = std::move(cb); }
+    void onSteamLevel(SteamLevelCallback cb) { _steamLevelCb = std::move(cb); } // the single-boiler mock has no level sensors
+    void onTankLevel(TankLevelCallback cb) { _tankLevelCb = std::move(cb); }
+    void onMachineHardware(MachineHardwareCallback cb) { _machineHardwareCb = std::move(cb); }
     void onError(ErrorCallback cb) { _errorCb = std::move(cb); }
 
   private:
     MockController _mock;
-    NimBLEClient _nativeClient;
 
     bool _initialized = false;
     bool _connected = false;
@@ -153,5 +170,8 @@ class GaggiMateClient {
     VolumetricCallback _volumetricCb;
     ScaleCallback _scaleCb;
     TofCallback _tofCb;
+    SteamLevelCallback _steamLevelCb;
+    TankLevelCallback _tankLevelCb;
+    MachineHardwareCallback _machineHardwareCb;
     ErrorCallback _errorCb;
 };

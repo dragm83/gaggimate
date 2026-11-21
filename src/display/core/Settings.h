@@ -3,16 +3,16 @@
 #define SETTINGS_H
 
 #include <Arduino.h>
+#include <LedEffect.h>
 #include <MachineHardwareSettings.h>
 #include <Preferences.h>
-#include <atomic>
 #include <algorithm>
-#include <LedEffect.h>
+#include <atomic>
 #include <cmath>
-#include <esp_err.h>
 #include <display/core/Property.h>
 #include <display/core/constants.h>
 #include <display/core/utils.h>
+#include <esp_err.h>
 #include <mutex>
 #include <vector>
 
@@ -20,7 +20,7 @@ constexpr uint16_t DEFAULT_HARDWARE_SCALE_SAMPLE_RATE_SPS = 10;
 constexpr float DEFAULT_HARDWARE_SCALE_IDLE_ALPHA = 0.80f;
 constexpr float DEFAULT_HARDWARE_SCALE_ACTIVE_ALPHA = 0.80f;
 
-#define PREFERENCES_KEY "controller"
+constexpr char PREFERENCES_KEY[] = "controller";
 
 // Per-warning severity: hidden, shown as a warning, or shown as an error that needs confirmation before brewing.
 enum WarningLevel { WARNING_LEVEL_IGNORE = 0, WARNING_LEVEL_WARN = 1, WARNING_LEVEL_ERROR = 2 };
@@ -43,6 +43,12 @@ struct AutoWakeupSchedule {
             days[i] = true;
         }
     }
+
+    AutoWakeupSchedule(const AutoWakeupSchedule &) = default;
+    AutoWakeupSchedule(AutoWakeupSchedule &&) noexcept = default;
+    AutoWakeupSchedule &operator=(const AutoWakeupSchedule &) = default;
+    AutoWakeupSchedule &operator=(AutoWakeupSchedule &&) noexcept = default;
+    ~AutoWakeupSchedule() = default;
 
     [[nodiscard]] bool isDayEnabled(const int dayOfWeek) const {
         // dayOfWeek: 1=Monday, 2=Tuesday, ..., 7=Sunday
@@ -223,7 +229,7 @@ class Settings {
     bool isHeaterCoordinationEnabled() const { return heaterCoordinationEnabled.get(); }
     int getHeaterHandoverMs() const { return heaterHandoverMs.get(); }
     String getMachineProfileSelection() const { return machineProfileSelection.get(); }
-    void setMachineProfileSelection(const String &v);
+    bool setMachineProfileSelection(const String &v);
     String getPid() const { return pid.get(); }
     String getSteamPid() const { return steamPid.get(); }
     String getPumpModelCoeffs() const { return pumpModelCoeffs.get(); }
@@ -575,7 +581,7 @@ class Settings {
     Property<bool> otaChannelConfigured{registry, "ocdb", false};
     Property<std::vector<String>> favoritedProfiles{registry, "fp", {}};
     Property<std::vector<String>> profileOrder{registry, "po", {}}; // persisted profile ordering
-    Property<int> defaultSteamMode{registry, "steam_mode", 1}; // 0 = Off, 1 = On, 2 = Last
+    Property<int> defaultSteamMode{registry, "steam_mode", 1};      // 0 = Off, 1 = On, 2 = Last
     Property<bool> persistentSteamState{registry, "sst", false};
     Property<float> steamPumpPercentage{registry, "spp", DEFAULT_STEAM_PUMP_PERCENTAGE};
     Property<float> steamPumpCutoff{registry, "spc", DEFAULT_STEAM_PUMP_CUTOFF};

@@ -10,12 +10,12 @@ struct SystemInfo;
 bool validateMachineProfile(JsonVariantConst value, String &error);
 bool validateMachineProfileRequest(AsyncWebServerRequest *request, const SystemInfo &system, bool hardwareSupported,
                                    String &error);
-void addMachineProfileSettings(JsonDocument &doc, const Settings &settings, const SystemInfo &system, bool hardwareSupported);
+bool addMachineProfileSettings(JsonDocument &doc, const Settings &settings, const SystemInfo &system, bool hardwareSupported);
 
 void logMachineProfile(const char *event, const String &selection);
 
 String machineProfileHash(JsonVariantConst profile);
-String machineProfileReference(const String &selection);
+bool machineProfileReference(const String &selection, String &result);
 bool isMachineProfileReference(JsonVariantConst value);
 
 bool loadBuiltinMachineProfile(const String &id, JsonDocument &profile);

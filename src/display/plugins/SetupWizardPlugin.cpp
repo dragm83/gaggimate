@@ -9,7 +9,7 @@
 
 namespace {
 constexpr unsigned long HEATER_TEST_MS = 10000;
-constexpr unsigned long HEATER_SETTLE_MS = 3000; // sensor lags the element, keep watching after it is off
+constexpr unsigned long HEATER_SETTLE_MS = 30000; // big boilers lag the element, keep watching after it is off
 constexpr float HEATER_MIN_RISE = 2.5f;
 constexpr float HEATER_HOT_MARGIN = 30.0f;   // this close to the steam target the heater has evidently worked
 constexpr float HEATER_ABORT_MARGIN = 15.0f; // steam mode starts the pump near its target
@@ -42,14 +42,18 @@ class PressureTestProcess : public Process {
     bool isRelayActive() override { return *phase == Phase::RELEASING; }
     bool isAltRelayActive() override { return false; }
     float getPumpValue() override { return *phase == Phase::BUILDING ? 100.0f : 0.0f; }
-    void progress() override {}
+    void progress() override {
+        // phase is driven by the wizard, nothing to advance here
+    }
     bool isActive() override {
         const Phase p = *phase;
         return (p == Phase::BUILDING || p == Phase::RELEASING) && millis() - started < PRESSURE_SAFETY_MS;
     }
     bool isComplete() override { return !isActive(); }
     int getType() override { return MODE_WATER; }
-    void updateVolume(double) override {}
+    void updateVolume(double) override {
+        // volume is not tracked for the pressure test
+    }
 
   private:
     std::shared_ptr<std::atomic<Phase>> phase;
@@ -216,9 +220,10 @@ void SetupWizardPlugin::startHeaterTest() {
 void SetupWizardPlugin::loopHeater(unsigned long now) {
     const float temp = heaterTemp();
     peakTemp = std::max(peakTemp, temp);
-    if (*phase == Phase::HEATING && temp - startTemp >= HEATER_MIN_RISE) {
-        // Enough to prove the heater works, no need to keep heating
-        controller->activateStandby();
+    if (temp - startTemp >= HEATER_MIN_RISE) {
+        // Enough to prove the heater works, no need to keep heating or waiting
+        if (*phase == Phase::HEATING)
+            controller->activateStandby();
         finish(true, nullptr);
         return;
     }
@@ -231,8 +236,7 @@ void SetupWizardPlugin::loopHeater(unsigned long now) {
             phaseStarted = now;
         }
     } else if (*phase == Phase::SETTLING && now - phaseStarted >= HEATER_SETTLE_MS) {
-        const bool passed = peakTemp - startTemp >= HEATER_MIN_RISE;
-        finish(passed, passed ? nullptr : "noRise");
+        finish(false, "noRise");
         return;
     }
     if (now - lastPublish >= PUBLISH_INTERVAL_MS)
@@ -359,6 +363,13 @@ void SetupWizardPlugin::publishScan(bool success) {
         int32_t rssi;
         bool secure;
         int32_t channel;
+
+        Network() = default;
+        Network(const Network &) = default;
+        Network(Network &&) noexcept = default;
+        Network &operator=(const Network &) = default;
+        Network &operator=(Network &&) noexcept = default;
+        ~Network() = default;
     };
     std::vector<Network> networks;
     const int16_t count = success ? WiFi.scanComplete() : 0;

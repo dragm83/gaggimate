@@ -70,7 +70,6 @@ struct ControllerConfig {
     PressureControlRate pressureControlRate = PressureControlRate::Hz60;
     // Per ADS channel; only used where an NTC is instantiated.
     std::array<NtcTiming, 4> ntcTiming{};
-    bool dualBoilerWaterHandling = false;
 };
 
 const ControllerConfig GM_STANDARD_REV_1X = {.name = "GaggiMate Standard Rev 1.x",
@@ -292,8 +291,8 @@ const ControllerConfig GM_MAX_REV10 = {.name = "GaggiMate Max Rev 1.x",
                                        .ext1Pin = 2,
                                        .ext2Pin = 47,
                                        .ext3Pin = 48,
-                                       .ext4Pin = 43,
-                                       .ext5Pin = 44,
+                                       .ext4Pin = 44,
+                                       .ext5Pin = 43,
                                        .capabilites =
                                            {
                                                .dimming = true,
@@ -302,7 +301,6 @@ const ControllerConfig GM_MAX_REV10 = {.name = "GaggiMate Max Rev 1.x",
                                            },
                                        .adcRates = {500, 0, 35, 35},
                                        .pressureControlRate = PressureControlRate::Hz60,
-                                       .ntcTiming = {{{}, {}, {100, 1120.355f}, {100, 1120.355f}}},
-                                       .dualBoilerWaterHandling = true};
+                                       .ntcTiming = {{{}, {}, {100, 1120.355f}, {100, 1120.355f}}}};
 
 #endif // CONTROLLERCONFIG_H

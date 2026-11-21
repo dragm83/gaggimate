@@ -95,7 +95,13 @@ String Settings::getSaveError() const {
                            : String("Machine profile storage: ") + esp_err_to_name(error);
 }
 
-void Settings::setMachineProfileSelection(const String &value) { machineProfileSelection.set(machineProfileReference(value)); }
+bool Settings::setMachineProfileSelection(const String &value) {
+    String reference;
+    if (!machineProfileReference(value, reference))
+        return false;
+    machineProfileSelection.set(reference);
+    return true;
+}
 
 Settings::Settings() {
     preferences.begin(PREFERENCES_KEY, true);
@@ -111,7 +117,14 @@ Settings::Settings() {
         steamPid.set(feedforwardSeparator >= 0 ? brewPid.substring(0, feedforwardSeparator) : brewPid);
     }
     // Migrate an older full snapshot without reapplying any machine values.
-    setMachineProfileSelection(machineProfileSelection.get());
+    if (!setMachineProfileSelection(machineProfileSelection.get()))
+        ESP_LOGW("MachineProfile", "Could not convert saved profile reference; keeping the existing selection");
+
+    // Persist the initial copy, so later Cup scale edits remain independent.
+    if (!preferences.isKey("sd_pf_scale")) {
+        portafilterScale.initDefault("");
+        portafilterScale.set(smartDoseScale.get());
+    }
 
     if (preferences.isKey("pss") && preferences.getType("pss") == PT_U8) {
         preferredScaleSource.initDefault("");
@@ -125,12 +138,6 @@ Settings::Settings() {
         defaultSteamMode.set(independent ? (remember ? 2 : 0) : 1);
         defaultSteamMode.persist();
     }
-    // Persist the initial copy, so later Cup scale edits remain independent.
-    if (!preferences.isKey("sd_pf_scale")) {
-        portafilterScale.initDefault("");
-        portafilterScale.set(smartDoseScale.get());
-    }
-
     // Legacy migrations: derive defaults for keys that were never persisted
     if (!preferences.isKey("sg_m")) {
         smartGrindMode.initDefault(smartGrindToggle.get() ? 1 : 0);
