@@ -1755,7 +1755,7 @@ void Controller::runButtonBehavior(const String &behavior, bool pressed) {
         handleFlushButton(pressed);
     } else if (behavior == "tare") {
         if (pressed) {
-            comms.tare();
+            comms.tareHardwareScale();
 #ifndef GAGGIMATE_SIM
             BLEScales.tare();
 #endif
