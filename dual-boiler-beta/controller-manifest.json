@@ -1,6 +1,6 @@
 {
   "name": "GaggiMate Dual Boiler Beta - Controller",
-  "version": "v1.10.0-73-g44c50cf3",
+  "version": "v1.10.0-74-g5b65e2ab",
   "new_install_prompt_erase": true,
   "builds": [
     {
